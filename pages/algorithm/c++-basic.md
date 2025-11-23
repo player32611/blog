@@ -393,3 +393,402 @@ int main() {
 :::
 
 `scanf()`的返回值是一个整数，表示成功读取的变量个数。如果没有读取任何项，或者匹配失败，则返回 0.如果在成功读取任何数据之前，发生了读取错误或者遇到读取到文件结尾，则返回常量 EOF (-1)。
+
+### cin 和 cout
+
+`cin`是 C++中提供的标准输入流对象，一般针对的是键盘，也就是从键盘上输入的字符流，使用`cin`来进行数据的提取，`cin`一般是和`>>`(流提取运算符)配合使用的。`cin`的功能和`scanf()`是类似的。
+
+`cout`是 C++中提供的标准输出流对象，一般针对控制台的窗口，也就是将数据以字符流的形式输出到控制台窗口上显示。`cout`一般是和`<<`(流插入运算符)配合使用的。`cout`的功能和`printf()`是类似的。
+
+`cin`和`cout`的输入输出非常的方便，不需要手动控制格式，能够自动识别变量类型。
+
+::: tip `cin`使用细节
+
+`cin`在读取的时候是根据用户的输入，从前往后，从上往下依次扫面。
+
+`cin`在读取的过程中遇到空格，自动会跳过，使用不要担心在想要的字符前输入空白字符。当一行读取结束的时候，会自动换行，读取下一行的内容。
+
+`cin`后面不可以跟换行`endl`
+
+:::
+
+## 条件判断与循环
+
+### 悬空 else
+
+如果有多个 if 和 else，else 总是跟最接近的 if 匹配：
+
+```c++
+int a = 0, b = 2;
+if(a == 1)
+    if(b == 2)
+        cout << "hehe" << endl;
+else
+    cout << "haha" << endl;
+```
+
+以上代码无输出。
+
+### 浮点数比较相等
+
+在比较浮点数时，由于浮点数在计算机中是以有限精度表示，也就是说有些浮点数在内存中其实无法精确保存，这可能导致浮点数比较中的一些精度误差问题。
+
+如果直接使用`==`来比较两个浮点数，很可能会由于这些微小的误差导致不准确的结果。
+
+这时候就要允许有误差存在，常见的写法如下：
+
+```c++
+#include <iostream>
+#include <cmath>
+
+using namespace std;
+
+int main() {
+    double a = 0.1;
+    double b = 0.2;
+    double c = 0.3;
+    if (fabs((a + b) - c) < 1e-9) // 1e-9 表示允许的误差范围
+        cout << "a + b 约等于 c" << endl;
+    else
+        cout << "a + b 不等于 c" << endl;
+}
+```
+
+### 范围 for
+
+打印数组元素除了可以使用 while、do-while、for 三种循环外，还有一个更方便的方式：使用范围`for`。范围 for 是在`C++11`这个标准中引入的，如果你使用的编译器默认不支持`c++11`，可能需要配置才能使用。
+
+范围 for 的语法如下：
+
+```c++
+for( 类型 变量名 : 数组名)
+    语句 // 多条语句需要加大括号
+```
+
+**示例**：打印数组
+
+```c++
+#include <iostream>
+using namespace std;
+
+int main() {
+    int arr[5] = {1, 2, 3, 4, 5};
+    for(int e : arr)
+        cout << e << " ";
+}
+```
+
+::: warning 注意
+
+这里的`e`是单独的一个变量，不是数组的元素，所以对`e`的修改，不会影响数组。
+
+:::
+
+### auto 关键字
+
+`auto`的主要用途是让编译器自动推导出变量的类型的，比如：
+
+```c++
+auto a = 10;
+auto ch = 'A';
+int arr[5] = {1, 2, 3, 4, 5};
+
+for(auto e : arr)
+     cout << e << " ";
+```
+
+## 数组
+
+### memset() 设置数组内容
+
+`memset()`是用来设置内存的，将内存中的值**以字节为单位**设置成想要的内容，需要头文件`<cstring>`。
+
+函数原型如下：
+
+```c++
+void *memset(void *ptr, int value, size_t num)
+```
+
+- **ptr**：指向了要设置的内存块的起始位置
+
+- **value**：要设置的值
+
+- **num**：设置的字节个数
+
+**示例**：设置数组内容：
+
+```c++
+#include <iostream>
+#include<cstring>
+using namespace std;
+
+int main() {
+    char str[] = "hello world";
+    memset(str, 'x', 5);
+    cout << str << endl;
+
+    int arr[5] = {1, 2, 3, 4, 5};
+    memset(arr, 0, sizeof(arr));
+    for(int e : arr)cout << e << " ";
+}
+
+```
+
+### memcpy() 拷贝数组内容
+
+C++中有一颗库函数`memcpy()`可以做数组内容的拷贝。虽然`memcpy()`其实是用来做内存块的拷贝的，当然用来做数组内容的拷贝也是没问题的。`memcpy()`需要的头文件是`<cstring>`。
+
+函数原型如下：
+
+```c++
+void *memcpy(void *dest, const void *src, size_t num)
+```
+
+- **dest**：目标空间的起始地址
+
+- **src**：源数据空间的起始地址
+
+- **num**：拷贝的数据的字节个数
+
+**代码示例**：
+
+```c++
+#include <iostream>
+#include <cstring>
+using namespace std;
+
+int main() {
+    char a[10] = {1,2,3,4,5,6,7,8,9,10}
+    char b[10] = {0};
+    memcpy(b, a, 10 * sizeof(int));
+}
+```
+
+### strlen() 字符串长度
+
+字符数组中存放着的字符串，这个字符数组有自己的长度，也就是数组的元素个数，这个可以使用`sizeof()`计算。要想计算数组中存放的字符串的长度，可以使用 C/C++中的一个库函数`strlen()`，其实统计的就是字符串中 **\0** 之前的字符个数。需要的头文件是`<cstring>`。
+
+```c++
+size_t strlen(const char *str)
+```
+
+- **str**：指针，存放的是字符串的起始地址，从这个地址开始计算字符串的长度
+
+**代码示例**：
+
+```c++
+#include <iostream>
+#include <cstring>
+using namespace std;
+
+int main() {
+    char str[20] = "hello world";
+    cout << strlen(str) << endl;
+    cout << sizeof(str) << endl;
+}
+```
+
+### 字符数组的输入
+
+当输入没有空格字符的字符串时，使用`scanf()`和`cin`来实现均可：
+
+::: code-group
+
+```c++ [scanf()]
+char arr[20] = { 0 };
+scanf("%s", arr);
+printf("%s", arr);
+```
+
+```c++ [cin]
+char arr[20] = { 0 };
+cin >> arr;
+cout << arr;
+```
+
+:::
+
+当输入的字符串中有空格时，`scanf()`和`cin`正常情况下均无法正常读取。
+
+::: warning 注意
+
+占位符`%s`其实不能简单地等同于字符串。它的规则时，从当前第一个非空白字符开始读起，直到遇到空白字符(即空格、换行符、制表符等)为止。
+
+因为`%s`的读取不会包含空白字符，所以无法用来读取多个单词，除非多个`%s`一起使用。这也意味着，`scanf()`不适合读取可能包含空格的字符串，比如书名或歌曲名。
+
+另外有一个细节，`scanf()`遇到`%s`占位符，会在字符串变量末尾存储一个`\0`字符。
+
+同时`scanf()`将字符串读入字符数组时，不会检测字符串是否超过了数组长度。所以，储存字符串时，很可能会超过数组的边界，导致意想不到的结果。为了放置这种情况，使用`%s`占位符时，可以指定读入字符串的最长长度，即写成`%[m]s`，其中的`[m]`是一个整数，表示读取字符串的最大长度，后面的字符将被丢弃。
+
+:::
+
+::: warning 注意
+
+其实`cin`在读取一个字符串的时候，遇到空白字符的时候，就认为字符串结束了，不再继续往后读取剩余的字符，同时将已经读取到的字符串末尾加上`\0`，直接存储起来。
+
+:::
+
+**解决方案 1**
+
+使用`gets()`函数的方式，这种方式能解决问题。但是因为`gets()`存在安全性问题，在 C++11 中取消了`gets()`，给出了更加安全的方案：`fgets()`。
+
+```c++
+char *gets(char *str)
+char *fgets(char *str, int num, FILE *stream)
+```
+
+- **gets()** : 从第一个字符开始读取，一直读到`\n`停止，但是不会读取`\n`，也就是读取到的内容中没有包含`\n`，但是会在读取到的内容后自动加上`\0`。
+
+- **fgets()** : 也是从第一个字符开始读取，最多读取`num-1`个字符，最后一个位置留给`\0`，如果`num`的长度是远大于输入的字符串长度，就会一直读取到`\n`停止，并且会读取`\n`，将`\n`作为读取到内容的一部分，同时在读取到的内容后自动加上`\0`。
+
+::: code-group
+
+```c++ [gets()]
+#include<cstdio>
+
+int main(){
+    char arr[20] = {0};
+    gets(arr);
+    printf("%s\n", arr);
+}
+```
+
+```c++ [fgets()]
+#include<cstdio>
+
+int main(){
+    char arr[20] = {0};
+    fgets(arr, sizeof(arr), stdin);
+    printf("%s\n", arr);
+}
+
+```
+
+:::
+
+**解决方案 2**
+
+C 语言中使用`scanf()`函数其实也能做到读取带有空格的字符串，只是不常见而已。方式就是将`%s`改成`%[^\n]s`，其中在`%`和`s`之间加上了`[^\n]`，意思是一直读取，直到遇到`\n`，这样即使遇到空格也就不会结束了。
+
+这种方式读取，不会将`\n`读取进来，但是在读取到的字符串末尾加上`\0`。
+
+```c++
+#include<cstdio>
+
+int main(){
+    char arr[20] = {0};
+    scanf("%[^\n]s", arr);
+    printf("%s\n", arr);
+}
+
+```
+
+::: tip 提示
+
+`%[^\n]s`也可写成`%[^\n]`
+
+:::
+
+**解决方案 3**
+
+使用`getchar()`逐个字符的读取，也是可以读取一个字符串的。
+
+```c++
+#include<iostream>
+#include<cstdio>
+using namespace std;
+
+int main() {
+    char arr[20] = { 0 };
+    int ch = 0;
+    int i = 0;
+    while ((ch = getchar()) != '\n') {
+        arr[i] = ch;
+        i++;
+    }
+    cout << arr << endl;
+}
+```
+
+### strcpy() 和 strcat()
+
+C/C++中有一个库函数叫`strcpy()`，可以将字符数组进行复制。包含在头文件`<cstring>`中。函数原型如下：
+
+```c++
+char *strcpy(char *dest, const char *src)
+```
+
+- **dest**：目标空间的地址
+
+- **src**：源头空间的地址
+
+代码演示：
+
+```c++
+#include<cstdio>
+#include<cstring>
+
+int main(){
+    char arr1[] = "hello";
+    char arr2[10] = {0};
+    strcpy(arr2, arr1);
+    printf("%s\n", arr2);
+}
+```
+
+有时候我们需要在一个字符串的末尾再追加一个字符串，C/C++中的头文件`<cstring>`中有一个库函数叫`strcat()`可以完成，函数原型如下：
+
+```c++
+char *strcat(char *dest, const char *src)
+```
+
+- **dest**：目标空间的地址
+
+- **src**：源头空间的地址
+
+代码演示：
+
+```c++
+#include<cstdio>
+#include<cstring>
+
+int main(){
+    char arr1[20] = "hello";
+    char arr2[] = "world";
+    strcat(arr1, arr2);
+    printf("%s\n", arr1);
+}
+```
+
+## string 字符串
+
+`string`字符串其实是一种更加高级的封装，`string`字符串中包含大量的方法，这些方法使得字符串的操作变得更加简单。
+
+C++ 中将字符串直接作为一种类型，也就是`string`类型，使用`string`类型创建的对象就是 C++ 的字符串。
+
+```c++
+string s1;
+string s2 = "hello world";
+```
+
+使用 C++ 中提供的`string`时，必须添加头文件`<string>`。
+
+### 创建字符串
+
+|            方式             |         解释         |
+| :-------------------------: | :------------------: |
+|         `string s1`         |   创建一个空字符串   |
+| `string s2 = "hello world"` | **创建字符串(常用)** |
+
+除了以上创建字符串的写法外，C++ 中还有一些其他的创建字符串方式，如：
+
+```c++
+string s3("hello world");
+string s4 = s3;
+```
+
+::: warning 注意
+
+`string`类型内的字符串不再以`\0`作为结束标志了。
+
+:::
