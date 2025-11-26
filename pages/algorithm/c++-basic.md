@@ -851,3 +851,258 @@ cout << s.size() << endl;
 :::
 
 ### 迭代器
+
+迭代器是一种对象，它可以用来遍历容器(`string`)中的元素，迭代器的作用类似于指针，或者数组下标。
+
+C++中的`string`提供了多种迭代器，用于遍历和操作字符串中的内容。常用的迭代器有：
+
+- `begin()`：返回指向字符串第一个字符的迭代器，需要一个迭代器的变量来接收。
+
+- `end()`：返回指向字符串最后一个字符的下一个位置的迭代器(该位置不属于字符串)。
+
+`string`中`begin()`和`end()`返回的迭代器的类型是`string::iterator`。
+
+```c++
+string s = "abc";
+string::iterator it1 = s.begin();
+string::iterator it2 = s.end();
+cout << *it1;
+```
+
+::: warning 注意
+
+访问迭代器指向的值，需要解引用`*`。
+
+:::
+
+::: tip 提示
+
+- 迭代器是可以进行大小比较，也可以进行 + 或者 - 整数运算的。比如：`it++`，就是让迭代器前进一步，`it--` 就是让迭代器后退一步。
+
+- 同一个容器的两个迭代器也可以相减，相减结果的绝对值，是两个迭代器中间元素的个数。
+
+:::
+
+迭代器通常用于遍历字符串，可以正序遍历，也可以逆序遍历。
+
+```c++
+string s = "hello world";
+// 正序遍历
+for (string::iterator it = s.begin(); it != s.end(); it++) {
+    cout << *it;
+}
+```
+
+::: warning 注意
+
+通过迭代器找到元素后，改变迭代器指向的元素，是可以直接改变字符串内容的。
+
+:::
+
+### push_back()
+
+`push_back()`函数用于在字符串(包括空字符串)尾部插入一个字符。
+
+```c++
+string s = "hello";
+s.push_back(' ');
+s.push_back('w');
+s.push_back('o');
+s.push_back('r');
+s.push_back('l');
+s.push_back('d');
+cout << s << endl;
+```
+
+### 字符串的 += 和 + 运算
+
+`push_back()`是用于在字符串后添加一个字符，然而部分情况下我们需要向原有的字符串后继续添加字符串。其实`string`类型的字符串是支持`+`和`+=`运算的。这里的本质是`string`中重载了`operator+=`这个操作符。
+
+```c++
+string s = "hello";
+s += " world";
+cout << s << endl;
+```
+
+### pop_back()
+
+`pop_back()`用于删除字符串中尾部的一个字符。这个成员函数是在`c++11`标准中引入的，有些编译器可能不支持。
+
+```c++
+string s = "helloX";
+s.pop_back();
+cout << s << endl;
+```
+
+### insert()
+
+`insert()`函数用于在字符串中间的某个位置插入一个字符或者字符串。函数原型如下：
+
+```c++
+string& insert(size_t pos, const string& str); // pos位置前面插入一个 string 字符串
+string& insert(size_t pos, const char* s); // pos位置前面插入一个 C 风格的字符串
+string& insert(size_t pos, size_t n, char c); // pos位置前面插入 n 个字符 c
+```
+
+```c++
+string s = "hello world";
+
+// 插入一个字符串 X
+string s1 = "X";
+s.insert(5, s1);
+
+// 插入一个 C 风格的字符串 X
+s.insert(5, "X");
+
+// 插入 n 个字符 c
+s.insert(5, 2, 'X');
+```
+
+### find()
+
+`find()`函数用于查找字符串中指定字串/字符，并返回子串/字符在字符串中第一次出现的位置。函数原型如下：
+
+```c++
+size_t find(const string& str, size_t pos = 0) const;
+// 查找 string 类型的字符串 str，默认是从头开始，pos可以指定位置开始
+
+size_t find(const char* s, size_t pos = 0) const;
+// 查找 C 风格的字符串 s，默认是从头开始，pos可以指定位置开始
+
+size_t find(const char* s, size_t pos, size_t n) const;
+// 在字符串的 pos 这个位置开始查找 C 风格的字符串 s 中的前 n 个字符
+
+size_t find(char c, size_t pos = 0) const;
+// 查找字符 c，默认是从头开始，pos可以指定位置开始
+```
+
+**对于返回值** :
+
+- 若找到，返回字串/字符在字符串中第一次出现的起始下标位置。
+
+- 若未找到，返回一个整数值`npos`。通常判断`find()`函数的返回值是否等于`npos`就能直到是否查找到字串或者字符。
+
+```c++
+string s = "hello world";
+
+// 查找字符串 hello
+string s1 = "hello";
+cout<< s.find(s1) << endl;
+
+// 查找 C 风格的字符串 hello
+cout << s.find("hello") << endl;
+
+// 查找 C 风格的字符串的前 3 个字符
+cout << s.find("hello everyone", 0, 3) << endl;
+
+// 查找字符 w
+cout << s.find('w') << endl;
+
+```
+
+::: tip 提示
+
+`npos`并不是一个随机的数字，而是`string`中定义的一个静态常量`npos`。
+
+```c++
+static const size_t npos = -1;
+```
+
+:::
+
+### substr()
+
+`substr()`函数用于截取字符串中指定位置指定长度的字串。函数原型如下：
+
+```c++
+string substr(size_t pos = 0, size_t len = npos) const;
+```
+
+- `pos` : 开始截取的位置，默认从 0 开始。
+
+- `len` : 截取的长度，默认一直截取到字符串末尾。
+
+常见有三种用法：
+
+- `substr()` : 如果函数不传参数，就是从下标为 0 的位置开始截取，直到结尾，得到的是整个字符串；
+
+- `substr(pos)` : 从指定下标`pos`位置开始截取字串，直到结尾；
+
+- `substr(pos, len)` : 从指定下标`pos`位置开始截取长度为`len`的字串。
+
+**返回值类型** : `string`，返回的是截取到的字符串，可以使用`string`类型的字符串接收。
+
+```c++
+string s = "hello world";
+string s1 = s.substr(0, 3);
+string s2 = s.substr(3);
+cout << s << endl;
+cout << s1 << endl;
+cout << s2 << endl;
+```
+
+::: warning 注意
+
+`substr()`不会修改原字符串。
+
+:::
+
+`substr()`和`find()`经常是配合使用的，`find()`负责找到位置，`substr()`从这个位置向后获得字符串。
+
+```c++
+string s = "hello world hello everyone";
+size_t n = s.find("world");
+string s1 = s.substr(n, 11);
+cout << s1 << endl;
+```
+
+### string 的关系运算
+
+两个`string`类型字符串可以比较大小，C++中为`string`提供了一系列的关系运算。
+
+```c++
+string s1 = "abc";
+string s2 = "abcd";
+char s3[] = "abcdef"; // C 风格的字符串
+
+// s1 == s2
+bool operator==(const string& lhs, const string& rhs);// 使用方式：s1 == s2
+bool operator==(const char* lhs, const string& rhs);// 使用方式：s3 == s1
+bool operator==(const string& lhs, const char* rhs);// 使用方式：s1 == s3
+
+// s1 != s2
+bool operator!=(const string& lhs, const string& rhs);// 使用方式：s1 != s2
+bool operator!=(const char* lhs, const string& rhs);// 使用方式：s3 != s1
+bool operator!=(const string& lhs, const char* rhs);// 使用方式：s1 != s3
+
+// s1 < s2
+bool operator<(const string& lhs, const string& rhs);// 使用方式：s1 < s2
+bool operator<(const char* lhs, const string& rhs);// 使用方式：s3 < s1
+bool operator<(const string& lhs, const char* rhs);// 使用方式：s1 < s3
+
+// s1 <= s2
+bool operator<=(const string& lhs, const string& rhs);// 使用方式：s1 <= s2
+bool operator<=(const char* lhs, const string& rhs);// 使用方式：s3 <= s1
+bool operator<=(const string& lhs, const char* rhs);// 使用方式：s1 <= s3
+
+// s1 > s2
+bool operator>(const string& lhs, const string& rhs);// 使用方式：s1 > s2
+bool operator>(const char* lhs, const string& rhs);// 使用方式：s3 > s1
+bool operator>(const string& lhs, const char* rhs);// 使用方式：s1 > s3
+
+// s1 >= s2
+bool operator>=(const string& lhs, const string& rhs);// 使用方式：s1 >= s2
+bool operator>=(const char* lhs, const string& rhs);// 使用方式：s3 >= s1
+bool operator>=(const string& lhs, const char* rhs);// 使用方式：s1 >= s3
+
+```
+
+字符串的比较是基于字典序进行的，比较是对应位置上字符的 ASCII 值的大小；比较的不是字符串的长度。比如：
+
+```markdown
+"abc" < "aq"
+"abcdef" < "ff"
+"100" < "9"
+```
+
+### 和 string 相关的函数
