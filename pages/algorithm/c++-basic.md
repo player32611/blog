@@ -1105,4 +1105,66 @@ bool operator>=(const string& lhs, const char* rhs);// 使用方式：s1 >= s3
 "100" < "9"
 ```
 
-### 和 string 相关的函数
+### `stoi()`/`stol()`
+
+- `stoi()`是将字符串转换成`int`类型的值
+
+- `stol()`是将字符串转换成`long int`类型的值
+
+函数原型如下：
+
+```c++
+int stoi(const string& str, size_t* idx = 0, int base = 10);
+long int stol(const string& str, size_t* idx = 0, int base = 10);
+```
+
+- `str` : 表示被转换的`string`类型的字符串
+
+- `idx` : 是一个输出型参数，也就是通过这个参数会带会一个值。`idx`是一个指针，需要在外边创建一个`size_t`类型的值，传递它的地址给`idx`，这个参数将会带回`str`中无法正确匹配数字的第一个字符的位置。
+
+- `base` : 表示被解析的字符串中数字的进制值，可能是`2`、`8`、`10`、`16`或者`0`。默认情况下这个值是`10`，表示十进制数字；如果传递的是`2`，表示被解析的字符串中是二进制的数字，最终会转换成十进制的；如果传递的是`0`，会根据字符串的内容的信息自动推导进制，比如：字符串中有`0x`，就认为是十六进制，`0`开头会被认为是八进制，最终会转换成十进制。
+
+```c++
+string s = "11x22";
+size_t pos = 0;
+int r = stoi(s, &pos, 10);
+cout << r << endl;
+cout << pos << endl;
+```
+
+::: tip 提示
+
+如果不想传递`idx`参数，可以传递`0`或者`NULL`。如`stoi(s, NULL, 10)`。
+
+:::
+
+### `stod()`/`stof()`
+
+`stod()`是将字符串转换成`double`类型的值，`stof`是将字符串转换成`float`类型的值。和`stoi()`函数比较的话，少了描述字符串中数字进制的参数，其他参数一致。函数原型如下：
+
+```c++
+double stod(const string& str, size_t* idx = 0);
+float stof(const string& str, size_t* idx = 0);
+```
+
+### `to_string()`
+
+`to_string()`函数可以将数字转换成字符串，包括整型、浮点型等。函数原型如下：
+
+```c++
+string to_string(int val);
+string to_string(long val);
+string to_string(long long val);
+string to_string(unsigned val);
+string to_string(unsigned long val);
+string to_string(unsigned long long val);
+string to_string(float val);
+string to_string(double val);
+string to_string(long double val);
+```
+
+使用示例如下：
+
+```c++
+string pi = "pi is " + to_string(3.14);
+```
