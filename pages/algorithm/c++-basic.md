@@ -412,6 +412,34 @@ int main() {
 
 :::
 
+### scanf()/printf() 和 cin/cout 的对比
+
+`scanf()`和`printf()`是 C 语言中的标准输入输出函数，而`cin`和`cout`是 C++ 语言中的标准输入输出流对象。它们各自有优缺点，整体上来说`cin`和`cout`会更加方便，但有时候我们也不得不使用`scanf()`和`printf()`。
+
+- `scanf()`和`printf()`不能自动识别输入数据的类型，需要手动指定格式字符串，容易出现格式错误。开发者需要确保格式字符串与变量类型匹配，否则会导致未定义行为。
+
+- `cin`和`cout`会根据变量类型自动处理输入输出，避免格式化错误。相对`scanf()`和`printf()`，C++ 的`cin`和`cout`更加易用。
+
+- `scanf()`和`printf()`在格式化输出更精确直观，特别适合复杂格式的输入输出。比如：在要求指定格式输出的时候，`printf()`函数就比`cout`更加方便和灵活。
+
+::: warning 注意
+
+- `cout`默认不会输出六位小数，自动忽略小数点后多余的`0`，`printf()`函数打印浮点数的时候，小数点默认打印 6 位。
+
+- `cout`在输出的时候不需要指定格式，`printf()`则需要明确的格式。
+
+:::
+
+- `scanf()`和`printf()`通常比`cin`和`cout`快。
+
+::: tip 原因
+
+`cin`和`cout`由于要考虑兼容 C 语言的输入和输出，封装实现的更加复杂，通常比`scanf()`和`printf()`稍慢，但这种差异在大多数应用场景中可以忽略不计。
+
+但是在竞赛的题目中，尤其是当输入输出数据量较大时，使用`cin`和`cout`完成输入输出，经常会出现`Time Limit Exceeded`的情况。而`scanf()`和`printf()`就不存在类似的问题。
+
+:::
+
 ## 条件判断与循环
 
 ### 悬空 else
@@ -1167,4 +1195,117 @@ string to_string(long double val);
 
 ```c++
 string pi = "pi is " + to_string(3.14);
+```
+
+## 特殊技巧
+
+### 含空格字符串的特殊处理方式
+
+根据我们现在掌握的知识，含空格的字符串，如要读取，有`fgets()`、`scanf()`、`getchar()`、`getline()`四种方式。但是有时候，根据题目的情况，不一定非要完整的读取这个带空格的字符串，而是将字符串中空格隔开的每一个字符，当作一个单词处理更方便，也避免了读取带空格的各种问题。
+
+**练习：统计数字字符个数**
+
+::: code-group
+
+```c++ [解法1.cpp]
+// 读取整个带空格的字符串分析
+#include<iostream>
+#include<string>
+using namespace std;
+
+int main() {
+	string s;
+	getline(cin, s);
+	int count = 0;
+	for (auto ch : s) {
+		if (ch >= '0' && ch <= '9')count++;
+	}
+	cout << count;
+}
+```
+
+```c++ [解法2.cpp]
+// 按照多个单词分析
+#include<iostream>
+#include<string>
+using namespace std;
+
+int main() {
+	string s;
+	int count = 0;
+	while (cin >> s) {
+		for (auto c : s) {
+			if (c >= '0' && c <= '9')count++;
+		}
+	}
+	cout << count;
+}
+```
+
+:::
+
+### 数字的特殊处理方式
+
+当我们程序运行的时候，在控制台输入`123`的时候，这是的`123`是一个字符序列，程序会根据代码中的数据类型，可能将`123`解析成整型，也可能将`123`解析成字符串。比如：
+
+```c++
+int num = 0;
+cin >> num; // 输入123，就被解析成整数
+
+string s;
+cin >> s; // 输入123，就被解析成字符串
+```
+
+这里的解析的方式，主要是依赖编译器对变量类型的识别，根据类型再将读取字符串数据转化成对应类型的数据。我们在写代码的时候，应该根据实际的情况，来决定如何处理输入的内容。
+
+**练习：将数字中的奇数位变为 1，偶数位变为 0**
+
+::: code-group
+
+```c++ [解法1.cpp]
+#include<iostream>
+using namespace std;
+
+int main() {
+	int n, i = 0, ret = 0;
+	cin >> n;
+	while (n) {
+		if (n % 10 % 2)ret += 1 * pow(10, i);
+		else ret += 0 * pow(10, i);
+		n /= 10;
+		i++;
+	}
+	cout << ret;
+}
+```
+
+```c++ [解法2.cpp]
+#include<iostream>
+#include<string>
+using namespace std;
+
+int main() {
+	string s;
+	cin >> s;
+	for (int i = 0; i < s.size(); i++) {
+		if (s[i] % 2)s[i] = '1';
+		else s[i] = '0';
+	}
+	cout << stoi(s);
+}
+```
+
+:::
+
+### 优化 cin 和 cout
+
+C++ 中为了支持混合使用`cin` `cout`和`scanf()` `printf()`，C++ 标准库默认会将`cin`、`cout`等 C++ 流对象与`stdin`、`stout`等 C 标准库的流对象同步在一起。这种同步操作意味着每次使用`cin`或`cout`时，都会自动刷新 C 标准库的缓冲区，以确保 C++ 和 C 的 I/O 操作是一致的。这就导致了性能的下降。
+
+在默认情况下，`cin`和`cout`之间存在一种绑定关系。这种绑定意味着，每当从`cin`读取数据时，任何之前通过`cout`输出的内容都会被强制刷新到屏幕上。这种绑定也可能导致性能问题，特别是在需要频繁读取大量数据的情况下。
+
+如果想要对`cin`进行优化，就需要加入以下代码：
+
+```c++
+ios::sync_with_stdio(false); // 取消给 C 语言输入输出缓冲区的同步
+cin.tie(nullptr);// 取消了 cin 和 cout 的绑定
 ```
