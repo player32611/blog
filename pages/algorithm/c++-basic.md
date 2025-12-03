@@ -1239,6 +1239,200 @@ int main() {
 }
 ```
 
+## 结构体
+
+### 结构体类型声明和变量定义
+
+结构体类型声明的关键字是`struct`。结构体类型声明的基本语法如下：
+
+```c++
+struct struct_name {
+    结构体成员变量列表; // 成员变量可以有 1 个，也可以有多个
+    结构体成员函数; // 成员函数可以有，也可以没有
+} 结构体变量列表; // 在声明结构体类型的同时，创建结构体变量，可以有多个，中间使用逗号隔开
+```
+
+### 结构体变量的特点
+
+结构体变量的初始化和数组类似，使用`{}`，将初始化的内容按照顺序放在`{}`中就可以。
+
+```c++
+struct Stu {
+    string name;
+    int age;
+}
+
+int main() {
+    Stu s1 = {"张三", 18};
+    struct Stu s2 = {"李四", 21};
+}
+```
+
+结构体变量中虽然包含多个成员，而且成员可能是不同类型的。但是一个结构体变量可以看做一个整体，是可以直接进行赋值操作的。
+
+```c++
+struct s2 = s1;
+```
+
+### 结构体的成员函数
+
+C++中的结构体除了有成员变量之外，还可以包含成员函数。
+
+C++的结构体会有一些默认的成员函数，比如：构造函数、析构函数等，是编译器默认生成的，如果觉得不合适，也是可以自己显式定义这些函数。这些函数都是自动调用，不需要手动调用。
+
+除了默认的成员函数之外，我们可以自己定义一些成员函数，可以有，也可以没有，完全根据实际的需要来添加就可以。这些成员函数可以**直接访问成员变量**。
+
+```c++
+struct Stu {
+    string name;
+    int age;
+    void print() {
+        cout << name << " " << age << endl;
+    }
+};
+```
+
+### 结构体的运算符重载
+
+弱国想要针对自定义结构体使用`cout`和`<<`来输出变量的内容，就得对`<<`这个输出运算符进行重载。具体代码如下：
+
+```c++
+ostream& operator<<(ostream& os, const Stu& s) {
+    os << s.name << " " << s.age << endl;
+    return os;
+}
+```
+
+### sort()
+
+C++的 STL 中的库函数`sort()`，可以直接用来排序数据，在算法竞赛和日常开发中使用非常频繁。只要涉及到数据的排序，又没有明确要求自己实现排序算法的时候，就可以直接使用`sort()`函数。`sort()`函数需要包含的头文件是`<algorithm>`。函数原型如下：
+
+```c++
+// 版本1：
+template <class RandomAccessIterator>
+void sort(RandomAccessIterator first, RandomAccessIterator last);
+// void sort(开始位置, 结束位置);
+// first: 指向要排序范围的第一个元素的迭代器或者指针。
+// last: 指向要排序范围的最后一个元素之后位置的迭代器或者指针。
+
+// 版本2：
+template <class RandomAccessIterator, class Compare>
+void sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp);
+// void sort(开始位置, 结束位置, 自定义排序函数);
+// first: 指向要排序范围的第一个元素的迭代器或者指针。
+// last: 指向要排序范围的最后一个元素之后位置的迭代器或者指针。
+// comp: 是一个比较函数或者函数对象。可以是函数，也可以是仿函数。
+```
+
+**对数组进行排序：**
+
+```c++
+#include<iostream>
+#include<algorithm>
+using namespace std;
+
+int main() {
+	int arr[] = { 4,5,6,9,7,1,2,8,5,4,2 };
+	int sz = sizeof(arr) / sizeof(arr[0]);
+	sort(arr, arr + sz);
+	for (auto i : arr)cout << i << " ";
+}
+```
+
+**对字符串中的字符进行排序：**
+
+```c++
+#include<iostream>
+#include<algorithm>
+#include<string>
+using namespace std;
+
+int main() {
+	string s = "defxxxabccba";
+	sort(s.begin(), s.end());
+	cout << s;
+}
+```
+
+::: tip 提示
+
+默认排序的结果是升序。
+
+:::
+
+如果想要按照降序排序，或是对结构体类型数据进行排序，就使用版本 2。
+
+```c++
+void sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp);
+```
+
+- **compare** : 是一个可选的自定义比较函数（或函数对象），用于指定排序的规则。如果不提供这个参数，`std::sort`默认会使用小于运算符`<`来比较元素，并按照升序排序。这个比较函数，接受两个参数，并返回一个布尔值。如果第一个参数应该排在第二个参数之前，则返回`true`；否则返回`false`。
+
+**创建比较函数进行比较：**
+
+```c++
+#include<iostream>
+#include<algorithm>
+using namespace std;
+
+bool compare(int x, int y) {
+	return x > y; // 降序
+}
+
+int main() {
+	int arr[] = { 4,5,6,9,7,1,2,8,5,4,2 };
+	int sz = sizeof(arr) / sizeof(arr[0]);
+	sort(arr, arr + sz, compare);
+	for (auto i : arr)cout << i << " ";
+}
+```
+
+**创建仿函数进行比较：**
+
+```c++
+#include<iostream>
+#include<algorithm>
+using namespace std;
+
+struct Cmp {
+	bool operator()(int x, int y) {
+		return x > y; // 降序
+	}
+}cmp;
+
+int main() {
+	int arr[] = { 4,5,6,9,7,1,2,8,5,4,2 };
+	int sz = sizeof(arr) / sizeof(arr[0]);
+	sort(arr, arr + sz, cmp);
+	for (auto i : arr)cout << i << " ";
+}
+```
+
+**排序结构体数据：**
+
+```c++
+#include<iostream>
+#include<algorithm>
+#include<string>
+using namespace std;
+
+struct S {
+	string name;
+	int age;
+};
+
+bool cmp_s_by_name(S s1,S s2) {
+	return s1.name < s2.name;
+}
+
+int main() {
+	S arr[] = { {"zhangsan",20},{"lisi",25},{"wangwu",18} };
+	int sz = sizeof(arr) / sizeof(arr[0]);
+	sort(arr, arr + sz, cmp_s_by_name);
+	for (S i : arr)cout << i.name << ":" << i.age << endl;
+}
+```
+
 ## 特殊技巧
 
 ### 含空格字符串的特殊处理方式
