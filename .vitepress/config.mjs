@@ -46,7 +46,9 @@ export default defineConfig({
       {
         text: '算法',
         items: [
-          { text: 'C++基础',link:'/pages/algorithm/c++-basic'}
+          { text: 'C++基础', link:'/pages/algorithm/c++-basic'},
+          { text: 'STL' , link:'/pages/algorithm/stl'},
+          { text: '数据结构', link:'/pages/algorithm/data-structure'},
         ]
       }
     ],

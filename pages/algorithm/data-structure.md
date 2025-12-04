@@ -1,0 +1,17 @@
+<script setup>
+    import SakanaWidget from "/components/SakanaWidget.vue"
+</script>
+
+# 数据结构
+
+::: danger 警告
+该页面尚未完工!
+:::
+
+## 顺序表和 vector
+
+### 线性表与顺序表的概念
+
+线性表是 n 个具有相同特性的数据元素的有序序列。线性表的顺序存储就是顺序表。
+
+<SakanaWidget />
