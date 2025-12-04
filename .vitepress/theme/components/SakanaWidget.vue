@@ -9,9 +9,6 @@
     import KoishiImage1 from '/images/Components/Koishi-1.gif';
     const Koishi1 = SakanaWidget.getCharacter('takina');
     Koishi1.image = KoishiImage1;
-    Koishi1.initialState = {
-        ...Koishi1.initialState,
-    }
     SakanaWidget.registerCharacter('Koishi1', Koishi1);
     
     export default {
@@ -19,7 +16,7 @@
         mounted(){
             new SakanaWidget({ 
                 size: 200,
-                character: 'Koishi1',
+                character: 'Koishi1'
             }).mount('#sakana-widget');
         }
     }
