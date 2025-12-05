@@ -195,3 +195,23 @@ void clear() {
 :::
 
 ### 封装静态顺序表
+
+利用 C++中的结构体和类把我们实现的顺序表封装起来，就能简化操作，使代码的复用率大大提升。
+
+```c++
+class SQList {
+	int a[N];
+	int n;
+public:
+	// 尾插
+	void push_back(int x) {
+		a[++n] = x;
+	}
+	// 打印
+	void print() {
+		for (int i = 1; i <= n; i++)cout << a[i] << " ";
+		cout << endl;
+	}
+	// ...
+}
+```
