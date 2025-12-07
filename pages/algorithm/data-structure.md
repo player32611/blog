@@ -281,21 +281,6 @@ void push_front(int x) {
 时间复杂度：O(n)
 
 ```c++
-#include<iostream>
-using namespace std;
-
-const int N = 1e5 + 10;
-
-int e[N], ne[N], h, id;
-
-// 头插
-void push_front(int x) {
-	id++;
-	e[id] = x;
-	ne[id] = ne[h];
-	ne[h] = id;
-}
-
 // 遍历链表
 void print() {
 	// 定义一个指针从头结点开始
@@ -303,14 +288,6 @@ void print() {
 	// 知道遇到空指针
 	for (int i = ne[h]; i; i = ne[i])cout << e[i] << " ";
 	cout << endl;
-}
-
-
-int main() {
-	for (int i = 1; i <= 5; i++) {
-		push_front(i);
-		print();
-	}
 }
 ```
 
@@ -330,7 +307,7 @@ int find(int x) {
 }
 ```
 
-```c++ [解法2]
+```c++ [解法2]{2,7,12-14}
 // 用哈希表优化
 int mp[N]; // mp[i] 表示 i 这个元素存放的位置
 
@@ -383,3 +360,138 @@ void erase(int p) {
 ```
 
 ### 双向链表的静态实现
+
+要求：**三个足够大的数组**
+
+- 第一个数组 `elem` 存储数据；
+
+- 第二个数组 `prev` 存储前一个元素的存储下标；
+
+- 第三个数组 `next` 存储下一个元素的存储下标。
+
+```c++
+const int N = 1e5 + 10;
+
+int e[N], ne[N], pre[N], id, h;
+```
+
+**头插**
+
+时间复杂度：O(1)
+
+```c++
+// 头插
+void push_front(int x) {
+	id++;
+	e[id] = x;
+	pre[id] = h;
+	ne[id] = ne[h];
+	pre[ne[h]] = id;
+	ne[h] = id;
+}
+```
+
+**遍历链表**
+
+直接无视 `prev` 数组，与单链表的遍历方式一致。
+
+```c++
+// 遍历链表
+void print() {
+	for (int i = ne[h]; i; i = ne[i])cout << e[i] << " ";
+	cout << endl;
+}
+```
+
+**按值查找**
+
+时间复杂度：O(1)
+
+```c++{1,7,15-17}
+int mp[N]; // mp[i] 表示 i 这个值存储的位置
+
+// 头插
+void push_front(int x) {
+	id++;
+	e[id] = x;
+	mp[x] = id;
+	pre[id] = h;
+	ne[id] = ne[h];
+	pre[ne[h]] = id;
+	ne[h] = id;
+}
+
+// 按值查找
+int find(int x) {
+	return mp[x];
+}
+```
+
+**在任意（存储）位置之后插入元素**
+
+1: id++，标记新结点存储的位置；把新的元素存储下来；
+
+2: 修改新结点的前驱指针，让其指向 p 位置；
+
+3: 修改新结点的后继指针，让其指向 p 位置的下一个位置；
+
+4: 修改 p 下一个位置的前驱指针，让其指向新的结点；
+
+5: 修改 p 的后继指针，让其指向新的结点。
+
+时间复杂度：O(1)
+
+```c++
+// 在任意位置之后插入元素
+void insert(int p,int x) {
+	id++;
+	e[id] = x;
+	mp[x] = id;
+	pre[id] = p;
+	ne[id] = ne[p];
+	pre[ne[p]] = id;
+	ne[p] = id;
+}
+```
+
+**在任意（存储）位置之前插入元素**
+
+1: id++，标记新结点存储的位置；
+
+2: 修改新结点的前驱指针，让其指向 p 的前一个位置；
+
+3: 修改新结点后继指针，让其指向 p 位置；
+
+4: 修改 p 前一个位置的后继指针，让其指向新的结点；
+
+5: 修改 p 的前驱指针，让其指向新的结点。
+
+```c++
+// 在任意位置之前插入元素
+void insert_front(int p, int x) {
+	id++;
+	e[id] = x;
+	mp[x] = id;
+	pre[id] = pre[p];
+	ne[id] = p;
+	ne[pre[p]] = id;
+	pre[p] = id;
+}
+```
+
+**删除任意（存储）位置的元素**
+
+- 让 p 的前驱结点的后继指针指向 p 的后继结点；
+
+- 让 p 的后继结点的前驱指针指向 p 的前驱结点。
+
+时间复杂度：O(1)
+
+```c++
+// 删除任意位置的元素
+void erase(int p) {
+	mp[e[p]] = 0; // 把标记清空
+	ne[pre[p]] = ne[p];
+	pre[ne[p]] = pre[p];
+}
+```
