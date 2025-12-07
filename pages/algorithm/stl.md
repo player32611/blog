@@ -200,3 +200,50 @@ int main() {
 	print(a);
 }
 ```
+
+## 双向链表-list
+
+## 栈-stack
+
+### 创建 stack
+
+```c++
+#include<stack>
+
+int main() {
+	std::stack<int> a;
+}
+```
+
+`T`可以是任意类型的数据。
+
+### size()/empty()
+
+- `size()`: 返回栈里实际元素的个数；
+
+- `empty()`: 栈是否为空。如果为空：返回 true，否则返回 false。
+
+### push()/pop()
+
+- `push()`: 往栈里添加一个元素；
+
+- `pop()`: 删除栈顶的一个元素。
+
+### top()
+
+- `top()`: 返回栈顶元素，但是不会删除栈顶元素。
+
+```c++
+#include<iostream>
+#include<stack>
+using namespace std;
+
+int main() {
+	stack<int> st;
+	for (int i = 1; i <= 10; i++)st.push(i);
+	while (st.size()) {
+		cout << st.top() << endl;
+		st.pop();
+	}
+}
+```
