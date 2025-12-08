@@ -798,7 +798,8 @@ int n;
 void add(int a, int b) {
 	id++;
 	e[id] = b;
-
+	ne[id] = h[a];
+	h[a] = id;
 }
 
 int main() {
@@ -812,4 +813,196 @@ int main() {
 }
 ```
 
-### 树的遍历
+### 树的遍历-深度优先遍历(DFS)
+
+深度优先遍历，英文缩写为 DFS，全称是 Depth First Search，是一种用于遍历或搜索树或图的算法。所谓深度优先，就是说每次都尝试向更深的结点走，也就是一条路走到黑。当一条路走完，走到不能再走的时候，那就回去，继续找别的路。
+
+![DFS](/images/algorithm/data-structure/DFS.png)
+
+::: code-group
+
+```c++ [用 vector 数组]
+#include<iostream>
+#include<vector>
+using namespace std;
+
+const int N = 1e5 + 10;
+
+int n;
+vector<int> edges[N]; // 存储树
+bool st[N]; // 标记哪些点已经访问过了
+
+void dfs(int u) {
+	cout << u << " ";
+	st[u] = true; // 当前这个点已经访问过了
+
+	// 访问所有的孩子
+	for(auto v : edges[u]){
+		if(!st[v]) dfs(v);
+	}
+}
+
+int main() {
+	// 建树
+	cin >> n;
+	for (int i = 1; i < n; i++) {
+		int a, b;
+		cin >> a >> b; // a 和 b 之间有一条边
+		edges[a].push_back(b);
+		edges[b].push_back(a);
+	}
+
+	// 深度优先遍历
+	dfs(1);
+}
+```
+
+```c++ [用链式前向星]
+#include<iostream>
+using namespace std;
+
+const int N = 1e5 + 10;
+
+// 链式前向星
+int h[N], e[N * 2], ne[N * 2], id;
+int n;
+
+bool st[N]; // 标记哪些点已经访问过了
+
+// 把 b 头插到 a 所在的链表后面
+void add(int a, int b) {
+	id++;
+	e[id] = b;
+	ne[id] = h[a];
+	h[a] = id;
+}
+
+void dfs(int u) {
+	cout << u << " ";
+	st[u] = true;
+
+	for (int i = h[u]; i; i = ne[i]) {
+		int v = e[i];
+		if (!st[v]) dfs(v);
+	}
+}
+
+int main() {
+	cin >> n;
+	for (int i = 1; i < n; i++) {
+		int a, b;
+		cin >> a >> b;
+		add(a, b);
+		add(b, a);
+	}
+
+	// 深度优先遍历
+	dfs(1);
+}
+```
+
+:::
+
+### 树的遍历-宽度优先遍历(BFS)
+
+宽度优先遍历，又名广度优先遍历或层序遍历，英文缩写为 BFS，全称是 Breadth First Search，也是一种用于遍历树或图的算法。就是每次都尝试访问同一层的结点。如果同一层都访问完了，再访问下一层。
+
+1：创建一个队列，辅助 BFS；
+
+2：根结点入队；
+
+3：若队列不为空，队头结点出队并访问该结点，然后将该点的孩子依次入队；
+
+4：重复 3 过程，直到队列为空。
+
+::: code-group
+
+```c++ [用 vector 数组]
+#include<iostream>
+#include<queue>
+#include<vector>
+using namespace std;
+
+const int N = 1e5 + 10;
+
+int n;
+vector<int> edges[N]; // 存树
+bool st[N];
+
+void bfs() {
+	queue<int> q;
+	q.push(1);
+	st[1] = true;
+	while (q.size()) {
+		int u = q.front();
+		q.pop();
+		cout << u << " ";
+		for (auto v : edges[u]) {
+			if (!st[v])q.push(v);
+			st[v] = true;
+		}
+	}
+}
+
+int main() {
+	// 建树
+	cin >> n;
+	for (int i = 1; i < n; i++) {
+		int a, b;
+		cin >> a >> b;
+		edges[a].push_back(b);
+		edges[b].push_back(a);
+	}
+	bfs();
+}
+```
+
+```c++ [用链式前向星]
+#include<iostream>
+#include<queue>
+using namespace std;
+
+const int N = 1e5 + 10;
+
+int n;
+int h[N], e[N * 2], ne[N * 2], id;
+bool st[N];
+
+void add(int a, int b) {
+	id++;
+	e[id] = b;
+	ne[id] = h[a];
+	h[a] = id;
+}
+
+void bfs() {
+	queue<int> q;
+	q.push(1);
+	st[1] = true;
+	while (q.size()) {
+		int u = q.front();
+		q.pop();
+		cout << u << " ";
+		for (int i = h[u]; i; i = ne[i]) {
+			int v = e[i];
+			if (!st[v]) {
+				q.push(v);
+				st[v] = true;
+			}
+		}
+	}
+}
+
+int main() {
+	cin >> n;
+	for (int i = 1; i < n; i++) {
+		int a, b;
+		cin >> a >> b;
+		add(a, b);
+		add(b, a);
+	}
+	bfs();
+}
+```
+
+:::
