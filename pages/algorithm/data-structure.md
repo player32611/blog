@@ -1042,3 +1042,97 @@ int main() {
 	for (int i = 1; i <= n; i++)cout << a[i] << " ";
 }
 ```
+
+### 选择排序
+
+**选择排序(Selection Sort)** 是一种特别直观的排序算法
+
+<font color="blue">算法思想：</font>每次找出未排序序列中最小的元素，然后放进有序序列的后面。
+
+```c++
+#include<iostream>
+#include<utility>
+using namespace std;
+
+const int N = 1e5 + 10;
+
+int n;
+int a[N];
+
+void selection_sort() {
+	for (int i = 1; i < n; i++) { // 带排序区间的首位置
+		// [i, n] 区间就是待排序的区间
+		int pos = i;
+		for (int j = i + 1; j <= n; j++) { // 查找待排序区间最小的元素的下标
+			if (a[j] < a[pos])pos = j;
+		}
+		swap(a[i], a[pos]);
+	}
+}
+
+int main() {
+	cin >> n;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	selection_sort();
+	for (int i = 1; i <= n; i++)cout << a[i] << " ";
+}
+```
+
+### 冒泡排序
+
+**冒泡排序(Bubble Sort)** 也是一种简单的排序算法。
+
+<font color="blue">算法思想：</font>执行 n-1 趟操作，每趟从前往后比较待排序区间的相邻元素，如果逆序，就交换。每趟结束之后，就会有一个较大元素在最终的位置上。
+
+```c++
+#include<iostream>
+#include<utility>
+using namespace std;
+
+const int N = 1e5 + 10;
+
+int n;
+int a[N];
+
+void bubble_sort() {
+	for (int i = n; i > 1; i--) { // 依次枚举待排序区间的最后一个元素
+		// [1, i] 就是待排序区间
+		for (int j = 1; j < i; j++) {
+			if (a[j] > a[j + 1])swap(a[j], a[j + 1]);
+		}
+	}
+}
+
+
+int main() {
+	cin >> n;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	bubble_sort();
+	for (int i = 1; i <= n; i++)cout << a[i] << " ";
+}
+```
+
+::: details 冒泡排序优化
+
+当某一趟冒泡操作中，没有执行元素的交换操作时，整个序列就是有序的了，没有必要再继续执行冒泡排序算法了。
+
+```c++
+// 优化后的冒泡排序
+void bubble_sort() {
+	for (int i = n; i > 1; i--) { // 依次枚举待排序区间的最后一个元素
+		bool flag = false;
+		// [1, i] 就是待排序区间
+		for (int j = 1; j < i; j++) {
+			if (a[j] > a[j + 1]){
+				swap(a[j], a[j + 1]);
+				flag = true;
+			}
+		}
+	}
+	if (!flag)return;
+}
+```
+
+:::
+
+### 堆排序
