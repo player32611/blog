@@ -1006,3 +1006,39 @@ int main() {
 ```
 
 :::
+
+## 排序
+
+### 插入排序
+
+**插入排序(Insertion Sort)** 类似于玩扑克牌插牌过程，每次将一个待排序的元素按照其关键字大小插入到前面已经有序的序列中，按照这种方式将所有元素全部插入完成即可。
+
+```c++
+#include<iostream>
+using namespace std;
+
+const int N = 1e5 + 10;
+
+int n;
+int a[N];
+
+void insert_sort() {
+	for (int i = 2; i <= n; i++) { // 第一个位置默认就是有序的
+		int key = a[i];
+		// 前面比 key 大的，统一右移
+		int j = i - 1;
+		while (j >= 1 && a[j] > key) {
+			a[j + 1] = a[j];
+			j--;
+		}
+		a[j + 1] = key;
+	}
+}
+
+int main() {
+	cin >> n;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	insert_sort();
+	for (int i = 1; i <= n; i++)cout << a[i] << " ";
+}
+```
