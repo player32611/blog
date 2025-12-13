@@ -1136,3 +1136,140 @@ void bubble_sort() {
 :::
 
 ### 堆排序
+
+堆排序(Heap Sort)是指利用堆这种数据结构所设计的一种排序算法。本质上是优化了选择排序算法，如果将数据放在堆中，能够快速找到待排序元素中的最小值或最大值。
+
+堆排序的过程分两步：
+
+**1. 建堆。** (升序建大根堆，降序建小根堆)是将待排序数组的基础上，使其变成一个堆。从倒数第一个非叶子结点开始，执行向下调整算法，直到根结点。
+
+**2. 排序。** 每次将堆顶元素与堆中最后一个元素交换，堆的大小减一，然后将堆顶元素向下调整。重复上述过程，直到堆中剩下一个元素。
+
+**向下调整算法**: 对于一棵树，选取其根结点与其最大(最小)的子结点进行比较，若根结点小于(大于)子结点，则交换两者，并继续向下比较，直到根结点大于等于(小于等于)其子结点为止。
+
+建堆时间复杂度：O(n)
+
+排序时间复杂度：O(nlogn)
+
+```c++
+#include<iostream>
+#include<utility>
+using namespace std;
+
+const int N = 1e5 + 10;
+
+int n;
+int a[N];
+
+// 向下调整算法
+void down(int parent,int len) {
+	int child = parent * 2;
+	while (child<=len) {
+		if (child + 1 <= len && a[child + 1] > a[child])child++;
+		if (a[parent] >= a[child])return;
+		swap(a[parent], a[child]);
+		parent = child;
+		child = parent * 2;
+	}
+}
+
+// 堆排序
+void heap_sort() {
+	// 1.建堆
+	for (int i = n / 2; i >= 1; i--)down(i, n);
+	// 2.排序
+	for (int i = n; i > 1; i--) { // 枚举堆里面最后一个元素的位置
+		swap(a[1], a[i]);
+		down(1, i - 1);
+	}
+}
+
+int main() {
+	cin >> n;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	heap_sort();
+	for (int i = 1; i <= n; i++)cout << a[i] << " ";
+}
+```
+
+### 快速排序
+
+快速排序(Quick Sort)在很多情况下，是效率较高的算法。
+
+<font color="blue">朴素快排的核心原理：</font>
+
+1. 从待排序区间中选择一个基准元素，按照基准元素的大小将区间分成左右两部分；
+
+2. 然后递归地处理左区间和右区间，直到区间长度为 1。
+
+<font color="blue">时间复杂度：</font>
+
+- 如果每次基准元素都选择得当，数组划分的比价均匀，时间复杂度 = 递归层数 \* N = O(nlogn)
+
+- 如果划分不当，数组分布比较极端，时间复杂度退化成 O(n^2)
+
+::: warning 朴素快排的缺陷
+
+- 基准元素选择不当，递归层数会增加，时间复杂度变高；
+
+解决方案：在待排序区间中，随机选择一个基准元素。利用 C++提供的随机函数，在一个区间内随机选择一个元素作为基准。
+
+```c++
+srand(time(0)) // 种下一个随机数种子
+rand() // 获得一个随机数
+rand() % (right - left + 1) + left // 在 [left, right] 区间内，随机选择一个数
+```
+
+:::
+
+::: warning 朴素快排的缺陷
+
+- 当有大量重复元素时，递归层数也会增加。
+
+解决方案：在划分区间时，如果划分的区间长度小于某个阈值，则将区间直接排序。
+
+:::
+
+```c++
+#include<iostream>
+#include<ctime>
+#include<cstdlib>
+#include<utility>
+using namespace std;
+
+const int N = 1e5 + 10;
+
+int n;
+int a[N];
+
+// 优化一：随机选择基准元素
+int get_random(int left, int right) {
+	return a[rand() % (right - left + 1) + left];
+}
+
+void quick_sort(int left, int right) {
+	if (left >= right)return;
+	// 1.选择一个基准元素
+	int p = get_random(left, right);
+	// 2. 数组分三块
+	int l = left - 1, i = left, r = right + 1;
+	while (i < r) {
+		if (a[i] < p)swap(a[++l], a[i++]);
+		else if (a[i] == p)i++;
+		else swap(a[--r], a[i]);
+	}
+	// [left, l] [l + 1, r - 1] [r, right]
+	quick_sort(left, l);
+	quick_sort(r, right);
+}
+
+int main() {
+	srand(time(0));
+	cin >> n;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	quick_sort(1,n);
+	for (int i = 1; i <= n; i++)cout << a[i] << " ";
+}
+```
+
+### 归并排序

@@ -1020,6 +1020,46 @@ int main() {
 }
 ```
 
+## 随机数
+
+### srand()
+
+`srand()`函数，用于设置随机数种子。这个函数的参数是一个整数，这个整数作为随机数种子，用于生成随机数。包含在`<cstdlib>`头文件中。
+
+```c++
+#include<ctime>
+#include<cstdlib>
+
+int main() {
+    srand(time(0)); // 种下一个随机数种子
+}
+```
+
+### rand()
+
+`rand()`函数，用于生成一个随机数。这个函数返回一个整数，这个整数是随机数，通常与`srand()`搭配使用。包含在`<cstdlib>`头文件中。
+
+```c++
+#include<iostream>
+#include<ctime>
+#include<cstdlib>
+using namespace std;
+
+int main() {
+	srand(time(0));
+	int r1 = rand();
+	int r2 = rand();
+	cout << r1 << endl;
+	cout << r2 << endl;
+}
+```
+
+也可以指定生成随机数的区间：
+
+```c++
+rand() % (right - left + 1) + left // 在 [left, right] 区间内，随机选择一个数
+```
+
 ## 特殊技巧
 
 ### 含空格字符串的特殊处理方式
