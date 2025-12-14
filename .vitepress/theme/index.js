@@ -15,5 +15,5 @@ export default {
   },
   enhanceApp({ app, router, siteData }) {
     app.component('SakanaWidget', SakanaWidget)
-  }
+  },
 }

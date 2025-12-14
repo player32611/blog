@@ -1,3 +1,4 @@
+import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vitepress'
 
 // https://vitepress.dev/reference/site-config
@@ -49,6 +50,7 @@ export default defineConfig({
           { text: 'C++基础', link:'/pages/algorithm/c++-basic'},
           { text: 'STL' , link:'/pages/algorithm/stl'},
           { text: '数据结构', link:'/pages/algorithm/data-structure'},
+          { text: '算法基础', link:'/pages/algorithm/algorithm-basic'}
         ]
       }
     ],
@@ -63,7 +65,6 @@ export default defineConfig({
       },
       { icon: 'gamejolt', link: 'https://gamejolt.com/@player32611' },
     ],
-
     search: {
       provider: "local",
       options: {
@@ -91,4 +92,16 @@ export default defineConfig({
       }
     }
   },
+  vite: {
+    resolve: {
+      alias: [
+        {
+          find: /^.*\/VPSwitchAppearance\.vue$/,
+          replacement: fileURLToPath(
+            new URL('./theme/components/ThemeSwitch.vue', import.meta.url)
+          )
+        }
+      ]
+    }
+  }
 })
