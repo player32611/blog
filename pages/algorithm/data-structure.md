@@ -1273,3 +1273,52 @@ int main() {
 ```
 
 ### 归并排序
+
+归并排序(Merge Sort)是无论数据有什么特性，时间复杂度就能稳定 N \* logN 的排序算法。
+
+<font color="blue">主要过程：</font>
+
+1. 只要能分，就将整个区间从中间一分为二，先将左区间和右区间排序；
+
+2. 然后将左右两个已经排好序的区间合并在一起。
+
+其中，如何让左右两边有序，就继续交给归并排序。
+
+- 因此归并排序是用递归来实现的；
+
+```c++
+#include<iostream>
+using namespace std;
+
+const int N = 1e5 + 10;
+
+int n;
+int a[N];
+int tmp[N]; // 辅助归并排序时，合并两个有序数组
+
+void merge_sort(int left,int right) {
+	if (left >= right)return;
+	// 1.先一分为二
+	int mid = (left + right) >> 1;
+	// [left, mid] [mid + 1, right]
+	// 2.先让左右区间有序
+	merge_sort(left, mid);
+	merge_sort(mid + 1, right);
+	// 3.合并两个有序数组
+	int cur1 = left, cur2 = mid + 1, i = left;
+	while (cur1 <= mid && cur2 <= right) {
+		if (a[cur1] <= a[cur2])tmp[i++] = a[cur1++];
+		else tmp[i++] = a[cur2++];
+	}
+	while (cur1 <= mid)tmp[i++] = a[cur1++];
+	while (cur2 <= right)tmp[i++] = a[cur2++];
+	for (int j = left; j <= right; j++)a[j] = tmp[j];
+}
+
+int main() {
+	cin >> n;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	merge_sort(1, n);
+	for (int i = 1; i <= n; i++)cout << a[i] << " ";
+}
+```
