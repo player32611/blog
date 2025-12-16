@@ -123,3 +123,66 @@ int main() {
 	for (int i = lc - 1; i >= 0; i--)cout << c[i];
 }
 ```
+
+### 高精度减法
+
+例题：[P2142 高精度减法](https://www.luogu.com.cn/problem/P2142)
+
+<font color="blue">解法：模拟小学列竖式计算的过程</font>
+
+1. 先比较大小，然后用较大的数减去较小的数（用字符串比较之前，先比较一下长度）
+
+2. 先用字符串读入，拆分每一位，逆序放在数组中
+
+3. 利用数组，模拟小学列竖式计算减法过程
+
+```c++
+#include<iostream>
+#include<string>
+#include<algorithm>
+using namespace std;
+
+const int N = 1e6 + 10;
+
+int a[N], b[N], c[N];
+int la, lb, lc;
+
+bool cmp(string& x, string& y) {
+	// 先比较长度
+	if (x.size() != y.size())return x.size() < y.size();
+	// 再按照字典序的方式1比较
+	return x < y;
+}
+
+void sub(int c[],int a[],int b[]) {
+	for (int i = 0; i < lc; i++) {
+		c[i] += a[i] - b[i]; // 对应位相减，然后处理借位
+		if (c[i] < 0) {
+			c[i + 1] -= 1; // 借位
+			c[i] += 10;
+		}
+	}
+	// 处理前导零
+	while (lc > 1 && c[lc - 1] == 0)lc--;
+}
+
+int main() {
+	string x, y;
+	cin >> x >> y;
+	// 1.比较大小
+	if (cmp(x, y)) {
+		swap(x, y);
+		cout << '-';
+	}
+	// 2.拆分每一位，逆序放在数组中
+	la = x.size();
+	lb = y.size();
+	lc = max(la, lb);
+	for (int i = 0; i < la; i++)a[la - 1 - i] = x[i] - '0';
+	for (int i = 0; i < lb; i++)b[lb - 1 - i] = y[i] - '0';
+	// 3.模拟减法的过程
+	sub(c, a, b); // c = a + b
+	// 输出结果
+	for (int i = lc - 1; i >= 0; i--)cout << c[i];
+}
+```
