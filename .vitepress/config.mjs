@@ -101,6 +101,12 @@ export default defineConfig({
           replacement: fileURLToPath(
             new URL('./theme/components/ThemeSwitch.vue', import.meta.url)
           )
+        },
+        {
+          find: /^.*\/VPButton\.vue$/,
+          replacement: fileURLToPath(
+            new URL('./theme/components/Button.vue', import.meta.url)
+          )
         }
       ]
     }

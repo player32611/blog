@@ -186,3 +186,7 @@ int main() {
 	for (int i = lc - 1; i >= 0; i--)cout << c[i];
 }
 ```
+
+### 高精度乘法
+
+例题：[P1303 A\*B Problem](https://www.luogu.com.cn/problem/P1303)
