@@ -241,3 +241,52 @@ int main() {
 ```
 
 ### 高精度除法
+
+例题：[P1480 A/B Problem](https://www.luogu.com.cn/problem/P1480)
+
+<font color="blue">解法：模拟列竖式计算除法过程</font>
+
+1. 先用字符串读入，拆分每一位，逆序放在数组中
+
+2. 利用数组，模拟列竖式除法过程
+
+```c++
+#include<iostream>
+#include<string>
+using namespace std;
+
+typedef long long ll;
+
+const int N = 1e6 + 10;
+
+int a[N], b, c[N];
+int la, lc;
+
+// 高精度除法的模板 c = a / b （高精度 / 低精度）
+void div(int c[],int a[],int b) {
+	ll t = 0; // 标记每次除完之后的余数
+	for (int i = la - 1; i >= 0; i--) {
+		// 计算当前的被除数
+		t = t * 10 + a[i];
+		c[i] = t / b;
+		t %= b;
+	}
+	// 处理前导零
+	while (lc > 1 && c[lc - 1] == 0)lc--;
+}
+
+int main() {
+	string x;
+	cin >> x >> b;
+	// 1.拆分每一位，逆序放在数组中
+	la = x.size();
+	lc = la;
+	for (int i = 0; i < la; i++)a[la - 1 - i] = x[i] - '0';
+	// 2.模拟除法的过程
+	div(c, a, b); // c = a + b
+	// 输出结果
+	for (int i = lc - 1; i >= 0; i--)cout << c[i];
+}
+```
+
+## 枚举
