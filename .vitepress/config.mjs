@@ -97,15 +97,27 @@ export default defineConfig({
     resolve: {
       alias: [
         {
+          find: /^.*\/VPButton\.vue$/,
+          replacement: fileURLToPath(
+            new URL('./theme/components/Button.vue', import.meta.url)
+          )
+        },
+        {
           find: /^.*\/VPSwitchAppearance\.vue$/,
           replacement: fileURLToPath(
             new URL('./theme/components/ThemeSwitch.vue', import.meta.url)
           )
         },
         {
-          find: /^.*\/VPButton\.vue$/,
+          find: /^.*\/VPFeature\.vue$/,
           replacement: fileURLToPath(
-            new URL('./theme/components/Button.vue', import.meta.url)
+            new URL('./theme/components/Card.vue', import.meta.url)
+          )
+        },
+        {
+          find: /^.*\/VPLink\.vue$/,
+          replacement: fileURLToPath(
+            new URL('./theme/components/VPLink.vue', import.meta.url)
           )
         }
       ]
