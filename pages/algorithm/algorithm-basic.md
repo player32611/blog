@@ -454,6 +454,48 @@ int main() {
 }
 ```
 
+## 前缀和
+
+前缀和与差分的核心思想是**预处理**，可以在暴力枚举的过程中，快速给出查询的结果，从而优化时间复杂度。是经典的**用空间替换时间**的做法。
+
+例题：[【模板】前缀和](https://ac.nowcoder.com/acm/problem/226282)
+
+<font color="blue">解法：先预处理出来一个前缀和数组 f ，f[i]表示区间[1, i]中，所有元素的和</font>
+
+```c++
+#include<iostream>
+using namespace std;
+
+typedef long long ll;
+
+const int N = 1e5 + 10;
+
+int n, q;
+ll a[N];
+ll f[N]; // 前缀和数组
+
+int main() {
+	cin >> n >> q;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	// 处理前缀和数组
+	for (int i = 1; i <= n; i++) {
+		f[i] = f[i - 1] + a[i];
+	}
+	// 处理 q 次询问
+	while (q--) {
+		int l, r;
+		cin >> l >> r;
+		cout << f[r] - f[l - 1] << endl;
+	}
+}
+```
+
+::: warning 注意
+
+使用前缀和数组时，下标必须从 1 开始计数
+
+:::
+
 ## 其他
 
 ### ACM 模式与核心代码模式
