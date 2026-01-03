@@ -13,6 +13,9 @@ hero:
     - theme: alt
       text: 前端
       link: /pages/front-end/html
+    - theme: alt
+      text: GMS2
+      link: /pages/gms2/common-functions
 
 features:
   - title: 语法查询

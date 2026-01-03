@@ -53,6 +53,12 @@ export default defineConfig({
           { text: '数据结构', link:'/pages/algorithm/data-structure'},
           { text: '算法基础', link:'/pages/algorithm/algorithm-basic'}
         ]
+      },
+      {
+        text: '深度学习',
+        items: [
+          { text: '机器学习', link: '/pages/deep-learning/machine-learning' }
+        ]
       }
     ],
 
