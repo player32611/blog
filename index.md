@@ -16,6 +16,9 @@ hero:
     - theme: alt
       text: GMS2
       link: /pages/gms2/common-functions
+    - theme: alt
+      text: 算法
+      link: /pages/algorithm/c++-basic
 
 features:
   - title: 语法查询

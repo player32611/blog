@@ -57,6 +57,8 @@ export default defineConfig({
       {
         text: '深度学习',
         items: [
+          { text: '感知机', link: '/pages/deep-learning/perceptron' },
+          { text: '神经网络', link: '/pages/deep-learning/neural-network' },
           { text: '机器学习', link: '/pages/deep-learning/machine-learning' }
         ]
       }
