@@ -101,6 +101,9 @@ export default defineConfig({
       }
     }
   },
+  markdown:{
+    math:true
+  },
   vite: {
     resolve: {
       alias: [
