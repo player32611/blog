@@ -530,6 +530,109 @@ int main() {
 }
 ```
 
+## 差分
+
+前缀和与差分核心思想是**预处理**，可以在暴力枚举的过程中，快速给出查询的结果，从而优化时间复杂度。是经典的**用空间替换时间**的做法。
+
+### 一维差分
+
+例题：[【模板】差分](https://ac.nowcoder.com/acm/problem/226303)
+
+<p><font color="blue">解法一：暴力解法 -> 直接模拟</font></p>
+
+<p><font color="blue">解法二：利用差分数组解决问题（快速解决“将某一个区间所有元素统一加上一个数”操作）</font></p>
+
+1. 预处理出来差分数组 f, f[i] 表示当前元素与前一个元素的差值
+
+2. 利用差分数组解决 m 次修改操作
+
+3. 直接对差分数组做前缀和运算，还原出原始的数组
+
+::: code-group
+
+```c++ [利用差分数组的定义创建差分数组]
+#include<iostream>
+using namespace std;
+
+typedef long long ll;
+
+const int N = 1e5 + 10;
+
+int n, m;
+ll a[N];
+ll f[N]; // 差分数组
+
+int main() {
+	cin >> n >> m;
+	// 利用差分数组的定义创建差分数组
+	for (int i = 1; i <= n; i++) {
+		cin >> a[i];
+		f[i] = a[i] - a[i - 1];
+	}
+	// 处理 n 次修改操作
+	while (m--) {
+		ll l, r, k;
+		cin >> l >> r >> k;
+		f[l] += k;
+		f[r + 1] -= k;
+	}
+	// 还原出原始的数组
+	for (int i = 1; i <= n; i++) {
+		a[i] = a[i - 1] + f[i];
+		cout << a[i] << " ";
+	}
+}
+```
+
+```c++ [利用差分数组的性质创建差分数组]
+#include<iostream>
+using namespace std;
+
+typedef long long ll;
+
+const int N = 1e5 + 10;
+
+int n, m;
+ll f[N]; // 差分数组
+
+int main() {
+	cin >> n >> m;
+	// 利用差分数组的性质创建差分数组
+	for (int i = 1; i <= n; i++) {
+		ll x;
+		cin >> x;
+		f[i] += x;
+		f[i + 1] -= x;
+	}
+	// 处理 n 次修改操作
+	while (m--) {
+		ll l, r, k;
+		cin >> l >> r >> k;
+		f[l] += k;
+		f[r + 1] -= k;
+	}
+	// 还原出原始的数组
+	for (int i = 1; i <= n; i++) {
+		f[i] = f[i - 1] + f[i];
+		cout << f[i] << " ";
+	}
+}
+```
+
+:::
+
+::: tip 差分数组的性质
+
+原数组 [L, R] 区间全部加 k 这个操作，相当于在差分数组中，f[L] += k, f[R + 1] -= k
+
+:::
+
+::: warning 注意
+
+差分数组使用的时候，所有的操作必须全部进行完毕之后，才能还原出操作之后的数组
+
+:::
+
 ## 其他
 
 ### ACM 模式与核心代码模式
