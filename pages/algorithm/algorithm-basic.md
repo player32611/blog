@@ -496,6 +496,40 @@ int main() {
 
 :::
 
+例题：[P1115 最大子段和](https://www.luogu.com.cn/problem/P1115)
+
+<font color="blue">解法：利用前缀和</font>
+
+```c++
+#include<iostream>
+#include<algorithm>
+using namespace std;
+
+typedef long long ll;
+
+const int N = 2e5 + 10;
+
+int n;
+ll f[N]; // 前缀和数组
+
+int main() {
+	cin >> n;
+	for (int i = 1; i <= n; i++) {
+		ll x;
+		cin >> x;
+		f[i] = f[i - 1] + x;
+	}
+
+	ll ret = -1e20;
+	ll prevmin = 0;
+	for (int i = 1; i <= n; i++) {
+		ret = max(ret, f[i] - prevmin);
+		prevmin = min(prevmin, f[i]);
+	}
+	cout << ret << endl;
+}
+```
+
 ## 其他
 
 ### ACM 模式与核心代码模式
