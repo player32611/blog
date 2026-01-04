@@ -19,6 +19,9 @@ hero:
     - theme: alt
       text: 算法
       link: /pages/algorithm/c++-basic
+    - theme: alt
+      text: 深度学习
+      link: /pages/deep-learning/perceptron
 
 features:
   - title: 语法查询
