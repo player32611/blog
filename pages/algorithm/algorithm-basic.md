@@ -633,6 +633,56 @@ int main() {
 
 :::
 
+例题：[P3406 海底高铁](https://www.luogu.com.cn/problem/P3406)
+
+<p><font color="blue">解法：利用差分计算出每段路程经的次数，并判断最小花费</font></p>
+
+```c++
+#include<iostream>
+#include<algorithm>
+using namespace std;
+
+typedef long long ll;
+
+const int N = 1e5 + 10;
+
+int n, m;
+ll f[N]; // 差分数组
+
+int main() {
+	cin >> n >> m;
+	// x -> y
+	int x;
+	cin >> x;
+	for (int i = 2; i <= m; i++) {
+		int y;
+		cin >> y;
+		// x -> y
+		if (x > y) {
+			f[y]++;
+			f[x]--;
+		}
+		else {
+			f[x]++;
+			f[y]--;
+		}
+		x = y;
+	}
+	// 利用差分数组，还原出原数组
+	for (int i = 1; i <= n; i++)f[i] += f[i - 1];
+	// 直接求结果
+	ll ret = 0;
+	for (int i = 1; i < n; i++) {
+		ll a, b, c;
+		cin >> a >> b >> c;
+		ret += min(a * f[i], c + b * f[i]);
+	}
+	cout << ret << endl;
+}
+```
+
+## 双指针
+
 ## 其他
 
 ### ACM 模式与核心代码模式
