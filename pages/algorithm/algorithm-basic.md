@@ -683,6 +683,60 @@ int main() {
 
 ## 双指针
 
+双指针算法有时候也叫**尺取法**或者**滑动窗口**，是一种**优化暴力枚举策略的手段**。
+
+- 当我们发现在两层 for 循环的暴力枚举过程中，**两个指针是可以不回退的**，此时我们就可以利用两个指针不回退的性质来优化时间复杂度。
+
+- 因为双指针算法中，两个指针是朝着同一个方向移动的，因此也叫做**同向双指针**
+
+时间复杂度：**O(n)**
+
+例题：[UVA11572 唯一的雪花 Unique Snowflakes](https://www.luogu.com.cn/problem/UVA11572)
+
+<p><font color="blue">解法一：暴力枚举 -> 枚举出所有符合要求的子数组</font></p>
+
+<p><font color="blue">解法二：利用单调性，使用“同向双指针”来优化（在暴力枚举的过程中，left 以及 right 其实是可以不回退的）</font></p>
+
+```c++
+#include<iostream>
+#include<map>
+#include<algorithm>
+using namespace std;
+
+const int N = 1e6 + 10;
+
+int n;
+int a[N];
+
+int main() {
+	int T;
+	cin >> T;
+	while (T--) {
+		cin >> n;
+		for (int i = 1; i <= n; i++)cin >> a[i];
+		// 初始化
+		int left = 1, right = 1, ret = 0;
+		map<int, int> mp; // 维护窗口内所有元素出现的次数
+		while (right <= n) {
+			// 进窗口
+			mp[a[right]]++;
+			// 判断
+			while (mp[a[right]] > 1) {
+				// 出窗口
+				mp[a[left]]--;
+				left++;
+			}
+			// 窗口合法，更新结果
+			ret = max(ret, right - left + 1);
+			right++;
+		}
+		cout << ret << endl;
+	}
+}
+```
+
+## 二分算法
+
 ## 其他
 
 ### ACM 模式与核心代码模式
