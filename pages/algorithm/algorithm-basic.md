@@ -810,6 +810,52 @@ public:
 };
 ```
 
+### 二分答案
+
+准确来说，应该叫做 [二分答案 + 判断]。
+
+二分答案可以处理大部分 [最大值最小] 以及 [最小值最大] 的问题。如果 [解空间] 在从小到大的 [变化] 过程中，[判断] 答案的结果出现 [二段性]，此时我们就可以 [二分] 这个 [解空间]，通过 [判断]，找出最优解。
+
+例题：[P2440 木材加工](https://www.luogu.com.cn/problem/P2440)
+
+<p><font color="blue">解法一：暴力枚举，枚举所有的切割长度 x</font></p>
+
+<p><font color="blue">解法二：利用二分来优化</font></p>
+
+```c++
+#include<iostream>
+#include<algorithm>
+using namespace std;
+
+typedef long long ll;
+
+const int N = 1e5 + 10;
+
+ll n, k;
+ll a[N];
+
+// 当切割长度为 x 的时候，最多能切出来多少段
+ll calc(ll x) {
+	ll cnt = 0;
+	for (int i = 1; i <= n; i++) {
+		cnt += a[i] / x;
+	}
+	return cnt;
+}
+
+int main() {
+	cin >> n >> k;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	ll left = 0, right = 1e8;
+	while (left < right) {
+		ll mid = (left + right + 1) / 2;
+		if (calc(mid) >= k)left = mid;
+		else right = mid - 1;
+	}
+	cout << left << endl;
+}
+```
+
 ### 二分模板
 
 ::: details 算法原理
@@ -857,6 +903,8 @@ while (l < r) {
 :::
 
 时间复杂度：**$O(logn)$**
+
+## 贪心
 
 ## 其他
 
