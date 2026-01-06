@@ -14,6 +14,7 @@ export default defineConfig({
       { text: '前端', link: '/pages/front-end/html' },
       { text: 'GameMakerStudio 2', link: '/pages/gms2/gms2' },
       { text: '算法', link: '/pages/algorithm/c++-basic' },
+      { text: '深度学习', link: '/pages/deep-learning/perceptron' }
     ],
 
     sidebar: [
@@ -59,6 +60,7 @@ export default defineConfig({
         items: [
           { text: '感知机', link: '/pages/deep-learning/perceptron' },
           { text: '神经网络', link: '/pages/deep-learning/neural-network' },
+          { text: '神经网络的学习', link: '/pages/deep-learning/neural-network-learning' },
           { text: '机器学习', link: '/pages/deep-learning/machine-learning' }
         ]
       }
