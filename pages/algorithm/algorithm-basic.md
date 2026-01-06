@@ -737,6 +737,127 @@ int main() {
 
 ## 二分算法
 
+例题：[在排序数组中查找元素的第一个和最后一个位置](https://leetcode.cn/problems/find-first-and-last-position-of-element-in-sorted-array/description/)
+
+<p><font color="blue">解法一：暴力解法 -> 从前往后扫描数组</font></p>
+
+<p><font color="blue">解法二：二分算法</font></p>
+
+::: warning 查找起始位置的细节问题
+
+while 循环里面的判断如何写?
+
+- `while (left < right)`
+
+求中点的方式？
+
+- `mid = (left + right) / 2`
+
+二分结束之后，相遇点的情况？
+
+- 需要判断以下，循环结束之后，是否是我们想要的结果
+
+:::
+
+::: warning 查找终止位置的细节问题
+
+while 循环里面的判断如何写?
+
+- `while (left < right)`
+
+求中点的方式？
+
+- `mid = (left + right + 1) / 2`
+
+二分结束之后，相遇点的情况？
+
+- 需要判断以下，循环结束之后，是否是我们想要的结果
+
+:::
+
+```c++
+class Solution {
+public:
+    vector<int> searchRange(vector<int>& nums, int target) {
+        int n = nums.size();
+        // 处理边界情况
+        if (n == 0)
+            return {-1, -1};
+        // 1.求起始位置
+        int left = 0, right = n - 1;
+        while (left < right) {
+            int mid = (left + right) / 2;
+            if (nums[mid] >= target)
+                right = mid;
+            else
+                left = mid + 1;
+        }
+        // left 或者 right 所指的位置就有可能是最终结果
+        if (nums[left] != target)
+            return {-1, -1};
+        int retleft = left; // 记录一下起始位置
+        // 2.求终止位置
+        left = 0, right = n - 1;
+        while (left < right) {
+            int mid = (left + right + 1) / 2;
+            if (nums[mid] <= target)
+                left = mid;
+            else
+                right = mid - 1;
+        }
+        return {retleft, left};
+    }
+};
+```
+
+### 二分模板
+
+::: details 算法原理
+
+当我们的解具有**二段性**时，就可以使用二分算法找出答案：
+
+- 根据待查找区间的中点位置，分析答案会出现在哪一侧；
+
+- 接下来舍弃一半的待查找区间，转而在有答案的区间内继续使用二分算法查找结果。
+
+:::
+
+::: code-group
+
+```c++ [二分查找区间左端点]
+int l = 1, r = n; // 待查找区间为 [1, n]
+while (l < r) {
+	int mid = (l + r) / 2;
+	if (check(mid)) r = mid;
+	else l = mid + 1;
+}
+// 二分结束之后可能需要判断是否存在结果
+```
+
+```c++ [二分查找区间右端点]
+int l = 1, r = n; // 待查找区间为 [1, n]
+while (l < r) {
+	int mid = (l + r + 1) / 2;
+	if (check(mid)) l = mid;
+	else r = mid - 1;
+}
+// 二分结束之后可能需要判断是否存在结果
+```
+
+:::
+
+::: tip 防止溢出
+
+为了防止溢出，求中点时可以用下面的方式：
+
+- `mid = left + (right - left) / 2;`
+
+- `mid = left + (right - left + 1) / 2;`
+
+:::
+
+时间复杂度：**$O(logn)$**
+
 ## 其他
 
 ### ACM 模式与核心代码模式
