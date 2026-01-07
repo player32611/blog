@@ -114,7 +114,7 @@ def cross_entropy_error(y, t):
 
 :::
 
-::: details 代码解释
+::: details 实例解释
 
 ```python
 def cross_entropy_error(y, t):
@@ -249,3 +249,190 @@ def function_2(x):
 不过，偏导数需要将多个变量中的某一个变量定为目标变量，并将其他变量固定为某个值。
 
 ## 梯度
+
+像 $(\frac{\partial f}{\partial x_0},\frac{\partial f}{\partial x_1})$ 这样的由全部变量的偏导数汇总而成的向量称为**梯度**（gradient）。
+
+```python
+def numerical_gradient(f, x):
+    h = 1e-4 # 0.0001
+    grad = np.zeros_like(x) # 生成和 x 形状相同、所有元素都为 0 的数组
+    for idx in range(x.size):
+        tmp_val = x[idx]
+        # f(x+h) 的计算
+        x[idx] = tmp_val + h
+        fxh1 = f(x)
+        # f(x-h) 的计算
+        x[idx] = tmp_val - h
+        fxh2 = f(x)
+        grad[idx] = (fxh1 - fxh2) / (2*h)
+        x[idx] = tmp_val # 还原值
+    return grad
+```
+
+::: details 实例计算
+
+```python
+def function_2(x):
+    return x[0]**2 + x[1]**2
+
+print(numerical_gradient(function_2, np.array([3.0, 4.0]))) # [6. 8.]
+print(numerical_gradient(function_2, np.array([0.0, 2.0]))) # [0. 4.]
+print(numerical_gradient(function_2, np.array([3.0, 0.0]))) # [6. 0.]
+```
+
+:::
+
+### 梯度法
+
+机器学习的主要任务是在学习时寻找最优参数。同样地，神经网络也必须在学习时找到最优参数（权重和偏置）。这里所说的最优参数是指损失函数取最小值时的参数。
+
+但是，一般而言，损失函数很复杂，参数空间庞大，我们不知道它在何处能取得最小值。而通过巧妙地使用梯度来寻找函数最小值（或者尽可能小的值）的方法就是**梯度法**（gradient method）。梯度法是解决机器学习中最优化问题的常用方法，特别是在神经网络的学习中经常被使用。
+
+::: warning 注意
+
+梯度表示的是各点处的函数值减小最多的方向。因此，无法保证梯度所指的方向就是函数的最小值或者真正应该前进的方向。实际上，在复杂的函数中，梯度指示的方向基本上都不是函数值最小处。
+
+虽然梯度的方向并不一定指向最小值，但沿着它的方向能够最大限度地减小函数的值。因此，在寻找函数的最小值（或者尽可能小的值）的位置的任务中，要以梯度的信息为线索，决定前进的方向。
+
+:::
+
+在梯度法中，函数的取值从当前位置沿着梯度方向前进一定距离，然后在新的地方重新求梯度，再沿着新梯度方向前进，如此反复，不断地沿梯度方向前进，通过不断地沿梯度方向前进，逐渐减小函数值。
+
+现在，我们尝试用数学式来表示梯度法：
+
+$$x_0 = x_0 - \eta \frac{\partial f}{\partial x_0}$$
+
+$$x_1 = x_1 - \eta \frac{\partial f}{\partial x_1}$$
+
+这里的 $\eta$ 表示更新量，在神经网络的学习中，称为**学习率**（learning rate）。学习率决定在一次学习中，应该学习多少，以及在多大程度上更新参数。
+
+::: tip 提示
+
+该式是表示更新一次的式子，这个步骤会反复执行。也就是说，每一步都按该式更新变量的值，通过反复执行此步骤，逐渐减小函数值。
+
+:::
+
+```python
+def gradient_descent(f, init_x, lr=0.01, step_num=100):
+    x = init_x
+    for i in range(step_num):
+        grad = numerical_gradient(f, x)
+        x -= lr * grad
+    return x
+```
+
+::: details 代码解释
+
+参数 f 是要进行最优化的函数，init_x 是初始值，lr 是学习率，step_num 是梯度法的重复次数。
+
+`numerical_gradient(f,x)` 会求函数的梯度，用该梯度乘以学习率得到的值进行更新操作，由 step_num 指定重复的次数。
+
+:::
+
+::: details 实例计算
+
+**问题**：请用梯度法求 $f(x_0+x_1) = x_0^2 + x_1^2$ 的最小值。
+
+```python
+def function_2(x):
+    return x[0]**2 + x[1]**2
+
+init_x = np.array([-3.0, 4.0])
+print(gradient_descent(function_2, init_x=init_x, lr=0.1, step_num=100))
+# [-6.11110793e-10  8.14814391e-10]
+```
+
+这里，设初始值为(-3.0, 4.0)，开始使用梯度法寻找最小值。最终的结果是(-6.1e-10, 8.1e-10)，非常接近(0，0)。实际上，真的最小值就是(0，0)，所以说通过梯度法我们基本得到了正确结果。
+
+如果用图来表示梯度法的更新过程，则可以发现，原点处是最低的地方，函数的取值一点点在向其靠近。
+
+![梯度法的更新过程](/images/deep-learning/neural-network-learning/gradient-method.png)
+
+:::
+
+::: warning 学习率过大或者过小都无法得到好的结果
+
+```python
+# 学习率过大的例子：lr=10.0
+init_x = np.array([-3.0, 4.0])
+print(gradient_descent(function_2, init_x=init_x, lr=10.0, step_num=100))
+# array([ -2.58983747e+13,  -1.29524862e+12])
+
+# 学习率过小的例子：lr=1e-10
+init_x = np.array([-3.0, 4.0])
+print(gradient_descent(function_2, init_x=init_x, lr=1e-10, step_num=100))
+# array([-2.99999994,  3.99999992])
+```
+
+学习率过大的话，会发散成一个很大的值；反过来，学习率过小的话，基本上没怎么更新就结束了。
+
+也就是说，设定合适的学习率是一个很重要的问题。
+
+:::
+
+### 神经网络的梯度
+
+神经网络的学习也要求梯度。这里所说的梯度是指损失函数关于权重参数的梯度。
+
+::: details 实例计算
+
+我们以一个简单的神经网络为例，来实现求梯度的代码。为此，我们要实现一个名为 simpleNet 的类：
+
+```python
+import sys, os
+sys.path.append(os.pardir)
+import numpy as np
+from common.functions import softmax, cross_entropy_error
+from common.gradient import numerical_gradient
+class simpleNet:
+    def __init__(self):
+        self.W = np.random.randn(2,3) # 用高斯分布进行初始化
+    def predict(self, x):
+        return np.dot(x, self.W)
+    def loss(self, x, t):
+        z = self.predict(x)
+        y = softmax(z)
+        loss = cross_entropy_error(y, t)
+        return loss
+```
+
+这里使用了 `softmax`（输出层的概率函数） 、 `cross_entropy_error`（交叉熵损失函数）以及 `numerical_gradient`（梯度计算）方法。
+
+simpleNet 类只有一个实例变量，即形状为 2×3 的权重参数。它有两个方法，一个是用于预测的 `predict(x)`，另一个是用于求损失函数值的 `loss(x,t)`。这里参数 x 接收输入数据，t 接收正确解标签。
+
+现在我们来试着用一下这个 simpleNet 类：
+
+```python
+net = simpleNet()
+print("权重参数：",net.W) # 权重参数
+x = np.array([0.6, 0.9])
+p = net.predict(x)
+print("预测结果：",p)
+print("最大值的索引：",np.argmax(p))
+t = np.array([0, 0, 1]) # 正确解标签
+print("损失函数：",net.loss(x, t))
+```
+
+接下来求梯度。和前面一样，我们使用 `numerical_gradient(f, x)` 求梯度度：
+
+```python
+def f(W):
+    return net.loss(x, t)
+dW = numerical_gradient(f, net.W)
+
+# lambda 表示法
+# f = lambda w: net.loss(x, t)
+# dW = numerical_gradient(f, net.W)
+
+print("梯度计算结果",dW)
+```
+
+（这里定义的函数 f(W)的参数 W 是一个伪参数。因为 `numerical_gradient(f, x)`会在内部执行 f(x),为了与之兼容而定义了 f(W)）
+
+`numerical_gradient(f, x)` 的参数 f 是函数，x 是传给函数 f 的参数。因此，这里参数 x 取 net.W，并定义一个计算损失函数的新函数 f，然后把这个新定义的函数传递给 `numerical_gradient(f, x)`。
+
+:::
+
+求出神经网络的梯度后，接下来只需根据梯度法，更新权重参数即可。
+
+## 学习算法的实现
