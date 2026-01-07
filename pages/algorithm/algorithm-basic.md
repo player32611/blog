@@ -953,7 +953,6 @@ int main() {
 ```c++ [利用结论计算]
 #include<iostream>
 #include<algorithm>
-#include<cstdlib>
 
 using namespace std;
 
@@ -985,6 +984,36 @@ int main() {
 - 最小和为：$(a[n]-a[1])+(a[n-1]+a[2])+...+(a[n+1-n/2]+a[n/2])$。
 
 :::
+
+例题：[P1115 最大子段和](https://www.luogu.com.cn/problem/P1115)
+
+```c++
+#include<iostream>
+#include<algorithm>
+
+using namespace std;
+
+typedef long long ll;
+
+const int N = 2e5 + 10;
+
+int n;
+ll a[N];
+
+int main() {
+	cin >> n;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	ll sum = 0, ret = -1e6;
+	for (int i = 1; i <= n; i++) {
+		sum += a[i];
+		ret = max(ret, sum);
+		if (sum < 0)sum = 0;
+	}
+	cout << ret << endl;
+}
+```
+
+### 哈夫曼编码
 
 ## 其他
 
