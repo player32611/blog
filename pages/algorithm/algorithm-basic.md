@@ -906,6 +906,86 @@ while (l < r) {
 
 ## 贪心
 
+贪心算法，或者说是贪心策略：企图用局部最优找出全局最优。
+
+- 1.把解决问题的过程分成若干步；
+
+- 2.解决每一步时，都选择“当前看起来最优的”解法；
+
+- 3.“希望”得到全局的最优解。
+
+::: tip 贪心算法的特点
+
+对于大多数题目，贪心策略的提出并不是很难，难的是证明它是正确的。因为贪心算法相较于暴力枚举，每一步并不是把所有情况的考虑进去，而是只考虑当前看起来最优的情况。但是，局部最优并不等于全局最优，所以我们必须要能严谨的证明我们的贪心策略是正确的。
+
+:::
+
+### 简单贪心
+
+例题：[P10452 货仓选址](https://www.luogu.com.cn/problem/P10452)
+
+::: code-group
+
+```c++ [利用中间值来计算]
+#include<iostream>
+#include<algorithm>
+#include<cstdlib>
+
+using namespace std;
+
+typedef long long ll;
+
+const int N = 1e5 + 10;
+
+int n;
+ll a[N];
+
+int main() {
+	cin >> n;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	sort(a + 1, a + 1 + n);
+	ll ret = 0;
+	for (int i = 1; i <= n; i++)ret += abs(a[i] - a[n / 2]);
+	cout << ret << endl;
+}
+```
+
+```c++ [利用结论计算]
+#include<iostream>
+#include<algorithm>
+#include<cstdlib>
+
+using namespace std;
+
+typedef long long ll;
+
+const int N = 1e5 + 10;
+
+int n;
+ll a[N];
+
+int main() {
+	cin >> n;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	sort(a + 1, a + 1 + n);
+	ll ret = 0;
+	for (int i = 1; i <= n; i++)ret += a[n - i + 1] - a[i];
+	cout << ret << endl;
+}
+```
+
+:::
+
+::: tip 结论
+
+形如：$sum=\sum_{i=1}^n |a[i]-x| = |a[1]-x|+|a[2]-x|+...+|a[n]-x|$ 这样一个式子：
+
+- 当 $x$ 取到 $n$ 个数的中位数时，和最小；
+
+- 最小和为：$(a[n]-a[1])+(a[n-1]+a[2])+...+(a[n+1-n/2]+a[n/2])$。
+
+:::
+
 ## 其他
 
 ### ACM 模式与核心代码模式
