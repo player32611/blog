@@ -436,3 +436,329 @@ print("梯度计算结果",dW)
 求出神经网络的梯度后，接下来只需根据梯度法，更新权重参数即可。
 
 ## 学习算法的实现
+
+神经网络的学习步骤如下所示：
+
+> 前提：神经网络存在合适的权重和偏置，调整权重和偏置以便拟合训练数据的过程称为“学习”
+>
+> 步骤 1（mini-batch 梯度法）：从训练数据中随机选出一部分数据，这部分数据称为 mini-batch。我们的目标是减小 mini-batch 的损失函数的值。
+>
+> 步骤 2（计算梯度）：为了减小 mini-batch 的损失函数的值，需要求出各个权重参数的梯度。梯度表示损失函数的值减小最多的方向。
+>
+> 步骤 3（更新参数）：将权重参数沿梯度方向进行微小更新。
+>
+> 步骤 4（重复）：重复步骤 1、步骤 2、步骤 3。
+
+神经网络的学习按照上面 4 个步骤进行。这个方法通过梯度下降法更新参数，不过因为这里使用的数据是随机选择的 mini batch 数据，所以又称为**随机梯度下降法**（stochastic gradient descent）。“随机”指的是“随机选择的”的意思，因此，随机梯度下降法是“对随机选择的数据进行的梯度下降法”。
+
+深度学习的很多框架中，随机梯度下降法一般由一个名为 **SGD** 的函数来实现。SGD 来源于随机梯度下降法的英文名称的首字母。
+
+### 2 层神经网络的类
+
+首先，我们将这个 2 层神经网络实现为一个名为 TwoLayerNet 的类：
+
+```python
+# coding: utf-8
+import sys, os
+sys.path.append(os.pardir)  # 为了导入父目录的文件而进行的设定
+from common.functions import *
+from common.gradient import numerical_gradient
+
+
+class TwoLayerNet:
+
+    def __init__(self, input_size, hidden_size, output_size, weight_init_std=0.01):
+        # 初始化权重
+        self.params = {}
+        self.params['W1'] = weight_init_std * np.random.randn(input_size, hidden_size)
+        self.params['b1'] = np.zeros(hidden_size)
+        self.params['W2'] = weight_init_std * np.random.randn(hidden_size, output_size)
+        self.params['b2'] = np.zeros(output_size)
+
+    def predict(self, x):
+        W1, W2 = self.params['W1'], self.params['W2']
+        b1, b2 = self.params['b1'], self.params['b2']
+
+        a1 = np.dot(x, W1) + b1
+        z1 = sigmoid(a1)
+        a2 = np.dot(z1, W2) + b2
+        y = softmax(a2)
+
+        return y
+
+    # x:输入数据, t:监督数据
+    def loss(self, x, t):
+        y = self.predict(x)
+
+        return cross_entropy_error(y, t)
+
+    def accuracy(self, x, t):
+        y = self.predict(x)
+        y = np.argmax(y, axis=1)
+        t = np.argmax(t, axis=1)
+
+        accuracy = np.sum(y == t) / float(x.shape[0])
+        return accuracy
+
+    # x:输入数据, t:监督数据
+    def numerical_gradient(self, x, t):
+        loss_W = lambda W: self.loss(x, t)
+
+        grads = {}
+        grads['W1'] = numerical_gradient(loss_W, self.params['W1'])
+        grads['b1'] = numerical_gradient(loss_W, self.params['b1'])
+        grads['W2'] = numerical_gradient(loss_W, self.params['W2'])
+        grads['b2'] = numerical_gradient(loss_W, self.params['b2'])
+
+        return grads
+
+    def gradient(self, x, t):
+        W1, W2 = self.params['W1'], self.params['W2']
+        b1, b2 = self.params['b1'], self.params['b2']
+        grads = {}
+
+        batch_num = x.shape[0]
+
+        # forward
+        a1 = np.dot(x, W1) + b1
+        z1 = sigmoid(a1)
+        a2 = np.dot(z1, W2) + b2
+        y = softmax(a2)
+
+        # backward
+        dy = (y - t) / batch_num
+        grads['W2'] = np.dot(z1.T, dy)
+        grads['b2'] = np.sum(dy, axis=0)
+
+        da1 = np.dot(dy, W2.T)
+        dz1 = sigmoid_grad(a1) * da1
+        grads['W1'] = np.dot(x.T, dz1)
+        grads['b1'] = np.sum(dz1, axis=0)
+
+        return grads
+```
+
+|  变量  |                                                                                                  说明                                                                                                   |
+| :----: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| params |               保存神经网络的参数的字典型变量（实例变量）。`params['W1']` 是第 1 层的权重，`params['b1']` 是第 1 层的偏置。`params['W2']` 是第 2 层的权重，`params['b2']` 是第 2 层的偏置                |
+| grads  | 保存梯度的字典型变量（`numerical_gradient()` 方法的返回值）。`grads['W1']` 是第 1 层权重的梯度，`grads['b1']` 是第 1 层偏置的梯度。`grads['W2']` 是第 2 层权重的梯度，`grads['b2']` 是第 2 层偏置的梯度 |
+
+|                          方法                          |                                         说明                                         |
+| :----------------------------------------------------: | :----------------------------------------------------------------------------------: |
+| `__init__(self, input_size, hidden_size, output_size)` | 进行初始化。参数从头开始依次表示输入层的神经元数、隐藏层的神经元数、输出层的神经元数 |
+|                   `predict(self, x)`                   |                         进行识别（推理）。参数 x 是图像数据                          |
+|                   `loss(self, x, t)`                   |   计算损失函数的值。参数 x 是图像数据，t 是正确解标签（后面 3 个方法的参数也一样）   |
+|                 `accuracy(self, x, t)`                 |                                     计算识别精度                                     |
+|            `numerical_gradient(self, x, t)`            |                           计算权重参数相对于损失函数的梯度                           |
+|                 `gradient(self, x, t)`                 |                  计算权重参数的梯度。`numerical_gradient()`的高速版                  |
+
+::: details `params` 和 `grads`
+
+TwoLayerNet 类有 params 和 grads 两个字典型实例变量。params 变量中保存了权重参数，比如 `params['W1']` 以 NumPy 数组的形式保存了第 1 层的权重参数。
+
+```python
+net = TwoLayerNet(input_size=784, hidden_size=100, output_size=10)
+net.params['W1'].shape # (784, 100)
+net.params['b1'].shape # (100,)
+net.params['W2'].shape # (100, 10)
+net.params['b2'].shape # (10,)
+```
+
+:::
+
+::: details `__init__` 方法
+
+进行手写数字识别时，输入图像的大小是 784（28×28），输出为 10 个类别，所以指定参数 `input_size=784`、`output_size=10`，将隐藏层的个数 hidden_size 设置为一个合适的值即可。
+
+这里权重使用符合高斯分布的随机数进行初始化，偏置使用 0 进行初始化。
+
+:::
+
+### mini-batch 的实现
+
+神经网络的学习的实现使用的是前面介绍过的 mini-batch 学习。所谓 mini-batch 学习，就是从训练数据中随机选择一部分数据（称为 mini-batch），再以这些 mini-batch 为对象，使用梯度法更新参数的过程。
+
+```python
+import sys, os
+sys.path.append(os.pardir)  # 为了导入父目录的文件而进行的设定
+import numpy as np
+import matplotlib.pyplot as plt
+from dataset.mnist import load_mnist
+from two_layer_net import TwoLayerNet
+
+# 读入数据：60,000个训练样本，10,000个测试样本
+(x_train, t_train), (x_test, t_test) = load_mnist(normalize=True, one_hot_label=True)
+
+# 创建两层神经网络
+network = TwoLayerNet(input_size=784, hidden_size=50, output_size=10)
+
+# 超参数
+iters_num = 10000  # 适当设定循环的次数
+train_size = x_train.shape[0] # 训练集大小，60000
+batch_size = 100 # 每个批次的样本数
+learning_rate = 0.1 # 学习率
+
+train_loss_list = [] # 记录每次迭代的训练损失
+
+for i in range(iters_num):
+    # 获取mini - batch
+    batch_mask = np.random.choice(train_size, batch_size) # 从 0-59999 中随机选择 100 个不重复的索引
+    x_batch = x_train[batch_mask]
+    t_batch = t_train[batch_mask]
+
+    # 计算梯度
+    # grad = network.numerical_gradient(x_batch, t_batch)
+    grad = network.gradient(x_batch, t_batch) # 高速版!
+
+    # 更新参数
+    for key in ('W1', 'b1', 'W2', 'b2'):
+        network.params[key] -= learning_rate * grad[key]
+
+    # 记录学习过程
+    loss = network.loss(x_batch, t_batch)
+    train_loss_list.append(loss)
+```
+
+::: details 代码解释
+
+这里，mini-batch 的大小为 100，需要每次从 60000 个训练数据中随机取出 100 个数据（图像数据和正确解标签数据）。
+
+然后，对这个包含 100 笔数据的 mini-batch 求梯度，使用随机梯度下降法（SGD）更新参数。这里，梯度法的更新次数（循环的次数）为 10000。每更新一次，都对训练数据计算损失函数的值，并把该值添加到数组中。
+
+:::
+
+用图像来表示这个损失函数的值的推移：
+
+![损失函数的推移](/images/deep-learning/neural-network-learning/loss-function.png)
+
+可以发现随着学习的进行，损失函数的值在不断减小。这是学习正常进行的信号，表示神经网络的权重参数在逐渐拟合数据。也就是说，神经网络的确在学习！通过反复地向它浇灌（输入）数据，神经网络正在逐渐向最优参数靠近。
+
+### 基于测试数据的评价
+
+根据上图所示，我们确认了通过反复学习可以使损失函数的值逐渐减小这一事实。
+
+不过这个损失函数的值，严格地讲是“对训练数据的某个 mini-batch 的损失函数”的值。训练数据的损失函数值减小，虽说是神经网络的学习正常进行的一个信号，但光看这个结果还不能说明该神经网络在其他数据集上也一定能有同等程度的表现。
+
+神经网络的学习中，必须确认是否能够正确识别训练数据以外的其他数据，即确认是否会发生**过拟合**（过拟合是指，虽然训练数据中的数字图像能被正确辨别，但是不在训练数据中的数字图像却无法被识别的现象）
+
+神经网络学习的最初目标是掌握泛化能力，因此，要评价神经网络的泛化能力，就必须使用不包含在训练数据中的数据。下面的代码在进行学习的过程中，会定期地对训练数据和测试数据记录识别精度。这里，每经过一个 epoch，我们都会记录下训练数据和测试数据的识别精度：
+
+::: tip 什么是 epoch
+
+**epoch** 是一个单位。一个 epoch 表示学习中所有训练数据均被使用过一次时的更新次数。
+
+比如，对于 60000 笔训练数据，用大小为 100 笔数据的 mini-batch 进行学习时，重复随机梯度下降法 600 次，所有的训练数据就都被“看过”了。此时，600 次就是一个 epoch。
+
+:::
+
+```python {21,22,24,44-50}
+import sys, os
+sys.path.append(os.pardir)  # 为了导入父目录的文件而进行的设定
+import numpy as np
+import matplotlib.pyplot as plt
+from dataset.mnist import load_mnist
+from two_layer_net import TwoLayerNet
+
+# 读入数据：60,000个训练样本，10,000个测试样本
+(x_train, t_train), (x_test, t_test) = load_mnist(normalize=True, one_hot_label=True)
+
+# 创建两层神经网络
+network = TwoLayerNet(input_size=784, hidden_size=50, output_size=10)
+
+# 超参数
+iters_num = 10000  # 适当设定循环的次数
+train_size = x_train.shape[0] # 训练集大小，60000
+batch_size = 100 # 每个批次的样本数
+learning_rate = 0.1 # 学习率
+
+train_loss_list = [] # 记录每次迭代的训练损失
+train_acc_list = [] # 记录每个epoch的训练准确率
+test_acc_list = [] # 记录每个epoch的测试准确率
+
+iter_per_epoch = max(train_size / batch_size, 1) # 平均每个epoch的重复次数
+
+for i in range(iters_num):
+    # 获取mini - batch
+    batch_mask = np.random.choice(train_size, batch_size) # 从 0-59999 中随机选择 100 个不重复的索引
+    x_batch = x_train[batch_mask]
+    t_batch = t_train[batch_mask]
+
+    # 计算梯度
+    # grad = network.numerical_gradient(x_batch, t_batch)
+    grad = network.gradient(x_batch, t_batch) # 高速版!
+
+    # 更新参数
+    for key in ('W1', 'b1', 'W2', 'b2'):
+        network.params[key] -= learning_rate * grad[key]
+
+    # 记录学习过程
+    loss = network.loss(x_batch, t_batch)
+    train_loss_list.append(loss)
+
+    # 计算每个 epoch 的识别精度
+    if i % iter_per_epoch == 0:
+        train_acc = network.accuracy(x_train, t_train)
+        test_acc = network.accuracy(x_test, t_test)
+        train_acc_list.append(train_acc)
+        test_acc_list.append(test_acc)
+        print("train acc, test acc | " + str(train_acc) + ", " + str(test_acc))
+
+# 绘制图形
+markers = {'train': 'o', 'test': 's'}
+x = np.arange(len(train_acc_list))
+plt.plot(x, train_acc_list, label='train acc')
+plt.plot(x, test_acc_list, label='test acc', linestyle='--')
+plt.xlabel("epochs")
+plt.ylabel("accuracy")
+plt.ylim(0, 1.0)
+plt.legend(loc='lower right')
+plt.show()
+```
+
+在上面的例子中，每经过一个 epoch，就对所有的训练数据和测试数据计算识别精度，并记录结果。之所以要计算每一个 epoch 的识别精度，是因为如果在 for 语句的循环中一直计算识别精度，会花费太多时间。
+
+把从上面的代码中得到的结果用图表示的话，如下：
+
+![训练数据和测试数据的识别精度的推移（横轴的单位是epoch）](/images/deep-learning/neural-network-learning/recognition-accuracy.png)
+
+> 图中实线表示训练数据的识别精度，虚线表示测试数据的识别精度。
+
+如图所示，随着 epoch 的前进（学习的进行），我们发现使用训练数据和测试数据评价的识别精度都提高了，并且，这两个识别精度基本上没有差异（两条线基本重叠在一起）。因此，可以说这次的学习中没有发生过拟合的现象。
+
+## 小结
+
+::: details 小结
+
+- 机器学习中使用的数据集分为训练数据和测试数据
+
+- 神经网络用训练数据进行学习，并用测试数据评价学习到的模型的泛化能力。
+
+- 神经网络的学习以损失函数为指标，更新权重参数，以使损失函数的值减小。
+
+- 利用某个给定的微小值的差分求导数的过程，称为数值微分。
+
+- 利用数值微分，可以计算权重参数的梯度。
+
+- 数值微分虽然费时间，但是实现起来很简单。
+
+:::
+
+::: details 专有名词
+
+- **训练数据**：神经网络学习时使用的数据集。
+
+- **测试数据**：神经网络学习过程中，对学习效果进行评价时使用的数据集。
+
+- **泛化能力**：神经网络学习过程中，对训练数据以外的数据进行评价，以评价学习效果。
+
+- **损失函数**：神经网络学习过程中，用于评价学习效果的指标。损失函数越小，表示学习效果越好。
+
+- **mini-batch**：一个训练数据集的子集，通常取一个较小的数据集，比如 100 个样本。
+
+- **学习率**：神经网络学习过程中，权重参数的更新大小。
+
+- **过拟合**：神经网络学习过程中，在训练数据上过拟合，即在训练数据上表现良好，但测试数据上表现不好。
+
+- **epoch**：一个 epoch 表示学习中，所有训练数据均被使用过一次时的更新次数。
+
+:::
