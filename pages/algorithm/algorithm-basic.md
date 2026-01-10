@@ -1153,9 +1153,61 @@ int main() {
 
 ## 递归初阶
 
-::: danger 警告
-该部分尚未完工!
+例题：[1205：汉诺塔问题](https://ybt.ssoier.cn/problem_show.php?pid=1205)
+
+<p><font color="yellowgreen">相同的问题：x 柱子上有 n 个盘子，需要借助 y 的帮助，转移到 z 上</font></p>
+
+```c++
+#include<iostream>
+#include<cstdio>
+using namespace std;
+
+int n;
+char a, b, c;
+
+// 把 x 柱子上的 n 个盘子，借助 y 的帮助，全部放到 z 上
+void Hanoi(int n, char x, char y, char z) {
+	if (n == 0)return;
+	Hanoi(n - 1, x, z, y);
+	printf("%c->%d->%c\n", x, n, z);
+	Hanoi(n - 1, y, x, z);
+}
+
+int main() {
+	cin >> n >> a >> b >> c;
+	Hanoi(n, a, c, b);
+}
+```
+
+::: tip 为什么会用到递归？
+
+本质：在处理主问题时，需要解决子问题，两者的处理方式完全一致。
+
+问题 -> 相同的子问题 -> 相同的子子问题......直到子问题不能继续拆分
+
 :::
+
+::: tip 从宏观角度看待递归
+
+- 不要在意递归的细节展开图 --- 写完代码不要再去纠结递归展开图；
+
+- 把递归函数当成一个黑盒 --- 赋予这个黑盒一个任务；
+
+- 相信这个黑盒一定能帮助我们完成这个任务。
+
+:::
+
+::: tip 如何写好一个递归
+
+- 先找到相同的子问题 -> 确定函数的功能以及函数头的设计；
+
+- 只关心某一个子问题时如何解决的 -> 函数题；
+
+- 不能继续拆分的子问题 -> 递归出口。
+
+:::
+
+## 分治
 
 ## 其他
 

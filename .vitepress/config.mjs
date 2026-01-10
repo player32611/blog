@@ -61,6 +61,7 @@ export default defineConfig({
           { text: '感知机', link: '/pages/deep-learning/perceptron' },
           { text: '神经网络', link: '/pages/deep-learning/neural-network' },
           { text: '神经网络的学习', link: '/pages/deep-learning/neural-network-learning' },
+          { text: '误差反向传播法', link: '/pages/deep-learning/backpropagation' },
           { text: '机器学习', link: '/pages/deep-learning/machine-learning' }
         ]
       }
