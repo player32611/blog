@@ -1209,6 +1209,54 @@ int main() {
 
 ## 分治
 
+分治，字面上的解释是 [分而治之]，就是把一个复杂的问题分成两个或更多的相同的子问题，直到最后子问题可以简单的直接求解，原问题的解即子问题的解的合并。
+
+例题：[P1908 逆序对](https://www.luogu.com.cn/problem/P1908)
+
+<p><font color="blue">解法一：两层 for 循环</font></p>
+
+<p><font color="blue">解法二：利用 分治 + 归并排序 来解决（全在左边选、全在右边选、一左一右）</font></p>
+
+```c++
+#include<iostream>
+using namespace std;;
+
+typedef long long ll;
+
+const int N = 5e5 + 10;
+
+int n;
+int a[N];
+int tmp[N];
+
+ll merge(int left, int right) {
+	if (left >= right)return 0;
+	ll ret = 0;
+	int mid = (left + right) / 2;
+	ret += merge(left, mid);
+	ret += merge(mid + 1, right);
+	// 一左一右的情况
+	int cur1 = left, cur2 = mid + 1, i = left;
+	while (cur1 <= mid && cur2 <= right) {
+		if (a[cur1] <= a[cur2])tmp[i++] = a[cur1++];
+		else {
+			ret += mid - cur1 + 1;
+			tmp[i++] = a[cur2++];
+		}
+	}
+	while (cur1 <= mid)tmp[i++] = a[cur1++];
+	while (cur2 <= right)tmp[i++] = a[cur2++];
+	for (int j = left; j <= right; j++)a[j] = tmp[j];
+	return ret;
+}
+
+int main() {
+	cin >> n;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	cout << merge(1,n) << endl;
+}
+```
+
 ## 其他
 
 ### ACM 模式与核心代码模式
