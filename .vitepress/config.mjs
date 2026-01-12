@@ -118,7 +118,7 @@ export default defineConfig({
           )
         },
         {
-          find: /^.*\/VPSwitchAppearance\.vue$/,
+          find: /^.*\/VPSwitch\.vue$/,
           replacement: fileURLToPath(
             new URL('./theme/components/ThemeSwitch.vue', import.meta.url)
           )

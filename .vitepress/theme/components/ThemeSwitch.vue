@@ -19,8 +19,9 @@ watchPostEffect(() => {
 
 <template>
   <label class="theme-switch">
-    <input class="theme-switch__checkbox" type="checkbox" :title="switchTitle" :aria-checked="isDark" />
-    <div class="theme-switch__container" @click="toggleAppearance">
+    <input class="theme-switch__checkbox" type="checkbox" :title="switchTitle" :checked="isDark"
+      @click="toggleAppearance" />
+    <div class="theme-switch__container">
       <div class="theme-switch__clouds"></div>
       <div class="theme-switch__stars-container">
         <svg fill="none" viewBox="0 0 144 55" xmlns="http://www.w3.org/2000/svg">
