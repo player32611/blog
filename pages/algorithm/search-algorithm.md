@@ -60,6 +60,37 @@ int main() {
 }
 ```
 
+例题：[P10448 组合型枚举](https://www.luogu.com.cn/problem/P10448)
+
+```c++
+#include<iostream>
+#include<vector>
+using namespace std;
+
+int n, m;
+vector<int> path;
+
+void dfs(int begin) {
+	if (path.size() == m) {
+		for (auto x : path) cout << x << " ";
+		cout << endl;
+		return;
+	}
+	for (int i = begin; i <= n; i++) {
+		path.push_back(i);
+		dfs(i + 1);
+		path.pop_back(); // 清空现场
+	}
+}
+
+int main() {
+	cin >> n >> m;
+	dfs(1);
+}
+```
+
+### DFS
+
 ## 广度优先遍历 - BFS
 
 ::: danger 警告
