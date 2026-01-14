@@ -91,6 +91,52 @@ int main() {
 
 ### DFS
 
+例题：[P1036 [NOIP 2002 普及组] 选数](https://www.luogu.com.cn/problem/P1036)
+
+<p><font color="blue">解法：暴力搜索</font></p>
+
+```c++
+#include<iostream>
+using namespace std;
+
+const int N = 25;
+
+int n, k;
+int a[N];
+int ret;
+int path; // 记录路径中所选择的数的和
+
+bool isprime(int x) {
+	if (x <= 1)return false;
+	// 试除法
+	for(int i=2;i<=x/i;i++){
+		if (x % i == 0)return false;
+	}
+	return true;
+}
+
+void dfs(int pos,int begin) {
+	if (pos > k) {
+		if (isprime(path))ret++;
+		return;
+	}
+	for (int i = begin; i <= n; i++) {
+		path += a[i];
+		dfs(pos + 1, i + 1);
+		path -= a[i];
+	}
+}
+
+int main() {
+	cin >> n >> k;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	dfs(1, 1);
+	cout << ret << endl;
+}
+```
+
+### 剪枝与优化
+
 ## 广度优先遍历 - BFS
 
 ::: danger 警告
