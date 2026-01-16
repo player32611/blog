@@ -191,10 +191,89 @@ int main() {
 
 > 记录每一个状态的搜索结果，当下一次搜索到这个状态时，直接找到之前记录过的搜索结果，有时也叫动态规划。
 
+例题：[P1025 [NOIP 2001 提高组] 数的划分](https://www.luogu.com.cn/problem/P1025)
+
+<p><font color="blue">解法：暴力搜索（剪枝：排除等效冗余、可行性剪枝）</font></p>
+
+```c++
+#include<iostream>
+using namespace std;
+
+int n, k;
+int path, ret;
+
+void dfs(int pos,int begin) {
+	if (pos == k) {
+		if (path == n)ret++;
+		return;
+	}
+	for (int i = begin; i <= n; i++) {
+		// 可行性剪枝
+		if (path + i * (k - pos) > n)return;
+		path += i;
+		dfs(pos + 1, i);
+		path -= i;
+	}
+}
+
+int main() {
+	cin >> n >> k;
+	dfs(0, 1);
+	cout << ret << endl;
+}
+```
+
 ### 记忆化搜索
 
-::: danger 警告
-该部分尚未完工!
+记忆化搜索也是一种可行性剪枝策略。
+
+通过一个“备忘录”，记录第一次搜索到的结果，当下一次搜索到这个状态时，直接在“备忘录”里面找结果。
+
+记忆化搜索，有时也叫动态规划。
+
+例题：[509. 斐波那契数](https://leetcode.cn/problems/fibonacci-number/description/)
+
+<p><font color="blue">解法：递归/暴力搜索</font></p>
+
+```c++
+class Solution {
+    int f[35]; // 备忘录
+public:
+    int dfs(int n) {
+        if (f[n] != -1)
+            return f[n];
+        if (n == 1 || n == 0)
+            return n;
+        f[n] = dfs(n - 1) + dfs(n - 2);
+        return f[n];
+    }
+    int fib(int n) {
+        memset(f, -1, sizeof f);
+        return dfs(n);
+    }
+};
+```
+
+::: tip 记忆化搜索的使用条件
+
+递归的过程中，出现了大量“完全相同的问题”。
+
+:::
+
+::: tip 如何实现记忆化搜索
+
+1. 创建备忘录；
+
+2. 递归返回的时候，先存到备忘录里面；
+
+3. 递归的时候，先往备忘录里面瞅一瞅。
+
+:::
+
+::: warning 注意：初始化备忘录
+
+备忘录中，一定不能存在递归过程中有可能出现的值。
+
 :::
 
 ## 广度优先遍历 - BFS
