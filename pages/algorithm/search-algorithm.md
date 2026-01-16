@@ -223,6 +223,12 @@ int main() {
 }
 ```
 
+例题：[P10483 小猫爬山](https://www.luogu.com.cn/problem/P10483)
+
+::: danger 警告
+该部分尚未完工!
+:::
+
 ### 记忆化搜索
 
 记忆化搜索也是一种可行性剪枝策略。
@@ -230,6 +236,28 @@ int main() {
 通过一个“备忘录”，记录第一次搜索到的结果，当下一次搜索到这个状态时，直接在“备忘录”里面找结果。
 
 记忆化搜索，有时也叫动态规划。
+
+::: tip 记忆化搜索的使用条件
+
+递归的过程中，出现了大量“完全相同的问题”。
+
+:::
+
+::: tip 如何实现记忆化搜索
+
+1. 创建备忘录；
+
+2. 递归返回的时候，先存到备忘录里面；
+
+3. 递归的时候，先往备忘录里面瞅一瞅。
+
+:::
+
+::: warning 注意：初始化备忘录
+
+备忘录中，一定不能存在递归过程中有可能出现的值。
+
+:::
 
 例题：[509. 斐波那契数](https://leetcode.cn/problems/fibonacci-number/description/)
 
@@ -254,36 +282,116 @@ public:
 };
 ```
 
-::: tip 记忆化搜索的使用条件
-
-递归的过程中，出现了大量“完全相同的问题”。
-
-:::
-
-::: tip 如何实现记忆化搜索
-
-1. 创建备忘录；
-
-2. 递归返回的时候，先存到备忘录里面；
-
-3. 递归的时候，先往备忘录里面瞅一瞅。
-
-:::
-
-::: warning 注意：初始化备忘录
-
-备忘录中，一定不能存在递归过程中有可能出现的值。
-
-:::
-
-## 广度优先遍历 - BFS
+例题：[P5635 【CSGRound1】天下第一](https://www.luogu.com.cn/problem/P5635)
 
 ::: danger 警告
 该部分尚未完工!
 :::
+
+例题：[P1434 [SHOI2002] 滑雪](https://www.luogu.com.cn/problem/P1434)
+
+::: danger 警告
+该部分尚未完工!
+:::
+
+## 广度优先遍历 - BFS
+
+广度优先搜索的过程中，每次都会从当前点向外扩展一层，所以会具有一个最短路的特性。因此，宽搜不仅能搜到所有的状态，而且还能找出起始状态距离某个状态的最小步数。
+
+但是，前提条件是每次扩展的代价都是 1，或者都是相同的数。宽搜常常被用于解决边权为 1 的最短路问题。
+
+### BFS
+
+例题：[P1443 马的遍历](https://www.luogu.com.cn/problem/P1443)
+
+<p><font color="blue">解法：从[1, 1]开始，按照马的跳跃规则，来一次 BFS 即可。</font></p>
+
+```c++
+#include<iostream>
+#include<queue>
+#include<utility>
+#include<cstring>
+using namespace std;
+
+typedef pair<int, int> pii;
+
+const int N = 410;
+
+int n, m, x, y;
+int dist[N][N];
+
+// 方向向量
+int dx[] = { 1,2,2,1,-1,-2,-2,-1 };
+int dy[] = { 2,1,-1,-2,-2,-1,1,2 };
+
+void bfs() {
+	memset(dist, -1, sizeof dist);
+	queue<pii> q;
+	q.push({ x,y });
+	dist[x][y] = 0;
+	while (q.size()) {
+		auto t = q.front();
+		q.pop();
+		int i = t.first, j = t.second;
+		for (int k = 0; k < 8; k++) {
+			int x = i + dx[k], y = j + dy[k];
+			if (x<1 || x>n || y<1 || y>m)continue;
+			if (dist[x][y] != -1)continue;
+			dist[x][y] = dist[i][j] + 1; // 更新结果
+			q.push({ x,y });
+		}
+	}
+}
+
+
+int main() {
+	cin >> n >> m >> x >> y;
+	bfs();
+	for (int i = 1; i <= n; i++) {
+		for (int j = 1; j <= m; j++) {
+			cout << dist[i][j] << " ";
+		}
+		cout << endl;
+	}
+}
+```
+
+例题：[P1588 [USACO07OPEN] Catch That Cow S](https://www.luogu.com.cn/problem/P1588)
+
+::: danger 警告
+该部分尚未完工!
+:::
+
+例题：[P1379 八数码难题](https://www.luogu.com.cn/problem/P1379)
+
+::: danger 警告
+该部分尚未完工!
+:::
+
+### 多源 BFS
+
+::: danger 警告
+该部分尚未完工!
+:::
+
+例题：[P1902 刺杀大使](https://www.luogu.com.cn/problem/P1902)
+
+### 01 BFS
+
+::: danger 警告
+该部分尚未完工!
+:::
+
+例题：[P4554 小明的游戏](https://www.luogu.com.cn/problem/P4554)
+
+例题：[P1047 涂色](https://www.luogu.com.cn/problem/P1047)
 
 ## FloodFill 问题
 
 ::: danger 警告
 该部分尚未完工!
 :::
+
+例题：[P1596 [USACO10OCT] Lake Counting S](https://www.luogu.com.cn/problem/P1596)
+
+例题：[P1162 填涂颜色](https://www.luogu.com.cn/problem/P1162)

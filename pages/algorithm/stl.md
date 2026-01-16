@@ -689,6 +689,40 @@ int main() {
 
 ## 双端队列-deque
 
+::: danger 警告
+该部分尚未完工!
+:::
+
+## 优先队列-priority_queue
+
+::: danger 警告
+该部分尚未完工!
+:::
+
+## 集合-set
+
+::: danger 警告
+该部分尚未完工!
+:::
+
+## 映射-map
+
+::: danger 警告
+该部分尚未完工!
+:::
+
+## unordered_set
+
+::: danger 警告
+该部分尚未完工!
+:::
+
+## unordered_map
+
+::: danger 警告
+该部分尚未完工!
+:::
+
 ## STL 函数
 
 ### lower_bound()
