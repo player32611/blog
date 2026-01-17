@@ -1365,6 +1365,8 @@ int main() {
 
 虽然是四个问题，但是原理是一致的。
 
+时间复杂度：$O(n)$
+
 ### 单调栈的实现
 
 **基本思想：栈 + 贪心**
@@ -1423,6 +1425,7 @@ void test2() {
 ```c++
 #include<iostream>
 #include<stack>
+#include<cstring>
 
 using namespace std;
 
@@ -1457,6 +1460,7 @@ int main() {
 ```c++
 #include<iostream>
 #include<stack>
+#include<cstring>
 
 using namespace std;
 
@@ -1491,6 +1495,7 @@ int main() {
 ```c++
 #include<iostream>
 #include<stack>
+#include<cstring>
 
 using namespace std;
 
@@ -1525,6 +1530,7 @@ int main() {
 ```c++
 #include<iostream>
 #include<stack>
+#include<cstring>
 
 using namespace std;
 
@@ -1554,7 +1560,7 @@ int main() {
 }
 ```
 
-::: tips 总结
+::: tip 总结
 
 - 找左侧，正遍历；找右侧，逆遍历；
 
@@ -1562,26 +1568,74 @@ int main() {
 
 :::
 
+例题：[P5788 【模板】单调栈](https://www.luogu.com.cn/problem/P5788)
+
+```c++
+#include<iostream>
+#include<stack>
+
+using namespace std;
+
+const int N = 3e6 + 10;
+
+int n;
+int a[N];
+int ret[N];
+
+void test() {
+	stack<int> st; // 单调递增 - 元素的下标
+	for (int i = n; i >= 1; i--) {
+		while (st.size() && a[st.top()] <= a[i])st.pop();
+		if (st.size()) ret[i] = st.top(); // 下标
+		st.push(i); // 下标
+	}
+	for (int i = 1; i <= n; i++)cout << ret[i] << " ";
+	cout << endl;
+}
+
+int main() {
+	cin >> n;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	test();
+}
+```
+
+例题：[P1901 发射站](https://www.luogu.com.cn/problem/P1901)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
 ## 单调队列
 
 ::: danger 警告
+
 该部分尚未完工!
+
 :::
 
 ## 并查集
 
 ::: danger 警告
+
 该部分尚未完工!
+
 :::
 
 ## 字符串哈希
 
 ::: danger 警告
+
 该部分尚未完工!
+
 :::
 
 ## Trie 树
 
 ::: danger 警告
+
 该部分尚未完工!
+
 :::
