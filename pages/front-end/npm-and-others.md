@@ -4,9 +4,11 @@
 该页面尚未完工!
 :::
 
-## 目录
+::: details 目录
 
 [[toc]]
+
+:::
 
 ## npm 的使用
 
@@ -68,24 +70,24 @@ package.json 文件中版本号的说明，安装的时候代表不同的含义:
 
 2. 在项目目录下新建 `.babeirc` 文件（这是 babel 的配置文件）
 
-````json
+```json
 {
-    "presets": ["es2015","stage-2"],//设置转码规则
-    "plugins": ["transform-runtime"]//设置转码插件
+  "presets": ["es2015", "stage-2"], //设置转码规则
+  "plugins": ["transform-runtime"] //设置转码插件
 }
-````
+```
 
 3. 这里我们需要转换成 es2015 ，安装我们需要的库：
 
-````
+```
 npm install babel-core babel-preset-es2015 babel-plugin-transform-runtime babel-preset-stage-2 --save -dev
-````
+```
 
 4. 在项目下的 `package.json` 文件做如下修改：
 
-````json
+```json
 "scripts":{"build":"babel src -w -d lib"},
-````
+```
 
 即编译整个 src 目录并将其输出到 lib 目录。这里的 src 指的是需要转换的目录， lib 指的是输出的内容的存放目录， -w 其实是 -watch 的意思，就是监听文件，实时编译输出
 
@@ -99,7 +101,7 @@ Promise是一门新的技术（ES6规范），用于进行异步编程。
 
 **使用方法：**
 
-````JavaScript
+```JavaScript
 new Promise((resolve, reject) => {
     //代码片段
     resolve(res)
@@ -110,7 +112,7 @@ new Promise((resolve, reject) => {
     }, err => {
         //代码片段
     })
-````
+```
 
 `resolve` 调用该函数则代表执行成功，跳出 Promise ，以 res 为参数执行 `.then` 中的第一个函数
 
@@ -120,7 +122,7 @@ new Promise((resolve, reject) => {
 
 **多层 Promise 调用**
 
-````JavaScript
+```JavaScript
 new Promise((resolve, reject) => {
     console.log('进入第一层')
     setTimeout(() => {
@@ -138,11 +140,11 @@ new Promise((resolve, reject) => {
     .then(res => {
         console.log(res)
     })
-````
+```
 
 可以在最后使用 `.catch` 统一处理错误，而不用对每个 Promise 均编写处理错误的函数:
 
-````JavaScript
+```JavaScript
 new Promise((resolve, reject) => {
     console.log('进入第一层')
     setTimeout(() => {
@@ -165,11 +167,11 @@ new Promise((resolve, reject) => {
     .catch(err => {
         console.log(err)
     })
-````
+```
 
 **并行 Promise 调用**
 
-````JavaScript
+```JavaScript
 Promise.all([
     new Promise((resolve, reject) => {
         setTimeout(() => {
@@ -184,6 +186,6 @@ Promise.all([
 ]).then(res => {
     console.log(res)
 })
-````
+```
 
 其中 res 的值为一个数组，其值分别代表不同 Promise 的 `resolve` 传递值

@@ -4,9 +4,11 @@
 该页面尚未完工!
 :::
 
-## 目录
+::: details 目录
 
 [[toc]]
+
+:::
 
 ## DOM 简介
 
@@ -51,9 +53,10 @@ DOM 的全称是 Document Object Model ，即文档对象模型，是一套对�
 **addEventListener()** 方法为指定元素指定事件处理程序，不会覆盖已有的事件处理程序。
 
 **语法**
-````JavaScript
+
+```JavaScript
 element.addEventListener(event, function, useCapture);
-````
+```
 
 第一个参数是事件的类型（比如 "click" 或 "mousedown"）。
 
@@ -63,24 +66,24 @@ element.addEventListener(event, function, useCapture);
 
 通过使用 **removeEventListener()** 方法轻松地删除事件监听器。
 
-````JavaScript
+```JavaScript
 element.removeEventListener("mousemove", myFunction);
-````
+```
 
 ## DOM 集合
 
 getElementsByTagName() 方法返回 HTMLCollection 对象，是类数组的 HTML 元素列表（集合）。
 
-````JavaScript
+```JavaScript
 var x = document.getElementsByTagName("p");
-````
+```
 
 **length** 属性定义了 HTMLCollection 中元素的数量
 
-````JavaScript
+```JavaScript
 var myCollection = document.getElementsByTagName("p");
 document.getElementById("demo").innerHTML = myCollection.length;
-````
+```
 
 **HTMLCollection 并非数组！**
 

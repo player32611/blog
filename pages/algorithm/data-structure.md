@@ -1,8 +1,14 @@
 # 数据结构
 
-## 目录
+::: danger 警告
+该页面尚未完工!
+:::
+
+::: details 目录
 
 [[toc]]
+
+:::
 
 ## 顺序表
 
@@ -1342,3 +1348,240 @@ int main() {
 	for (int i = 1; i <= n; i++)cout << a[i] << " ";
 }
 ```
+
+## 单调栈
+
+单调栈，顾名思义，就是具有单调性的栈。它依旧是一个栈结构，只不过里面存储的数据是严格递增或者严格递减的。
+
+单调栈能帮助我们解决以下四个问题：
+
+- 寻找当前元素左侧，离它最近，并且比它大的元素在哪；
+
+- 寻找当前元素左侧，离它最近，并且比它小的元素在哪；
+
+- 寻找当前元素右侧，离它最近，并且比它大的元素在哪；
+
+- 寻找当前元素右侧，离它最近，并且比它小的元素在哪。
+
+虽然是四个问题，但是原理是一致的。
+
+### 单调栈的实现
+
+**基本思想：栈 + 贪心**
+
+```c++
+#include<stack>
+
+using namespace std;
+
+const int N = 3e6 + 10;
+int a[N], n;
+
+void test1() {
+	stack<int> st; // 维护一个严格单调递增的栈
+	for (int i = 1; i <= n; i++) {
+		// 栈里面大于等于 a[i] 的元素全部出栈
+		while (st.size() && st.top() >= a[i])st.pop();
+		st.push(a[i]);
+	}
+}
+
+void test2() {
+	stack<int> st; // 维护一个严格单调递减的栈
+	for (int i = 1; i <= n; i++) {
+		// 栈里面小于等于 a[i] 的元素全部出栈
+		while (st.size() && st.top() <= a[i])st.pop();
+		st.push(a[i]);
+	}
+}
+```
+
+### 单调栈的使用方法
+
+**寻找当前元素左侧，离它最近，并且比它大的元素在哪：**
+
+> 从左往右遍历元素，构造一个单调递减的栈。**插入当前位置的元素时**：
+>
+> - 如果栈为空，则左侧不存在比当前元素大的元素；
+> - 如果栈非空，插入当前位置元素时的栈顶元素就是所找的元素。
+>
+> 注意，因为我们要找的是最终结果的位置。因此，栈里面存的是每个元素的下标。
+
+**寻找当前元素左侧，离它最近，并且比它小的元素在哪：**
+
+> 从左往右遍历元素，构造一个单调递增的栈。**插入当前位置的元素时**：
+>
+> - 如果栈为空，则左侧不存在比当前元素小的元素；
+> - 如果栈非空，插入当前位置元素时的栈顶元素就是所找的元素。
+>
+> 注意，因为我们要找的是最终结果的位置。因此，栈里面存的是每个元素的下标。
+
+### 单调栈模板
+
+**模板一：寻找当前元素左侧，离它最近，并且比它大的元素在哪**
+
+```c++
+#include<iostream>
+#include<stack>
+
+using namespace std;
+
+const int N = 1e5 + 10;
+
+int n;
+int a[N];
+int ret[N];
+
+// 模板一：寻找当前元素左侧，离它最近，并且比它大的元素在哪
+void test() {
+	memset(ret, -1, sizeof ret);
+	stack<int> st; // 单调递减 - 元素的下标
+	for (int i = 1; i <= n; i++) {
+		while (st.size() && a[st.top()] <= a[i])st.pop();
+		if (st.size()) ret[i] = st.top(); // 下标
+		st.push(i); // 下标
+	}
+	for (int i = 1; i <= n; i++)cout << ret[i] << " ";
+	cout << endl;
+}
+
+int main() {
+	cin >> n;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	test();
+}
+```
+
+**模板二：寻找当前元素左侧，离它最近，并且比它小的元素在哪：**
+
+```c++
+#include<iostream>
+#include<stack>
+
+using namespace std;
+
+const int N = 1e5 + 10;
+
+int n;
+int a[N];
+int ret[N];
+
+// 模板二：寻找当前元素左侧，离它最近，并且比它小的元素在哪
+void test() {
+	memset(ret, -1, sizeof ret);
+	stack<int> st; // 单调递增 - 元素的下标
+	for (int i = 1; i <= n; i++) {
+		while (st.size() && a[st.top()] >= a[i])st.pop();
+		if (st.size()) ret[i] = st.top(); // 下标
+		st.push(i); // 下标
+	}
+	for (int i = 1; i <= n; i++)cout << ret[i] << " ";
+	cout << endl;
+}
+
+int main() {
+	cin >> n;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	test();
+}
+```
+
+**模板三：寻找当前元素右侧，离它最近，并且比它大的元素在哪：**
+
+```c++
+#include<iostream>
+#include<stack>
+
+using namespace std;
+
+const int N = 1e5 + 10;
+
+int n;
+int a[N];
+int ret[N];
+
+// 模板三：寻找当前元素右侧，离它最近，并且比它大的元素在哪
+void test() {
+	memset(ret, -1, sizeof ret);
+	stack<int> st; // 单调递增 - 元素的下标
+	for (int i = n; i >= 1; i--) {
+		while (st.size() && a[st.top()] <= a[i])st.pop();
+		if (st.size()) ret[i] = st.top(); // 下标
+		st.push(i); // 下标
+	}
+	for (int i = 1; i <= n; i++)cout << ret[i] << " ";
+	cout << endl;
+}
+
+int main() {
+	cin >> n;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	test();
+}
+```
+
+**模板四：寻找当前元素右侧，离它最近，并且比它小的元素在哪：**
+
+```c++
+#include<iostream>
+#include<stack>
+
+using namespace std;
+
+const int N = 1e5 + 10;
+
+int n;
+int a[N];
+int ret[N];
+
+// 模板四：寻找当前元素右侧，离它最近，并且比它小的元素在哪
+void test() {
+	memset(ret, -1, sizeof ret);
+	stack<int> st; // 单调递增 - 元素的下标
+	for (int i = n; i >= 1; i--) {
+		while (st.size() && a[st.top()] >= a[i])st.pop();
+		if (st.size()) ret[i] = st.top(); // 下标
+		st.push(i); // 下标
+	}
+	for (int i = 1; i <= n; i++)cout << ret[i] << " ";
+	cout << endl;
+}
+
+int main() {
+	cin >> n;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	test();
+}
+```
+
+::: tips 总结
+
+- 找左侧，正遍历；找右侧，逆遍历；
+
+- 比它大，单调减；比它小，单调增。
+
+:::
+
+## 单调队列
+
+::: danger 警告
+该部分尚未完工!
+:::
+
+## 并查集
+
+::: danger 警告
+该部分尚未完工!
+:::
+
+## 字符串哈希
+
+::: danger 警告
+该部分尚未完工!
+:::
+
+## Trie 树
+
+::: danger 警告
+该部分尚未完工!
+:::

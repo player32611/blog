@@ -1,8 +1,10 @@
 # React
 
-## 目录
+::: details 目录
 
 [[toc]]
+
+:::
 
 ## 什么是 React
 

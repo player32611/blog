@@ -1,8 +1,10 @@
 # webpack
 
-## 目录
+::: details 目录
 
 [[toc]]
+
+:::
 
 ## 什么是 webpack
 
@@ -18,35 +20,33 @@ chunk：打包过程中被操作的模块文件叫做 chunk ，例如异步加�
 
 bundel：bundle是最后打包后的文件，最终文件可以和 chunk 长得一模一样，但是大部分情况下他是多个 chunk 的集合。
 
-
 ## 安装 webpack
-
 
 **使用 npm :**
 
-````
+```
 npm i webpack webpack-cli --save-dev
-````
+```
 
 ## 使用 webpack 打包
 
 **使用默认设置打包**
 
-````
+```
 npx webpack
-````
+```
 
 **以开发模式打包**
 
-````
+```
 npx webpack --mode development
-````
+```
 
 **以生产模式打包**
 
-````
+```
 npx webpack --mode production
-````
+```
 
 只有和入口产生直接/间接的引入关系，才会被打包。
 
@@ -54,7 +54,7 @@ npx webpack --mode production
 
 `webpack.config.js`(或`webpack.config.cjs`)创建在项目根目录下，用于进行 webpack 打包的基础配置
 
-````JavaScript
+```JavaScript
 const { resolve } = require('path')
 
 module.exports = {
@@ -73,32 +73,32 @@ module.exports = {
 
     ],
 }
-````
+```
 
 ## 多入口和多出口的情况配置
 
 当含有多个入口文件时，将入口文件作为字符数组传入 entry，此时所有的入口文件形成一个 chunk ，名称是默认的，输出也是只有一个 bundle
 
-````JavaScript
+```JavaScript
 entry: ["./src/index.js", "./src/children2.js"],
-````
+```
 
 也可以采用对象的格式，此时有几个入口文件就会生成几个 chunk ，并输出几个 bundle ，chunk 的名称是 key
 
-````JavaScript
+```JavaScript
 entry: {
     one: './src/index.js',
     two: './src/children2.js'
 },
-````
+```
 
 也可以对象和数组混合:
 
-````JavaScript
+```JavaScript
 entry: {
     one: ['./src/index.js','./src/children2.js'],
 },
-````
+```
 
 ## 打包 html 资源
 
@@ -106,19 +106,19 @@ entry: {
 
 **1、下载安装插件**
 
-````
+```
 npm i html-webpack-plugin -D
-````
+```
 
 **2、引入插件**
 
-````JavaScript
+```JavaScript
 const htmlWebpackPlugin = require('html-webpack-plugin')
-````
+```
 
 **3、使用插件**
 
-````JavaScript
+```JavaScript
 plugins: [
   new htmlWebpackPlugin({
     template: './src/index.html',//作为模板的 html 的文件地址
@@ -129,13 +129,13 @@ plugins: [
     }
   })//默认会创建一个空的，目的就是自动引入打包的资源(js/css)
 ],
-````
+```
 
 html-webpack-plugin插件生成的内存中的页面已帮我们创建并正确引用了打包编译生成的资源(js/css)
 
 打包多个 html 的规律是需要有多个 entry ，每个 html 一个 entry ，同时需要新建多个 htmlWebpackPlugin
 
-````JavaScript
+```JavaScript
 entry: {
   vendor:['./src/js/jquery.js'.'./src/js/common.js'],
   index:"./src/js/index.js",
@@ -153,7 +153,7 @@ plugins:[
     chunks:['cart','vendor']
   })
 ]
-````
+```
 
 ## 打包 css 资源
 
@@ -161,9 +161,9 @@ plugins:[
 
 需要使用 npm 下载安装两个 loader 帮我们完成打包
 
-````
+```
 npm i css-loader style-loader -D
-````
+```
 
 `css-loader` : 处理 css 中的 @import 和 url 这样的外部资源
 
@@ -173,7 +173,7 @@ npm i css-loader style-loader -D
 
 ::: code-group
 
-````JavaScript [webpack.config.cjs]
+```JavaScript [webpack.config.cjs]
 //...
 module: {
   rules: [
@@ -184,7 +184,7 @@ module: {
   ]
 },//让 webpack 能够去处理非 JavaScript 资源，如 css、img 等
 //...
-````
+```
 
 ```JavaScript [index.js]
 import './index.css'
@@ -202,21 +202,21 @@ console.log(demo)
 
 Less 需要使用 npm 下载 less 包和 less-loader
 
-````
+```
 npm i less less-loader -D
-````
+```
 
 Sass 需要使用 npm 下载 sass 包和 sass-loader
 
-````
+```
 npm i sass sass-loader -D
-````
+```
 
 使用方法与 css 类似
 
 ::: code-group
 
-````JavaScript [webpack.config.cjs]
+```JavaScript [webpack.config.cjs]
 //...
 module: {
   rules: [
@@ -226,7 +226,7 @@ module: {
   ]
 },
 //...
-````
+```
 
 ```JavaScript [index.js]
 import './index.css'
@@ -242,13 +242,13 @@ console.log(demo)
 
 css 内容是打包在 js 文件中的，可以使用`mini-css-extract-plugin`插件提取成单独的 css 文件
 
-````
+```
 npm i mini-css-extract-plugin -D
-````
+```
 
 在 webpack 配置文件中引入并配置(此时需更改 module 中的配置)：
 
-````JavaScript
+```JavaScript
 const miniCssExtractPlugin = require('mini-css-extract-plugin')
 //...
 
@@ -266,40 +266,40 @@ plugins: [
     filename: 'index.css'//打包后的 css 文件名称
   })
 ],
-````
+```
 
 ### 处理 css 的兼容性
 
 需要使用 postcss 处理，下载两个包:`post-loader`和`postcss-preset-env`
 
-````
+```
 npm i postcss-loader postcss-preset-env -D
-````
+```
 
 在`package.json`文件中进行以下配置
 
-````JavaScript
+```JavaScript
 //...
 "browserslist": [
   "> 0.2%",
   "last 2 versions",
   "not dead"
 ]
-````
+```
 
 并需要在根目录下创建`postcss.config.js`(或`postcss.config.cjs`)文件进行配置
 
-````JavaScript
+```JavaScript
 module.exports = {
   plugins: [
     require('postcss-preset-env')
   ]
 }
-````
+```
 
 最后在 webpack 配置文件中进行配置
 
-````JavaScript
+```JavaScript
 //...
 module: {
   rules: [
@@ -309,19 +309,19 @@ module: {
   ]
 },
 //...
-````
+```
 
 ### 压缩 css 内容
 
 使用 css-minimizer-webpack-plugin 插件压缩 css 内容
 
-````
+```
 npm i css-minimizer-webpack-plugin -D
-````
+```
 
 在 webpack 配置文件中引入并添加插件:
 
-````JavaScript
+```JavaScript
 const cssMinimizerWebpackPlugin = require('css-minimizer-webpack-plugin')
 //...
 
@@ -330,7 +330,7 @@ plugins: [
   //...
   new cssMinimizerWebpackPlugin()
 ],
-````
+```
 
 ## 打包图片资源
 
@@ -338,13 +338,13 @@ plugins: [
 
 需下载 url-loader 和 file-loader 两个包
 
-````
+```
 npm i url-loader file-loader -D
-````
+```
 
 并在 webpack 配置文件中进行设置
 
-````JavaScript
+```JavaScript
 module: {
   rules: [
     //...
@@ -360,19 +360,19 @@ module: {
     }
   ]
 },
-````
+```
 
 ### 打包 html 中使用的图片?
 
 需下载 html-loader
 
-````
-npm install html-loader -D 
-````
+```
+npm install html-loader -D
+```
 
 并在 webpack 配置文件中进行设置
 
-````JavaScript
+```JavaScript
 module: {
   rules: [
     {
@@ -381,13 +381,13 @@ module: {
     }
   ]
 },
-````
+```
 
 ## 打包其它资源字体图标
 
 不需要优化和压缩处理，直接输出的资源，称为其它资源。
 
-````JavaScript
+```JavaScript
 module: {
   rules: [
     {
@@ -401,7 +401,7 @@ module: {
     }
   ]
 },
-````
+```
 
 ## 去除项目里的死代码
 
@@ -417,13 +417,13 @@ webpack 本身就支持，不需要另外配置
 
 webpack 使用 purgecss-webpack-plugin 去除无用的 css
 
-````
+```
 npm i purgecss-webpack-plugin -D
-````
+```
 
 在 webpack 配置文件中进行以下配置：
 
-````JavaScript
+```JavaScript
 const { resolve, join } = require('path')
 const { glob } = require('glob')
 const { PurgeCSSPlugin } = require('purgecss-webpack-plugin')
@@ -436,7 +436,7 @@ plugins: [
     paths: glob.sync(`${PATHS.src}/**/*`, { nodir: true })
   })
 ],
-````
+```
 
 ## 更多信息
 

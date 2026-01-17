@@ -1,14 +1,16 @@
 # 网络请求
 
-## 目录
+::: details 目录
 
 [[toc]]
+
+:::
 
 ## fetch
 
 `fetch()` 方法是一种常用的网络请求的方法，在现代浏览器中原生支持。
 
-````JavaScript
+```JavaScript
 fetch(url, {
   method: "get",// 没写默认是发送get请求
   headers: {
@@ -19,7 +21,7 @@ fetch(url, {
   }
 })
 const data = await res.json()
-````
+```
 
 **更多 fetch 信息请点击[此处](https://developer.mozilla.org/zh-CN/docs/Web/API/Fetch_API)**
 
@@ -35,7 +37,7 @@ xhr.open()参数的含义：
 
     ③ 指定ajax请求是异步处理还是同步处理，默认为true即异步处理，同步一定会影响用户体验
 
-````JavaScript
+```JavaScript
 const xhr = new XMLHttpRequest();
 xhr.open("get", url, true);
 xhr.setRequestHeader("", "");// 设置请求头
@@ -50,7 +52,7 @@ xhr.onreadystatechange = () => {
     }
   }
 }
-````
+```
 
 ## axios
 
@@ -62,21 +64,21 @@ Axios 简单的理解就是 ajax 的封装
 
 使用 npm:
 
-````
+```
 npm install axios
-````
+```
 
 ### 使用 axios
 
 为使用 axios ，需先引入 axios
 
-````JavaScript
+```JavaScript
 import axios from "axios"
-````
+```
 
 **GET 基础用例**
 
-````JavaScript
+```JavaScript
 axios.get(url)
     .then(res => {
         //代码片段
@@ -84,11 +86,11 @@ axios.get(url)
     .catch(err => {
         //代码片段
     })
-````
+```
 
 **POST 基础用例**
 
-````JavaScript
+```JavaScript
 axios.post(url, {
     firstName: 'Fred',
     lastName: 'Flintstone'
@@ -99,7 +101,7 @@ axios.post(url, {
     .catch(err => {
         //代码片段
     });
-````
+```
 
 与 Promise 类似， `.then` 用于处理请求成功后的操作， `.catch` 用于处理请求失败后的操作
 
@@ -107,31 +109,31 @@ axios.post(url, {
 
 使用 get 请求传递参数时有两种传递方式:
 
-````JavaScript
+```JavaScript
 axios.get('url?id=1').then(res => {
   console.log(res)
 })
-````
+```
 
-````JavaScript
+```JavaScript
 axios.get(url,{params:{id:1}}).then(res => {
   console.log(res)
 })
-````
+```
 
 使用 post 请求传递参数时则是以下方式:
 
-````JavaScript
+```JavaScript
 axios.get('post',"id=1").then(res => {
   console.log(res)
 })
-````
+```
 
 ### 并发请求
 
 使用 axios 的并发请求`axios.all()`方法可以同时进行多个网络请求。
 
-````JavaScript
+```JavaScript
 axios.all([
     axios.get(url1),
     axios.get(url2),
@@ -141,13 +143,13 @@ axios.all([
 }).catch(err => {
     console.log(err)
 })
-````
+```
 
 其中 res 与 err 的值均为数组，分别代表每一个请求的结果。
 
 若想分别处理单个请求的结果，也可以使用`spread()`方法：
 
-````JavaScript
+```JavaScript
 axios.all([
     axios.get(url1),
     axios.get(url2),
@@ -159,42 +161,42 @@ axios.all([
         console.log(res3)
     })
 )
-````
+```
 
 ### 全局配置方案
 
 为 axios 进行全局配置可以提高代码复用性
 
-````JavaScript
+```JavaScript
 axios.defaults.baseURL = url
     axios.defaults.timeout = 5000
     axios.get('link?id=1').then(res => { })
     axios.post('link/add', 'id=1').then(res => { })
-````
+```
 
 ### 实例封装
 
 当需要进行多个请求并且超时时长不一样时，可以用到 axios 示例进行配置。
 
-````JavaScript
+```JavaScript
 let work = axios.create({
     baseURL: url1,
     timeout: 5000
 })
 work.get('link?id=1').then(res => { })
-````
+```
 
 **axios 实例的相关配置(config 参数)**
 
-|参数|信息|
-|:--:|:--:|
-|baseURL|请求的域名基本地址|
-|timeout|后端定义的超时时长|
-|url|请求的路径|临
-|method|请求方法|
-|headers|设置请求头|
-|params|请求的参数拼接在 url 中|
-|data|请求的参数放在 request body 中|
+|  参数   |              信息              |
+| :-----: | :----------------------------: | --- |
+| baseURL |       请求的域名基本地址       |
+| timeout |       后端定义的超时时长       |
+|   url   |           请求的路径           | 临  |
+| method  |            请求方法            |
+| headers |           设置请求头           |
+| params  |    请求的参数拼接在 url 中     |
+|  data   | 请求的参数放在 request body 中 |
 
 ::: tip 提示
 假如新建了一个 axios 实例但是没有参数，取的就是全局的配置值，实例中如果有则优先取实例中的
@@ -204,7 +206,7 @@ work.get('link?id=1').then(res => { })
 
 请求拦截器能为每个请求都带上参数，比如 token ，时间戳等
 
-````JavaScript
+```JavaScript
 let work = axios.create({
     baseURL: url1,
     timeout: 5000
@@ -221,11 +223,11 @@ config => {
 error => {
     return Promise.error(error)
 })
-````
+```
 
 响应拦截器能对返回的状态进行判断，比如 token 是否过期
 
-````JavaScript
+```JavaScript
 work.interceptors.response.use(config => {
   //如果返回的状态码为200，说明接口请求成功，可以正常拿到数据
   //否则的话抛出错误
@@ -239,34 +241,34 @@ work.interceptors.response.use(config => {
     return Promise.reject(error.response)
   }
 })
-````
+```
 
 ## token
 
 ### 获取 token
 
-````JavaScript
+```JavaScript
 const token = localStorage.getItem('token')//获取 token
 if(!token){
   location.href = 'url'//如果没有 token ，则返回到指定地址
 }
-````
+```
 
 当登录成功后，获取并保存 token
 
-````JavaScript
+```JavaScript
 localStorage.setItem('token',token)//将 token 保存在浏览器
 location.href = 'url'//登录成功后跳转
-````
+```
 
 ## 状态码
 
 HTTP 状态码用来表示特定的 HTTP 请求是否已成功完成。响应分为五类：信息响应(100–199)，成功响应(200–299)，重定向(300–399)，客户端错误(400–499)和服务器错误 (500–599)。
 
-|Code|Text|Information|
-|:--:|:--:|:---------:|
-|200|OK|成功|
-|301|Moved Permanently|永久重定向|
-|302|Found|临时重定向|
-|403|Forbiddenext|禁止访问|
-|404|Not Found|找不到文件|
+| Code |       Text        | Information |
+| :--: | :---------------: | :---------: |
+| 200  |        OK         |    成功     |
+| 301  | Moved Permanently | 永久重定向  |
+| 302  |       Found       | 临时重定向  |
+| 403  |   Forbiddenext    |  禁止访问   |
+| 404  |     Not Found     | 找不到文件  |
