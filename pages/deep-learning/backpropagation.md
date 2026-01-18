@@ -153,3 +153,159 @@ $$t=x+y$$
 ![根据计算图的反向传播的结果](/images/deep-learning/backpropagation/chain-backpropagation-result.png)
 
 ## 反向传播
+
+### 加法节点的反向传播
+
+这里以 $z=x+y$ 为对象，观察它的反向传播。
+
+$z=x+y$ 的导数可由下式（解析性地）计算出来：
+
+$$ \frac{\partial z}{\partial x} = 1$$
+
+$$ \frac{\partial z}{\partial y} = 1$$
+
+用计算图表示的话，如下图所示（左图是正向传播，右图是反向传播）：
+
+![加法节点的反向传播：左图是正向传播，右图是反向传播](/images/deep-learning/backpropagation/add-backpropagation.png)
+
+反向传播将从上游传过来的导数（本例中是 $\frac{\partial L}{\partial z}$）乘以 1，然后传向下游。也就是说，因为加法节点的反向传播只乘以1，所以输入的值会原封不动地流向下一个节点。
+
+::: tip 为什么将上游传过来的导数的值设为 $\frac{\partial L}{\partial z}$
+
+这是因为，如下图所示，我们假定了一个最终输出值为 $L$ 的大型计算图。$z=x+y$ 的计算位于这个大型计算图的某个地方，从上游会传来 $\frac{\partial L}{\partial z}$ 的值，并向下游传递 $\frac{\partial L}{\partial x}$ 和 $\frac{\partial L}{\partial y}$。
+
+![反向传播的计算顺序](/images/deep-learning/backpropagation/large-computational-graph.png)
+
+:::
+
+::: details 具体示例
+
+假设有 `10 + 5 = 15` 这一计算，反向传播时，从上游会传来值 1.3。用计算图表示的话如下：
+
+![加法节点的反向传播](/images/deep-learning/backpropagation/add-backpropagation-example.png)
+
+因为加法节点的反向传播只是将输入信号输出到下一个节点，所以反向传播将 1.3 向下一个节点传递。
+
+:::
+
+### 乘法节点的反向传播
+
+这里我们考虑 $z=xy$。这个式子的导数用下式表示：
+
+$$ \frac{\partial z}{\partial x} = y$$
+
+$$ \frac{\partial z}{\partial y} = x$$
+
+乘法的反向传播会将上游的值乘以正向传播时的输入信号的“翻转值”后传递给下游。翻转值表示一种翻转关系，正向传播时信号是 x 的话，反向传播时则是 y；正向传播时信号是 y 的话，反向传播时则是 x。
+
+![乘法节点的反向传播](/images/deep-learning/backpropagation/multiply-backpropagation.png)
+
+::: details 具体示例
+
+假设有 `10 × 5 = 50` 这一计算，反向传播时，从上游会传来值 1.3。用计算图表示的话，如下图所示：
+
+![乘法节点的反向传播](/images/deep-learning/backpropagation/multiply-backpropagation-example.png)
+
+因为乘法的反向传播会乘以输入信号的翻转值，所以各自可按 `1.3 × 5 = 6.5`、`1.3 × 10 = 13` 计算。
+
+:::
+
+::: warning 注意
+
+加法的反向传播只是将上游的值传给下游，并不需要正向传播的输入信号。
+
+但是，乘法的反向传播需要正向传播时的输入信号值。因此，实现乘法节点的反向传播时，要保存正向传播的输入信号。
+
+:::
+
+### 苹果的例子
+
+再来思考一下最开始举的购买苹果的例子（2个苹果和消费税）。
+
+这里要解的问题是苹果的价格、苹果的个数、消费税这 3 个变量各自如何影响最终支付的金额。这个问题相当于求“支付金额关于苹果的价格的导数”“支付金额关于苹果的个数的导数”“支付金额关于消费税的导数”。
+
+用计算图的反向传播来解的话，求解过程如下图所示：
+
+![求解苹果的导数](/images/deep-learning/backpropagation/apple-backpropagation.png)
+
+从上图的结果可知，苹果的价格的导数是 2.2，苹果的个数的导数是 110，消费税的导数是 200。
+
+这可以解释为，如果消费税和苹果的价格增加相同的值，则消费税将对最终价格产生 200 倍大小的影响，苹果的价格将产生 2.2 倍大小的影响。
+
+> 不过，因为这个例子中消费税和苹果的价格的量纲不同，所以才形成了这样的结果（消费税的 1 是 100%，苹果的价格的 1 是 1 日元）。
+
+## 简单层的实现
+
+这里，我们把要实现的计算图的乘法节点称为“乘法层”（MulLayer），加法节点称为“加法层”（AddLayer）。
+
+### 乘法层的实现
+
+层的实现中有两个共通的方法（接口）`forward()` 和 `backward()`。`forward()` 对应正向传播，`backward()` 对应反向传播。
+
+```python
+class MulLayer:
+    def __init__(self):
+        self.x = None
+        self.y = None
+
+    def forward(self, x, y):
+        self.x = x
+        self.y = y
+        out = x * y
+
+        return out
+
+    def backward(self, dout):
+        dx = dout * self.y # 翻转 x 和 y
+        dy = dout * self.x
+
+        return dx, dy
+```
+
+::: details 代码解释
+
+`__init__()` 中会初始化实例变量 x 和 y，它们用于保存正向传播时的输入值。
+
+`forward()` 接收 x 和 y 两个参数，将它们相乘后输出。
+
+`backward()` 将从上游传来的导数（dout）乘以正向传播的翻转值，然后传给下游。
+
+:::
+
+![购买2个苹果](/images/deep-learning/backpropagation/apple-backpropagation.png)
+
+使用这个乘法层的话，苹果的例子的正向传播可以像下面这样实现：
+
+```python
+apple = 100
+apple_num = 2
+tax = 1.1
+
+# layers
+mul_apple_layer = MulLayer()
+mul_tax_layer = MulLayer()
+
+# forward
+apple_price = mul_apple_layer.forward(apple, apple_num)
+price = mul_tax_layer.forward(apple_price, tax)
+
+# backward
+dprice = 1
+dapple_price, dtax = mul_tax_layer.backward(dprice)
+dapple, dapple_num = mul_apple_layer.backward(dapple_price)
+
+print("price:", int(price)) # 220
+print("dApple:", dapple) # 2.2
+print("dApple_num:", int(dapple_num)) # 110
+print("dTax:", dtax) # 200
+```
+
+::: warning 注意
+
+这里，调用 `backward()` 的顺序与调用 `forward()` 的顺序相反。
+
+此外，要注意 `backward()` 的参数中需要输入“关于正向传播时的输出变量的导数”。比如，`mul_apple_layer` 乘法层在正向传播时会输出 `apple_price`，在反向传播时，则会将 `apple_price` 的导数 `dapple_price` 设为参数。
+
+:::
+
+### 加法层的实现
