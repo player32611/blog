@@ -1610,6 +1610,56 @@ int main() {
 
 ## 单调队列
 
+单调队列，顾名思义，就是存储的元素要么单调递增要么单调递减的队列（双端队列）。
+
+单调队列一般用于解决滑动窗口内最大值最小值问题，以及优化动态规划。
+
+例题：[P1886 【模板】单调队列 / 滑动窗口](https://www.luogu.com.cn/problem/P1886)
+
+<p><font color=blue>求窗口内最大值：双端队列（单调递减） + 贪心</font></p>
+
+<p><font color=blue>求窗口内最小值：双端队列（单调递增） + 贪心</font></p>
+
+```c++
+#include<iostream>
+#include<deque>
+
+using namespace std;
+
+const int N = 1e6 + 10;
+
+int n, k;
+int a[N];
+
+int main() {
+	cin >> n >> k;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	deque<int> q; // 存下标
+
+	// 窗口内最小值 - 单调递增的队列 - 存下标
+	for (int i = 1; i <= n; i++) {
+		while (q.size() && a[q.back()] >= a[i])q.pop_back();
+		q.push_back(i);
+		// 判断队列里面元素是否在合法窗口内
+		if (q.back() - q.front() + 1 > k)q.pop_front();
+		if (i >= k)cout << a[q.front()] << " ";
+	}
+	cout << endl;
+
+	// 窗口内最大值 - 单调递减的队列 - 存下标
+	q.clear();
+	for (int i = 1; i <= n; i++) {
+		while (q.size() && a[q.back()] <= a[i])q.pop_back();
+		q.push_back(i);
+		// 判断队列里面元素是否在合法窗口内
+		if (q.back() - q.front() + 1 > k)q.pop_front();
+		if (i >= k)cout << a[q.front()] << " ";
+	}
+}
+```
+
+例题：[P2251 质量检测](https://www.luogu.com.cn/problem/P2251)
+
 ::: danger 警告
 
 该部分尚未完工!
@@ -1617,6 +1667,90 @@ int main() {
 :::
 
 ## 并查集
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+### 双亲表示法
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+### 并查集的实现
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+### 并查集的优化
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+### 普通并查集
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P3367 【模板】并查集](https://www.luogu.com.cn/problem/P3367)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P1551 亲戚](https://www.luogu.com.cn/problem/P1551)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P1955 [NOI2015] 程序自动分析](https://www.luogu.com.cn/problem/P1955)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+### 扩展并查集
+
+例题：[P1892 [BalticOI 2003] 团伙](https://www.luogu.com.cn/problem/P1892)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P2024 [NOI2001] 食物链](https://www.luogu.com.cn/problem/P2024)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+### 带权并查集
+
+例题：[P1196 [NOI2002] 银河英雄传说](https://www.luogu.com.cn/problem/P1196)
 
 ::: danger 警告
 
