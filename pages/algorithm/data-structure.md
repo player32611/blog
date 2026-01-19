@@ -1834,11 +1834,40 @@ ULL gethash() {
 
 例题：[P3370 【模板】字符串哈希](https://www.luogu.com.cn/problem/P3370)
 
-::: danger 警告
+<p><font color=blue>解法：把所有字符串利用“字符串哈希”映射成数之后，看看一共有多少个不同的数</font></p>
 
-该部分尚未完工!
+```c++
+#include<iostream>
+#include<algorithm>
+using namespace std;
 
-:::
+typedef unsigned long long ULL;
+
+const int N = 1e4 + 10, P = 131;
+
+int n;
+int a[N];
+
+// 字符串哈希
+ULL get_hash(string& s) {
+	ULL ret = 0;
+	for (int i = 0; i < s.size(); i++)ret = ret * P + s[i];
+	return ret;
+}
+
+int main() {
+	cin >> n;
+	for (int i = 1; i <= n; i++) {
+		string s;
+		cin >> s;
+		a[i] = get_hash(s);
+	}
+	int ret = 1;
+	sort(a + 1, a + 1 + n);
+	for (int i = 2; i <= n; i++)if (a[i] != a[i - 1])ret++;
+	cout << ret << endl;
+}
+```
 
 例题：[P10468 兔子与兔子](https://www.luogu.com.cn/problem/P10468)
 
