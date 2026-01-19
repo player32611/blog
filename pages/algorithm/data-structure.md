@@ -1904,3 +1904,90 @@ Trie 树又叫字典树或前缀树，是一种能够快速插入和查询字符
 - 查询所有以某个前缀开头的单词。
 
 :::
+
+### 字典树的实现
+
+目标：实现一个能够**查询单词出现次数**以及**查询有多少个单词是以某个字符串为前缀**的字典树、默认全是小写字母。
+
+**准备工作**：
+
+```c++
+#include<string>
+
+using namespace std;
+
+const int N = 1e6 + 10; // 表示所有的字符串中一共有多少个字符
+
+int tree[N][26]; // tree[i]：表示 i 号结点的孩子信息；tree[i][0]：表示 'a' 的路径信息
+int p[N], e[N]; // p[i]：表示 i 号结点的 pass 信息；e[i]：表示 i 号结点的 end 信息
+int idx; // 新来一个字符之后，为它分配位置
+```
+
+**插入字符串**：
+
+```c++
+void insert(string& s) {
+	int cur = 0; // 从根结点开始
+	p[cur]++; // 这个格子经过一次
+	for (auto ch : s) {
+		int path = ch - 'a';
+		// 如果没有路
+		if (tree[cur][path] == 0)tree[cur][path] = ++idx;
+		cur = tree[cur][path];
+		p[cur]++;
+	}
+	e[cur]++;
+}
+```
+
+**查询字符串出现的次数**：
+
+```c++
+int find(string& s) {
+	int cur = 0;
+	for (auto ch : s) {
+		int path = ch - 'a';
+		if (tree[cur][path] == 0)return 0;
+		cur = tree[cur][path];
+	}
+	return e[cur];
+}
+```
+
+**查询有多少个单词以字符串 `s` 为前缀**
+
+```c++
+int find_pre(string& s) {
+	int cur = 0;
+	for (auto ch : s) {
+		int path = ch - 'a';
+		if (tree[cur][path] == 0)return 0;
+		cur = tree[cur][path];
+	}
+	return p[cur];
+}
+```
+
+例题：[P8306 【模板】字典树](https://www.luogu.com.cn/problem/P8306)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P2580 于是他错误的点名开始了](https://www.luogu.com.cn/problem/P2580)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P10471 最大异或对 The XOR Largest Pair](https://www.luogu.com.cn/problem/P10471)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::

@@ -12,7 +12,7 @@ export default defineConfig({
       { text: '主页', link: '/' },
       { text: 'vitepress', link: '/pages/vitepress/quick-start' },
       { text: '前端', link: '/pages/front-end/html' },
-      { text: 'GameMakerStudio 2', link: '/pages/gms2/gms2' },
+      { text: 'GameMakerStudio 2', link: '/pages/gms2/common-functions' },
       { text: '算法', link: '/pages/algorithm/c++-basic' },
       { text: '深度学习', link: '/pages/deep-learning/perceptron' }
     ],
