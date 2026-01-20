@@ -53,7 +53,8 @@ export default defineConfig({
           { text: 'STL' , link:'/pages/algorithm/stl'},
           { text: '数据结构', link:'/pages/algorithm/data-structure'},
           { text: '算法基础', link:'/pages/algorithm/algorithm-basic'},
-          { text: '搜索算法', link:'/pages/algorithm/search-algorithm'}
+          { text: '搜索算法', link:'/pages/algorithm/search-algorithm'},
+          { text: '动态规划', link:'/pages/algorithm/dynamic-programming'}
         ]
       },
       {
