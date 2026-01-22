@@ -165,6 +165,74 @@ int main() {
 
 :::
 
+例题：[P1216 [IOI 1994 / USACO1.5] 数字三角形 Number Triangles](https://www.luogu.com.cn/problem/P1216)
+
+<p><font color="blue">状态表示：f[i][j] 表示从 [1, 1] 走到 [i, j] 位置时，所有方案下的最大权值</font></p>
+
+<p><font color="blue">状态转移方程：f[i][j] = max(f[i - 1][j - 1], f[i - 1][j]) + a[i][j]</font></p>
+
+<p><font color="blue">初始化：填表的时候不越界、保证后面的填表是正确的</font></p>
+
+<p><font color="blue">填表顺序：从左到右，从上到下</font></p>
+
+<p><font color="blue">最终结果：最后一行的最大值</font></p>
+
+```c++
+#include<iostream>
+#include<algorithm>
+using namespace std;
+
+const int N = 1010;
+
+int n;
+int a[N][N];
+int f[N][N]; // f[i][j]：从 [1, 1] 走到 [i, j] 时，所有方案下的最大权值
+
+int main() {
+	cin >> n;
+	for (int i = 1; i <= n; i++)for (int j = 1; j <= i; j++)cin >> a[i][j];
+	for (int i = 1; i <= n; i++)for (int j = 1; j <= i; j++)f[i][j] = max(f[i - 1][j], f[i - 1][j - 1]) + a[i][j];
+	int ret = 0;
+	for (int j = 1; j <= n; j++)ret = max(ret, f[n][j]);
+	cout << ret << endl;
+}
+```
+
+::: tip 空间优化
+
+采用从右往左的遍历方式，可以优化空间为一维数组：
+
+```c++
+#include<iostream>
+#include<algorithm>
+using namespace std;
+
+const int N = 1010;
+
+int n;
+int a[N][N];
+int f[N]; // f[i][j]：从 [1, 1] 走到 [i, j] 时，所有方案下的最大权值
+
+int main() {
+	cin >> n;
+	for (int i = 1; i <= n; i++)for (int j = 1; j <= i; j++)cin >> a[i][j];
+	for (int i = 1; i <= n; i++)for (int j = i; j >= 1; j--)f[j] = max(f[j], f[j - 1]) + a[i][j]; //修改一下遍历顺序
+	int ret = 0;
+	for (int j = 1; j <= n; j++)ret = max(ret, f[j]);
+	cout << ret << endl;
+}
+```
+
+:::
+
+::: details 二维数组转一维数组的注意事项
+
+- 是否修改遍历顺序
+
+- 删掉第一维即可
+
+:::
+
 ## 线性 dp
 
 ::: danger 警告
