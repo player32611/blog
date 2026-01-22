@@ -97,6 +97,74 @@ int fib(int n) {
 
 5. **确定最终结果**：根据题意，在表中找出最终结果。
 
+例题：[P10250 [GESP样题 六级] 下楼梯](https://www.luogu.com.cn/problem/P10250)
+
+<p><font color="blue">状态表示：f[i] 表示有 i 个台阶的时候，一共有多少种方案</font></p>
+
+<p><font color="blue">状态转移方程：f[i] = f[i - 1] + f[i - 2] + f[i - 3]</font></p>
+
+<p><font color="blue">初始化：保证填表是正确的、填表的时候不越界</font></p>
+
+<p><font color="blue">填表顺序：从左到右</font></p>
+
+<p><font color="blue">最终结果：f[n]</font></p>
+
+```c++
+#include<iostream>
+using namespace std;
+
+typedef long long LL;
+
+const int N = 65;
+
+int n;
+LL f[N]; // f[i] 表示：有 i 个台阶的时候，一共有多少种方案
+
+int main() {
+	cin >> n;
+	// 初始化
+	f[0] = 1;
+	f[1] = 1;
+	f[2] = 2;
+	for (int i = 3; i <= n; i++)f[i] = f[i - 1] + f[i - 2] + f[i - 3];
+	cout << f[n] << endl;
+}
+```
+
+::: tip 空间优化
+
+由于 `f[n]` 只与 `f[i - 1]`、`f[i - 2]`、`f[i - 3]` 有关，因此可以空间优化，只存储三个变量：
+
+```c++
+#include<iostream>
+using namespace std;
+
+typedef long long LL;
+
+const int N = 65;
+
+int n;
+LL f[N]; // f[i] 表示：有 i 个台阶的时候，一共有多少种方案
+
+int main() {
+	cin >> n;
+	// 初始化
+	LL a = 1, b = 1, c = 2;
+	for (int i = 3; i <= n; i++) {
+		LL t = a + b + c;
+		a = b;
+		b = c;
+		c = t;
+	}
+	if (n == 1)cout << b << endl;
+	else cout << c << endl;
+}
+```
+
+但该方法很少能对时间做优化。
+
+:::
+
 ## 线性 dp
 
 ::: danger 警告
