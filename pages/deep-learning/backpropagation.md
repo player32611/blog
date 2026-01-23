@@ -536,3 +536,59 @@ class Sigmoid:
 :::
 
 ## Affine/Softmax 层的实现
+
+### Affine 层
+
+神经网络的正向传播中进行的矩阵的乘积运算在几何学领域被称为“仿射变换”。因此，这里将进行仿射变换的处理实现为 **Affine 层**。
+
+神经网络的正向传播中，为了计算加权信号的总和，使用了矩阵的乘积运算（NumPy 中是 `np.dot()`）。
+
+```python
+X = np.random.rand(2) # 输入
+W = np.random.rand(2,3) # 权重
+B = np.random.rand(3) # 偏置
+
+X.shape # (2,)
+W.shape # (2, 3)
+B.shape # (3,)
+
+Y = np.dot(X, W) + B
+```
+
+这里，`X`、`W`、`B` 分别是形状为(2,)、(2,3)、(3,)的多维数组。这样一来，神经元的加权和可以用 `Y = np.dot(X, W) + B` 计算出来。然后，`Y` 经过激活函数转换后，传递给下一层。这就是神经网络正向传播的流程。
+
+现在将这里进行的求矩阵的乘积与偏置的和的运算用计算图表示出来（将乘积运算用 **dot** 节点表示）：
+
+![Affine层的计算图（仅正向传播）](/images/deep-learning/backpropagation/affine-multiply.png)
+
+::: warning 注意
+
+之前我们见到的计算图中各个节点间流动的是标量，而这个例子中各个节点间传播的是矩阵。
+
+:::
+
+现在我们来考虑该计算图的反向传播。以矩阵为对象的反向传播，按矩阵的各个元素进行计算时，步骤和以标量为对象的计算图相同。实际写一下的话，可以得到下式：
+
+$$\frac{\partial L}{\partial X}=\frac{\partial L}{\partial Y} · W^T$$
+
+$$\frac{\partial L}{\partial W}=X^T · \frac{\partial L}{\partial Y}$$
+
+现在，我们根据上式，尝试写出计算图的反向传播：
+
+![Affine层的反向传播：注意变量是多维数组。反向传播时各个变量的下方标记了该变量的形状](/images/deep-learning/backpropagation/affine-multiply-backward.png)
+
+我们看一下计算图中各个变量的形状。尤其要注意，$X$ 和 $\frac{\partial L}{\partial X}$ 形状相同，$W$ 和 $\frac{\partial L}{\partial W}$ 形状相同。从下面的数学式可以很明确地看出 $X$ 和 $\frac{\partial L}{\partial X}$ 形状相同：
+
+$$X=(x_0,x_1,···,x_n)$$
+
+$$X^T=(\frac{\partial L}{\partial x_0},\frac{\partial L}{\partial x_1},···,\frac{\partial L}{\partial x_n})$$
+
+::: details 为什么要注意矩阵的形状
+
+因为矩阵的乘积运算要求对应维度的元素个数保持一致，通过确认一致性。比如，$\frac{\partial L}{\partial Y}$ 的形状是 (3,)，$W$ 的形状是 (2,3) 时，思考 $\frac{\partial L}{\partial Y}$ 和 $W$ 的乘积，使得 $\frac{\partial L}{\partial X}$ 的形状为 (2,)。
+
+![矩阵的乘积（dot 节点）的反向传播可以通过组建使矩阵对应维度的元素个数一致的乘积运算而推导出来](/images/deep-learning/backpropagation/matrix-multiply-backward.png)
+
+:::
+
+### 批版本的 Affine 层
