@@ -309,3 +309,230 @@ print("dTax:", dtax) # 200
 :::
 
 ### 加法层的实现
+
+接下来，我们实现加法节点的加法层:
+
+```python
+class AddLayer:
+    def __init__(self):
+        pass
+
+    def forward(self, x, y):
+        out = x + y
+        return out
+
+    def backward(self, dout):
+        dx = dout * 1
+        dy = dout * 1
+        return dx, dy
+```
+
+::: details 代码解释
+
+加法层不需要特意进行初始化，所以 `__init__()` 中什么也不运行（`pass` 语句表示“什么也不运行”）。
+
+`forward()` 接收 `x` 和 `y` 两个参数，将它们相加后输出。
+
+`backward()` 将上游传来的导数（`dout`）原封不动地传递给下游。
+
+:::
+
+### 例子
+
+现在，我们使用加法层和乘法层，实现购买2个苹果和3个橘子的例子：
+
+![购买2个苹果和3个橘子](/images/deep-learning/backpropagation/buy-apple-orange.png)
+
+```python
+apple = 100
+apple_num = 2
+orange = 150
+orange_num = 3
+tax = 1.1
+
+# layer
+mul_apple_layer = MulLayer()
+mul_orange_layer = MulLayer()
+add_apple_orange_layer = AddLayer()
+mul_tax_layer = MulLayer()
+
+# forward
+apple_price = mul_apple_layer.forward(apple, apple_num)  # (1)
+orange_price = mul_orange_layer.forward(orange, orange_num)  # (2)
+all_price = add_apple_orange_layer.forward(apple_price, orange_price)  # (3)
+price = mul_tax_layer.forward(all_price, tax)  # (4)
+
+# backward
+dprice = 1
+dall_price, dtax = mul_tax_layer.backward(dprice)  # (4)
+dapple_price, dorange_price = add_apple_orange_layer.backward(dall_price)  # (3)
+dorange, dorange_num = mul_orange_layer.backward(dorange_price)  # (2)
+dapple, dapple_num = mul_apple_layer.backward(dapple_price)  # (1)
+
+print("price:", int(price)) # 715
+print("dApple:", dapple) # 2.2
+print("dApple_num:", int(dapple_num)) # 110
+print("dOrange:", dorange) # 3.3
+print("dOrange_num:", int(dorange_num)) # 165
+print("dTax:", dtax) # 650
+```
+
+::: details 代码解释
+
+首先，生成必要的层，以合适的顺序调用正向传播的 `forward()` 方法。
+
+然后，用与正向传播相反的顺序调用反向传播的 `backward()` 方法，就可以求出想要的导数。
+
+:::
+
+## 激活函数层的实现
+
+现在，我们将计算图的思路应用到神经网络中。这里，我们把构成神经网络的层实现为一个类。先来实现激活函数的 ReLU 层和 Sigmoid 层。
+
+### ReLU 层
+
+::: details 回忆：激活函数 ReLU
+
+ReLU 函数在输入大于 0 时，直接输出该值；在输入小于等于 0 时，输出 0。
+
+$$
+y =\begin{cases}
+x & (x > 0) \\
+0 & (x \leq 0)
+\end{cases}
+$$
+
+:::
+
+可以求出y关于x的导数：
+
+$$
+\frac{\partial y}{\partial x} =\begin{cases}
+1 & (x > 0) \\
+0 & (x \leq 0)
+\end{cases}
+$$
+
+在该式中，如果正向传播时的输入 `x` 大于 0，则反向传播会将上游的值原封不动地传给下游。反过来，如果正向传播时的 `x` 小于等于 0，则反向传播中传给下游的信号将停在此处。用计算图表示的话，如下图所示：
+
+![ReLU](/images/deep-learning/backpropagation/relu-multiply.png)
+
+现在我们来实现 ReLU 层（在神经网络的层的实现中，一般假定 `forward()` 和 `backward()` 的参数是 NumPy 数组。）：
+
+```python
+class Relu:
+    def __init__(self):
+        self.mask = None
+
+    def forward(self, x):
+        self.mask = (x <= 0)
+        out = x.copy()
+        out[self.mask] = 0 # 将负数或零的位置设为 0
+        return out
+
+    def backward(self, dout):
+        dout[self.mask] = 0 # 将之前输入为负或零的位置的梯度设为 0
+        dx = dout
+        return dx
+```
+
+::: details 代码解释
+
+Relu 类有实例变量 `mask`。这个变量 `mask` 是由 `True/False` 构成的 NumPy 数组，它会把正向传播时的输入 `x` 的元素中小于等于 0 的地方保存为 `True`，其他地方（大于 0 的元素）保存为 `False`。
+
+如下例所示，`mask` 变量保存了由 `True/False` 构成的 NumPy 数组：
+
+```python
+x = np.array( [[1.0, -0.5], [-2.0, 3.0]] )
+print(x)
+# [[ 1.  -0.5]
+# [-2.   3. ]]
+mask = (x <= 0)
+print(mask)
+# [[False  True]
+# [ True False]]
+```
+
+如果正向传播时的输入值小于等于 0，则反向传播的值为 0。因此，反向传播中会使用正向传播时保存的 `mask`，将从上游传来的 `dout` 的 `mask` 中的元素为 `True` 的地方设为 0。
+
+:::
+
+### Sigmoid 层
+
+::: details 回忆：激活函数 Sigmoid
+
+Sigmoid 函数将输入映射到 0 到 1 之间：
+
+$$y = \frac{1}{1 + e^{-x}}$$
+
+:::
+
+用计算图表示的话，如下图所示：
+
+![sigmoid层的计算图（仅正向传播）](/images/deep-learning/backpropagation/sigmoid-multiply-forward.png)
+
+这里除了 **×** 和 **+** 节点外，还出现了新的 **exp** 和 **/** 节点。**exp** 节点会进行 $y=e^x$ 的计算，**/** 节点会进行 $y=\frac{1}{x}$ 的计算。
+
+下面我们就来进行该计算图的反向传播：
+
+- **步骤一**：**/** 结点表示 $\frac{1}{x}$，它的导数可以解析性地表示为 $\frac{\partial y}{\partial x} = -\frac{1}{x^2} = -y^2$。反向传播时，会将上游的值乘以 $−y^2$（正向传播的输出的平方乘以 −1 后的值）后，再传给下游。
+
+![sigmoid层的计算图（反向传播）-步骤一](/images/deep-learning/backpropagation/sigmoid-multiply-backward-step1.png)
+
+- **步骤二**：**+** 节点将上游的值原封不动地传给下游。
+
+![sigmoid层的计算图（反向传播）-步骤二](/images/deep-learning/backpropagation/sigmoid-multiply-backward-step2.png)
+
+- **步骤三**：**exp** 节点表示 $y=e^x$，它的导数表示为 $\frac{\partial y}{\partial x} = e^x$。计算图中，上游的值乘以正向传播时的输出（这个例子中是 $e^x$）后，再传给下游。
+
+![sigmoid层的计算图（反向传播）-步骤三](/images/deep-learning/backpropagation/sigmoid-multiply-backward-step3.png)
+
+- **步骤四**：**×** 节点将正向传播时的值翻转后做乘法运算。因此，这里要乘以 −1。
+
+![sigmoid层的计算图](/images/deep-learning/backpropagation/sigmoid-multiply-backward.png)
+
+由结果可知：反向传播的输出为 $\frac{\partial L}{\partial y}y^2 e^{-x}$，这个值会传播给下游的节点。这里要注意，$\frac{\partial L}{\partial y}y^2 e^{-x}$ 这个值只根据正向传播时的输入 $x$ 和输出 $y$ 就可以算出来。因此，可以画成集约化的 **sigmoid** 节点：
+
+![Sigmoid层的计算图（简洁版）](/images/deep-learning/backpropagation/sigmoid-multiply-backward-compact.png)
+
+简洁版的计算图可以省略反向传播中的计算过程，因此计算效率更高。此外，通过对节点进行集约化，可以不用在意Sigmoid层中琐碎的细节，而只需要专注它的输入和输出，这一点也很重要。
+
+::: tip 进一步整理
+
+$\frac{\partial L}{\partial y}y^2 e^{-x}$ 可以进一步整理如下：
+
+$$
+\frac{\partial L}{\partial y}y^2 e^{-x}=\frac{\partial L}{\partial y}\frac{1}{(1+e^{-x})^2}e^{-x}
+=\frac{\partial L}{\partial y}\frac{1}{1+e^{-x}}\frac{e^{-x}}{1+e^{-x}}
+=\frac{\partial L}{\partial y}y(1-y)
+$$
+
+因此，Sigmoid 层的反向传播，只根据正向传播的输出就能计算出来：
+
+![Sigmoid层的计算图：可以根据正向传播的输出y计算反向传播](/images/deep-learning/backpropagation/sigmoid-multiply-backward-optimization.png)
+:::
+
+现在，我们用 Python 实现 Sigmoid 层：
+
+```python
+class Sigmoid:
+    def __init__(self):
+        self.out = None
+
+    def forward(self, x):
+        out = sigmoid(x)
+        self.out = out
+        return out
+
+    def backward(self, dout):
+        dx = dout * (1.0 - self.out) * self.out
+        return dx
+```
+
+::: details 代码解释
+
+这个实现中，正向传播时将输出保存在了实例变量 `out` 中。然后，反向传播时，使用该变量 `out` 进行计算。
+
+:::
+
+## Affine/Softmax 层的实现
