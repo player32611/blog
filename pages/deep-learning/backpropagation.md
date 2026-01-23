@@ -592,3 +592,69 @@ $$X^T=(\frac{\partial L}{\partial x_0},\frac{\partial L}{\partial x_1},···,\f
 :::
 
 ### 批版本的 Affine 层
+
+前面介绍的 Affine 层的输入 X 是以单个数据为对象的。现在我们考虑 N 个数据一起进行正向传播的情况，也就是批版本的 Affine 层。
+
+先给出批版本的 Affine 层的计算图：
+
+![批版本的Affine层的计算图](/images/deep-learning/backpropagation/affine-multiply-batch.png)
+
+与刚刚不同的是，现在输入 X 的形状是(N,2)。之后就和前面一样，在计算图上进行单纯的矩阵计算。反向传播时，如果注意矩阵的形状，就可以和前面一样推导出 $\frac{\partial L}{\partial X}$ 和 $\frac{\partial L}{\partial W}$。
+
+加上偏置时，需要特别注意。正向传播时，偏置被加到 $X·W$ 的各个数据上。
+
+::: details 示例：加上偏置
+
+N=2（数据为2个）时，偏置会被分别加到这 2 个数据（各自的计算结果）上：
+
+```python
+X_dot_W = np.array([[0, 0, 0], [10, 10, 10]])
+B = np.array([1, 2, 3])
+print(X_dot_W)
+# [[ 0  0  0]
+#  [10 10 10]]
+print(X_dot_W+B)
+# [[ 1  2  3]
+#  [11 12 13]]
+```
+
+正向传播时，偏置会被加到每一个数据（第1个、第2个······）上。因此，反向传播时，各个数据的反向传播的值需要汇总为偏置的元素：
+
+```python
+dY = np.array([[1, 2, 3,], [4, 5, 6]])
+print(dY)
+# [[1 2 3]
+#  [4 5 6]]
+dB = np.sum(dY, axis=0)
+print(dB)
+# [5 7 9]
+```
+
+这个例子中，假定数据有 2 个（N=2）。偏置的反向传播会对这 2 个数据的导数按元素进行求和。因此，这里使用了 `np.sum()` 对第 0 轴（以数据为单位的轴，axis=0）方向上的元素进行求和。
+
+:::
+
+综上所述，Affine 的实现如下所示：
+
+```python
+class Affine:
+    def __init__(self, W, b):
+        self.W =W
+        self.b = b
+        self.x = None
+        self.dW = None
+        self.db = None
+
+    def forward(self, x):
+        self.x = x
+        out = np.dot(self.x, self.W) + self.b
+        return out
+
+    def backward(self, dout):
+        dx = np.dot(dout, self.W.T)
+        self.dW = np.dot(self.x.T, dout)
+        self.db = np.sum(dout, axis=0)
+        return dx
+```
+
+### Softmax-with-Loss 层
