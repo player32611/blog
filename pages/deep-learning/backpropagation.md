@@ -1,5 +1,7 @@
 # 误差反向传播法
 
+> 误差反向传播法——一个能够高效计算权重参数的梯度的方法
+
 ::: danger 警告
 该页面尚未完工!
 :::
@@ -603,7 +605,7 @@ $$X^T=(\frac{\partial L}{\partial x_0},\frac{\partial L}{\partial x_1},···,\f
 
 加上偏置时，需要特别注意。正向传播时，偏置被加到 $X·W$ 的各个数据上。
 
-::: details 示例：加上偏置
+::: details 示例：偏置
 
 N=2（数据为2个）时，偏置会被分别加到这 2 个数据（各自的计算结果）上：
 
@@ -658,3 +660,7 @@ class Affine:
 ```
 
 ### Softmax-with-Loss 层
+
+::: details 回忆：Softmax 层
+
+:::
