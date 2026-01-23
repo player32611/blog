@@ -298,6 +298,49 @@ int main() {
 
 ### 路径类 dp
 
+路径类 dp 是线性 dp 的一种，它是在一个 n × m 的矩阵中设置一个行走规则，研究从起点走到终点的方案数、最小路径和或者最大路径和等等的问题。
+
+> 入门阶段的《数字三角形》其实就是路径类 dp。
+
+例题：[矩阵的最小路径和](https://www.nowcoder.com/practice/38ae72379d42471db1c537914b06d48e?tpld=230&tqld=39755&ru=/exam/oj)
+
+<p><font color="blue">状态表示：f[i][j] ：从 [1, 1] 走到 [i, j] 时，所有方案下最小路径和</font></p>
+
+<p><font color="blue">状态转移方程：f[i][j] = min(f[i - 1][j], f[i][j - 1]) + a[i][j]</font></p>
+
+<p><font color="blue">初始化：全部格子初始化为正无穷（0x3f3f3f3f）、f[0][1] 或 f[1][0] 初始化为0</font></p>
+
+<p><font color="blue">填表顺序：从上往下每一行、每一行从左往右</font></p>
+
+<p><font color="blue">最终结果：f[n][m]</font></p>
+
+```c++
+#include<iostream>
+#include<cstring>
+#include<algorithm>
+using namespace std;
+
+const int N = 510;
+
+int n, m;
+int f[N][N];
+
+int main() {
+	cin >> n >> m;
+	// 初始化
+	memset(f, 0x3f, sizeof f);
+	f[0][1] = 0;
+	for (int i = 1; i <= n; i++) {
+		for (int j = 1; j <= m; j++) {
+			int x;
+			cin >> x;
+			f[i][j] = min(f[i - 1][j], f[i][j - 1]) + x;
+		}
+	}
+	cout << f[n][m] << endl;
+}
+```
+
 ::: danger 警告
 
 该部分尚未完工!
