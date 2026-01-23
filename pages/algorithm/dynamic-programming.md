@@ -235,20 +235,73 @@ int main() {
 
 ## 线性 dp
 
-::: danger 警告
-该部分尚未完工!
-:::
+线性 dp 是动态规划问题中最基础，最常见的一类问题。它的特点是**状态转移只依赖于前一个或前几个状态**，状态之间的关系是线性的，通常可以用一维或者二维数组来存储状态。
 
 ### 基础线性 dp
 
+例题：[P1192 台阶问题](https://www.luogu.com.cn/problem/P1192)
+
+<p><font color="blue">状态表示：f[i] 表示：到达第 i 个台阶时，一共有多少种不同的方案</font></p>
+
+<p><font color="blue">状态转移方程：f[i] += f[i - j] (1 <= j <= k)</font></p>
+
+<p><font color="blue">初始化：f[0] = 1</font></p>
+
+<p><font color="blue">填表顺序：从左到右</font></p>
+
+<p><font color="blue">最终结果：f[n]</font></p>
+
+```c++
+#include<iostream>
+using namespace std;
+
+const int N = 1e5 + 10, MOD = 1e5 + 3;
+
+int n, k;
+int f[N];
+
+int main() {
+	cin >> n >> k;
+	f[0] = 1;
+	for (int i = 1; i <= n; i++) {
+		for (int j = 1; j <= k && i - j >= 0; j++) {
+			f[i] = (f[i] + f[i - j]) % MOD;
+		}
+	}
+	cout << f[n] << endl;
+}
+```
+
+例题：[P1115 最大子段和](https://www.luogu.com.cn/problem/P1115)
+
 ::: danger 警告
+
 该部分尚未完工!
+
+:::
+
+例题：[P5888 传球游戏](https://www.luogu.com.cn/problem/P5888)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P1541 [NOIP 2010 提高组] 乌龟棋](https://www.luogu.com.cn/problem/P1541)
+
+::: danger 警告
+
+该部分尚未完工!
+
 :::
 
 ### 路径类 dp
 
 ::: danger 警告
+
 该部分尚未完工!
+
 :::
 
 ### 经典线性 dp 问题
