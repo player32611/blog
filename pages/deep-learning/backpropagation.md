@@ -661,6 +661,77 @@ class Affine:
 
 ### Softmax-with-Loss 层
 
-::: details 回忆：Softmax 层
+::: details 回忆：Softmax 函数
+
+softmax 函数会将输入值正规化之后再输出。
+
+$$y_k = \frac{e^{a_i}}{\sum_{i=1}^{n} e^{a_j}}$$
+
+比如手写数字识别时，Softmax层的输出如下图所示：
+
+![Softmax 函数](/images/deep-learning/backpropagation/softmax.png)
+
+Softmax 层将输入值正规化（将输出值的和调整为 1）之后再输出。另外，因为手写数字识别要进行 10 类分类，所以向 Softmax 层的输入也有 10 个。
 
 :::
+
+下面来实现 Softmax 层。考虑到这里也包含作为损失函数的交叉熵误差（cross entropy error），所以称为**Softmax-with-Loss层**。 Softmax-withLoss 层（Softmax 函数和交叉熵误差）的计算图如下图所示：
+
+![Softmax-with-Loss 层的计算图](/images/deep-learning/backpropagation/softmax-with-loss-multiply.png)
+
+> 推导过程见附录。
+
+也可以简化为下图：
+
+![Softmax-with-Loss 层的计算图](/images/deep-learning/backpropagation/softmax-with-loss-multiply-simplified.png)
+
+> softmax 函数记为 Softmax 层，交叉熵误差记为 Cross Entropy Error 层。
+>
+> 这里假设要进行 3 类分类，从前面的层接收 3 个输入（得分）。
+
+如图所示，Softmax 层将输入（$a_1$, $a_2$, $a_3$）正规化，输出（$y_1$, $y_2$, $y_3$）。 Cross Entropy Error 层接收 Softmax 的输出（$y_1$, $y_2$, $y_3$）和教师标签（$t1_,$ $t_2$, $t_3$），从这些数据中输出损失 $L$。
+
+Softmax层的反向传播得到了（$y_1−t_1$,$y_2−t_2$,$y_3−t_3$）这样的结果。由于（$y_1$,$y_2$,$y_3$）是 Softmax 层的输出，（$t_1$,$t_2$,$t_3$）是监督数据，所以（$y_1−t_1$,$y_2−t_2$,$y_3−t_3$）是 Softmax 层的输出和教师标签的差分。神经网络的反向传播会把这个差分表示的误差传递给前面的层，这是神经网络学习中的重要性质。
+
+神经网络学习的目的就是通过调整权重参数，使神经网络的输出（Softmax 的输出）接近教师标签。因此，必须将神经网络的输出与教师标签的误差高效地传递给前面的层。刚刚的（$y_1−t_1$,$y_2−t_2$,$y_3−t_3$）正是 Softmax 层的输出与教师标签的差，直截了当地表示了当前神经网络的输出与教师标签的误差。
+
+::: details 示例
+
+这里考虑一个具体的例子，比如思考教师标签是（0, 1, 0），Softmax层的输出是(0.3, 0.2, 0.5)的情形。因为正确解标签处的概率是 0.2（20%），这个时候的神经网络未能进行正确的识别。此时， Softmax 层的反向传播传递的是(0.3, −0.8, 0.5)这样一个大的误差。因为这个大的误差会向前面的层传播，所以 Softmax 层前面的层会从这个大的误差中学习到**大**的内容。
+
+再举一个例子，比如思考教师标签是(0, 1, 0)，Softmax 层的输出是(0.01, 0.99, 0)的情形（这个神经网络识别得相当准确）。此时 Softmax 层的反向传播传递的是(0.01, −0.01, 0)这样一个小的误差。这个小的误差也会向前面的层传播，因为误差很小，所以 Softmax 层前面的层学到的内容也很**小**。
+
+:::
+
+现在来进行 Softmax-with-Loss 层的实现：
+
+```python
+class SoftmaxWithLoss:
+    def __init__(self):
+        self.loss = None # 损失
+        self.y = None # softmax 的输出
+        self.t = None # 监督数据(one-hot vector)
+
+    def forward(self, x, t):
+        self.t = t
+        self.y = softmax(x)
+        self.loss = cross_entropy_error(self.y, self.t)
+
+        return self.loss
+
+    def backward(self, dout=1):
+        batch_size = self.t.shape[0]
+        dx = (self.y - self.t) / batch_size
+
+        return dx
+```
+
+::: details 代码解释
+
+这个实现利用了之前实现的 `softmax()` 和 `cross_entropy_error()` 函数。
+
+请注意反向传播时，将要传播的值除以批的大小（batch_size）后，传递给前面的层的是单个数据的误差。
+
+:::
+
+## 误差反向传播法的实现
