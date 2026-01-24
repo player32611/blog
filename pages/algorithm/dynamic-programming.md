@@ -341,6 +341,16 @@ int main() {
 }
 ```
 
+例题：[P1002 [NOIP 2002 普及组] 过河卒](https://www.luogu.com.cn/problem/P1002)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P1004 [NOIP 2000 提高组] 方格取数](https://www.luogu.com.cn/problem/P1004)
+
 ::: danger 警告
 
 该部分尚未完工!
