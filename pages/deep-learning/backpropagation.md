@@ -735,3 +735,272 @@ class SoftmaxWithLoss:
 :::
 
 ## 误差反向传播法的实现
+
+### 神经网络学习的全貌图
+
+在进行具体的实现之前，我们再来确认一下神经网络学习的全貌图。神经网络学习的步骤如下所示。
+
+- **前提**：神经网络中有合适的权重和偏置，调整权重和偏置以便拟合训练数据的过程称为学习。
+
+- **步骤 1（mini-batch）**：从训练数据中随机选择一部分数据。
+
+- **步骤 2（计算梯度）**：计算损失函数关于各个权重参数的梯度。
+
+- **步骤 3（更新参数）**：将权重参数沿梯度方向进行微小的更新。
+
+- **步骤 4（重复）**：重复步骤 1、步骤 2、步骤 3。
+
+误差反向传播法会在步骤 2 中出现。之前我们利用数值微分求得了这个梯度。数值微分虽然实现简单，但是计算要耗费较多的时间。和需要花费较多时间的数值微分不同，误差反向传播法可以快速高效地计算梯度。
+
+### 对应误差反向传播法的神经网络的实现
+
+现在来进行神经网络的实现。这里我们要把 2 层神经网络实现为 TwoLayerNet。首先，将这个类的实例变量和方法整理一下：
+
+| 实例变量  |                                                                             说明                                                                              |
+| :-------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------: |
+|  params   | 保存神经网络的参数的字典型变量。`params['W1']` 是第 1 层的权重，`params['b1']` 是第 1 层的偏置。`params['W2']` 是第 2 层的权重，`params['b2']`是第 2 层的偏置 |
+|  layers   |                保存神经网络的层的有序字典型变量。以 `layers['Affine1']`、`layers['ReLu1']`、`layers['Affine2']` 的形式，通过有序字典保存各个层                |
+| lastLayer |                                                        神经网络的最后一层。本例中为 SoftmaxWithLoss 层                                                        |
+
+|                                 方法                                  |                                                       说明                                                       |
+| :-------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------: |
+| `__init__(self, input_size,hidden_size, output_size,weight_init_std)` | 进行初始化。参数从头开始依次是输入层的神经元数、隐藏层的神经元数、输出层的神经元数、初始化权重时的高斯分布的规模 |
+|                          `predict(self, x)`                           |                                       进行识别（推理）。参数 x 是图像数据                                        |
+|                          `loss(self, x, t)`                           |                               计算损失函数的值。参数 X 是图像数据、t 是正确解标签                                |
+|                        `accuracy(self, x, t)`                         |                                                   计算识别精度                                                   |
+|                   `numerical_gradient(self, x, t)`                    |                                      通过**数值微分**计算关于权重参数的梯度                                      |
+|                        `gradient(self, x, t)`                         |                                   通过**误差反向传播法**计算关于权重参数的梯度                                   |
+
+下面是 TwoLayerNet 的代码实现：
+
+```python
+import sys, os
+sys.path.append(os.pardir)  # 为了导入父目录的文件而进行的设定
+import numpy as np
+from common.layers import *
+from common.gradient import numerical_gradient
+from collections import OrderedDict
+
+
+class TwoLayerNet:
+
+    def __init__(self, input_size, hidden_size, output_size, weight_init_std = 0.01):
+        # 初始化权重
+        self.params = {}
+        self.params['W1'] = weight_init_std * np.random.randn(input_size, hidden_size)
+        self.params['b1'] = np.zeros(hidden_size)
+        self.params['W2'] = weight_init_std * np.random.randn(hidden_size, output_size)
+        self.params['b2'] = np.zeros(output_size)
+
+        # 生成层
+        self.layers = OrderedDict()
+        self.layers['Affine1'] = Affine(self.params['W1'], self.params['b1'])
+        self.layers['Relu1'] = Relu()
+        self.layers['Affine2'] = Affine(self.params['W2'], self.params['b2'])
+
+        self.lastLayer = SoftmaxWithLoss()
+
+    def predict(self, x):
+        for layer in self.layers.values():
+            x = layer.forward(x)
+
+        return x
+
+    # x:输入数据, t:监督数据
+    def loss(self, x, t):
+        y = self.predict(x)
+        return self.lastLayer.forward(y, t)
+
+    def accuracy(self, x, t):
+        y = self.predict(x)
+        y = np.argmax(y, axis=1)
+        if t.ndim != 1 : t = np.argmax(t, axis=1)
+
+        accuracy = np.sum(y == t) / float(x.shape[0])
+        return accuracy
+
+    # x:输入数据, t:监督数据
+    def numerical_gradient(self, x, t):
+        loss_W = lambda W: self.loss(x, t)
+
+        grads = {}
+        grads['W1'] = numerical_gradient(loss_W, self.params['W1'])
+        grads['b1'] = numerical_gradient(loss_W, self.params['b1'])
+        grads['W2'] = numerical_gradient(loss_W, self.params['W2'])
+        grads['b2'] = numerical_gradient(loss_W, self.params['b2'])
+
+        return grads
+
+    def gradient(self, x, t):
+        # forward
+        self.loss(x, t)
+
+        # backward
+        dout = 1
+        dout = self.lastLayer.backward(dout)
+
+        layers = list(self.layers.values())
+        layers.reverse()
+        for layer in layers:
+            dout = layer.backward(dout)
+
+        # 设定
+        grads = {}
+        grads['W1'], grads['b1'] = self.layers['Affine1'].dW, self.layers['Affine1'].db
+        grads['W2'], grads['b2'] = self.layers['Affine2'].dW, self.layers['Affine2'].db
+
+        return grads
+
+```
+
+::: details 代码解释
+
+`OrderedDict` 是有序字典，指它可以记住向字典里添加元素的顺序。因此，神经网络的正向传播只需按照添加元素的顺序调用各层的 `forward()` 方法就可以完成处理，而反向传播只需要按照相反的顺序调用各层即可。
+
+因为 Affine 层和 ReLU 层的内部会正确处理正向传播和反向传播，所以这里要做的事情仅仅是以正确的顺序连接各层，再按顺序（或者逆序）调用各层。
+
+:::
+
+像这样通过将神经网络的组成元素以层的方式实现，可以轻松地构建神经网络。这个用层进行模块化的实现具有很大优点。因为想另外构建一个神经网络（比如 5 层、10 层、20 层······的大的神经网络）时，只需像组装乐高积木那样添加必要的层就可以了。之后，通过各个层内部实现的正向传播和反向传播，就可以正确计算进行识别处理或学习所需的梯度。
+
+### 误差反向传播法的梯度确认
+
+到目前为止，我们介绍了两种求梯度的方法。一种是基于数值微分的方法，另一种是解析性地求解数学式的方法。后一种方法通过使用误差反向传播法，即使存在大量的参数，也可以高效地计算梯度。因此，后文将不再使用耗费时间的数值微分，而是使用误差反向传播法求梯度。
+
+数值微分的计算很耗费时间，而且如果有误差反向传播法的（正确的）实现的话，就没有必要使用数值微分的实现了。那么数值微分有什么用呢？实际上，在确认误差反向传播法的实现是否正确时，是需要用到数值微分的。
+
+::: details 为什么用数值微分来确认误差反向传播法
+
+数值微分的优点是实现简单，因此，一般情况下不太容易出错。而误差反向传播法的实现很复杂，容易出错。所以，经常会比较数值微分的结果和误差反向传播法的结果，以确认误差反向传播法的实现是否正确。
+
+:::
+
+确认数值微分求出的梯度结果和误差反向传播法求出的结果是否一致（严格地讲，是非常相近）的操作称为**梯度确认**（gradient check）。
+
+```python
+import sys, os
+sys.path.append(os.pardir)  # 为了导入父目录的文件而进行的设定
+import numpy as np
+from dataset.mnist import load_mnist
+from two_layer_net import TwoLayerNet
+
+# 读入数据
+(x_train, t_train), (x_test, t_test) = load_mnist(normalize=True, one_hot_label=True)
+
+network = TwoLayerNet(input_size=784, hidden_size=50, output_size=10)
+
+x_batch = x_train[:3]
+t_batch = t_train[:3]
+
+grad_numerical = network.numerical_gradient(x_batch, t_batch)
+grad_backprop = network.gradient(x_batch, t_batch)
+
+for key in grad_numerical.keys():
+    diff = np.average( np.abs(grad_backprop[key] - grad_numerical[key]) )
+    print(key + ":" + str(diff))
+```
+
+::: details 代码解释
+
+和以前一样，读入 MNIST 数据集。然后，使用训练数据的一部分，确认数值微分求出的梯度和误差反向传播法求出的梯度的误差。这里误差的计算方法是求各个权重参数中对应元素的差的绝对值，并计算其平均值。
+
+运行上面的代码后，会输出如下结果：
+
+```cmd
+W1:1.116084602605866e-09
+b1:3.0483517120868246e-09
+W2:7.2589998358910316e-09
+b2:1.598537949593082e-07
+```
+
+可以看出，通过数值微分和误差反向传播法求出的梯度的差非常小。这样一来，我们就知道了通过误差反向传播法求出的梯度是正确的，误差反向传播法的实现没有错误。
+
+:::
+
+### 使用误差反向传播法的学习
+
+最后，我们来看一下使用了误差反向传播法的神经网络的学习的实现。和之前的实现相比，不同之处仅在于通过误差反向传播法求梯度这一点：
+
+```python
+import sys, os
+sys.path.append(os.pardir)
+import numpy as np
+from dataset.mnist import load_mnist
+from two_layer_net import TwoLayerNet
+
+# 读入数据
+(x_train, t_train), (x_test, t_test) = load_mnist(normalize=True, one_hot_label=True)
+
+network = TwoLayerNet(input_size=784, hidden_size=50, output_size=10)
+
+iters_num = 10000
+train_size = x_train.shape[0]
+batch_size = 100
+learning_rate = 0.1
+train_loss_list = []
+train_acc_list = []
+test_acc_list = []
+
+iter_per_epoch = max(train_size / batch_size, 1)
+
+for i in range(iters_num):
+    batch_mask = np.random.choice(train_size, batch_size)
+    x_batch = x_train[batch_mask]
+    t_batch = t_train[batch_mask]
+
+    # 梯度
+    #grad = network.numerical_gradient(x_batch, t_batch) # 数值微分
+    grad = network.gradient(x_batch, t_batch) # 误差反向传播法
+
+    # 更新
+    for key in ('W1', 'b1', 'W2', 'b2'):
+        network.params[key] -= learning_rate * grad[key]
+
+    loss = network.loss(x_batch, t_batch)
+    train_loss_list.append(loss)
+
+    if i % iter_per_epoch == 0:
+        train_acc = network.accuracy(x_train, t_train)
+        test_acc = network.accuracy(x_test, t_test)
+        train_acc_list.append(train_acc)
+        test_acc_list.append(test_acc)
+        print(train_acc, test_acc)
+```
+
+## 小结
+
+::: details 小结
+
+- 通过使用计算图，可以直观地把握计算过程。
+
+- 计算图的节点是由局部计算构成的。局部计算构成全局计算。
+
+- 计算图的正向传播进行一般的计算。通过计算图的反向传播，可以计算各个节点的导数。
+
+- 通过将神经网络的组成元素实现为层，可以高效地计算梯度（反向传播法 ）。
+
+- 通过比较数值微分和误差反向传播法的结果，可以确认误差反向传播法的实现是否正确（梯度确认）
+
+:::
+
+::: details 专有名词
+
+- **计算图**：用图形表示的计算过程。
+
+- **链式法则**：如果某个函数由复合函数表示，则该复合函数的导数可以用构成复合函数的各个函数的导数的乘积表示。
+
+- **Affine 层**：神经网络的正向传播中进行的矩阵的乘积运算。
+
+- **教师标签**：数据的真实标签。
+
+- **梯度确认**：通过数值微分求出的梯度结果确定误差反向传播法求出的结果是否正确。
+
+:::
+
+## 附录：Softmax-with-Loss 层计算图的推导
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
