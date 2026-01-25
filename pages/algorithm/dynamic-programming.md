@@ -359,9 +359,49 @@ int main() {
 
 ### 经典线性 dp 问题
 
-::: danger 警告
-该部分尚未完工!
-:::
+经典线性 dp 问题有两个：最长上升子序列（简称：LIS）以及最长公共子序列（简称：LCS）。这两道题目的很多方面都是可以作为经验，运用到别的题目中。
+
+例题：[B3637 最长上升子序列](https://www.luogu.com.cn/problem/B3637)
+
+- 解法一：纯动态规划
+
+<p><font color="blue">状态表示：f[i] 表示：以 i 位置元素为结尾的所有的子序列中，最长上升子序列的长度</font></p>
+
+<p><font color="blue">状态转移方程：f[i] = max(f[i], f[j] + 1) (1 <= j < i)</font></p>
+
+<p><font color="blue">初始化：f[i] = 0</font></p>
+
+<p><font color="blue">填表顺序：从左到右</font></p>
+
+<p><font color="blue">最终结果：整个 f 表里面的最大值</font></p>
+
+```c++
+#include<iostream>
+#include<algorithm>
+using namespace std;
+
+const int N = 5010;
+
+int n;
+int a[N];
+int f[N];
+
+int main() {
+	cin >> n;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	int ret = 0;
+	for (int i = 1; i <= n; i++) {
+		f[i] = 1; // 长度为 1 的子序列
+		for (int j = 1; j < i; j++) {
+			if (a[j] < a[i]) {
+				f[i] = max(f[i], f[j] + 1);
+			}
+		}
+		ret = max(ret, f[i]);
+	}
+	cout << ret << endl;
+}
+```
 
 ## 背包问题
 
