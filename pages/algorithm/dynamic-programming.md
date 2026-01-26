@@ -361,9 +361,9 @@ int main() {
 
 经典线性 dp 问题有两个：最长上升子序列（简称：LIS）以及最长公共子序列（简称：LCS）。这两道题目的很多方面都是可以作为经验，运用到别的题目中。
 
-例题：[B3637 最长上升子序列](https://www.luogu.com.cn/problem/B3637)
-
 - 解法一：纯动态规划
+
+例题：[B3637 最长上升子序列](https://www.luogu.com.cn/problem/B3637)
 
 <p><font color="blue">状态表示：f[i] 表示：以 i 位置元素为结尾的所有的子序列中，最长上升子序列的长度</font></p>
 
@@ -402,6 +402,59 @@ int main() {
 	cout << ret << endl;
 }
 ```
+
+- 解法二：贪心 + 二分优化动态规划
+
+例题：[【模板】最长上升子序列](https://ac.nowcoder.com/acm/problem/226831)
+
+::: tip 当研究最长上升子序列的**长度**时：
+
+- 我们并不关心这个序列具体长什么样子，仅需知道长度以及最后一个元素是谁即可；
+
+- 如果长度为 i 的序列有很多个，仅需保留最小的末尾；
+
+- f 数组（用于存储最小的末尾的数组）是严格递增的，因此对于一个新来的数 a[i]，就可以二分出要放的位置（目标位置为大于等于 a[i] 的最小位置）。
+
+:::
+
+```c++
+#include<iostream>
+using namespace std;
+
+const int N = 1e5 + 10;
+
+int n;
+int a[N];
+int f[N], len; // f[N]：用于存储不同长度子序列的最小的末尾的数组；len：当前统计到的长度
+
+int main() {
+	cin >> n;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	for (int i = 1; i <= n; i++) {
+		// 处理边界情况
+		if (len == 0 || a[i] > f[len])f[++len] = a[i];
+		else {
+			// 二分插入位置
+			int l = 1, r = len;
+			while (l < r) {
+				int mid = (l + r) / 2;
+				if (f[mid] >= a[i])r = mid;
+				else l = mid + 1;
+			}
+			f[l] = a[i];
+		}
+	}
+	cout << len << endl;
+}
+```
+
+::: details 两种解法的对比
+
+时间上：解法二快于解法一；
+
+使用范围上：解法二仅能处理只研究最长上升子序列的长度的情况，解法一可以处理研究最长上升子序列的长度和具体序列的情况。
+
+:::
 
 ## 背包问题
 
