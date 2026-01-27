@@ -482,9 +482,148 @@ int main() {
 
 因此，背包问题种类非常繁多，题型非常丰富。但是，尽管背包问题有很多变形，都是从 01 背包问题演化过来的。
 
+::: warning 注意
+
+背包问题不能使用贪心策略。
+
+:::
+
 ### 01 背包
 
 **01 背包问题**：每种物品只能选或不选（选 0 次或 1 次）。
+
+例题：[【模板】01背包](https://ac.nowcoder.com/acm/problem/226514)
+
+**第一问**：
+
+<p><font color="blue">状态表示：f[i][j] 表示：在 [1, i] 区间内挑选物品，总体积不能超过 j，所有的选法下，最大的价值</font></p>
+
+<p><font color="blue">状态转移方程：f[i][j] = max(f[i - 1][j], w[i] + f[i - 1][j - v[i]])（f[i - 1][j]：不选 i 的情况；w[i] + f[i - 1][j - v[i]]：选 i 的情况）</font></p>
+
+<p><font color="blue">初始化：第 0 行初始化为 0</font></p>
+
+<p><font color="blue">填表顺序：从上到下每一行</font></p>
+
+<p><font color="blue">最终结果：f[n][V]</font></p>
+
+**第二问**：
+
+<p><font color="blue">状态表示：f[i][j]：在 [1, i] 区间内挑选物品，总体积必须为 j，所有的选法下，最大的价值</font></p>
+
+<p><font color="blue">状态转移方程：f[i][j] = max(f[i - 1][j], w[i] + f[i - 1][j - v[i]])（f[i - 1][j]：不选 i 的情况；w[i] + f[i - 1][j - v[i]]：选 i 的情况）</font></p>
+
+<p><font color="blue">初始化：非法的格子初始化为负无穷</font></p>
+
+```c++
+#include<iostream>
+#include<algorithm>
+#include<cstring>
+using namespace std;
+
+const int N = 1010;
+
+int n, V;
+int v[N], w[N]; // v[i]：第 i 个物品的价值；w[i]：第 i 个物品的体积
+int f[N][N]; // f[i][j] 表示：在 [1, i] 区间内挑选物品，总体积不能超过 j，所有的选法下，最大的价值
+
+int main() {
+	cin >> n >> V;
+	for (int i = 1; i <= n; i++)cin >> v[i] >> w[i];
+
+	// 第一问
+	for (int i = 1; i <= n; i++) {
+		for (int j = 0; j <= V; j++) {
+			f[i][j] = f[i - 1][j];
+			if (j >= v[i]) {
+				f[i][j] = max(f[i][j], f[i - 1][j - v[i]] + w[i]);
+			}
+		}
+	}
+	cout << f[n][V] << endl;
+
+	// 第二问
+	// 初始化
+	memset(f, -0x3f, sizeof f);
+	f[0][0] = 0;
+	for (int i = 1; i <= n; i++) {
+		for (int j = 0; j <= V; j++) {
+			f[i][j] = f[i - 1][j];
+			if (j >= v[i]) {
+				f[i][j] = max(f[i][j], f[i - 1][j - v[i]] + w[i]);
+			}
+		}
+	}
+	if (f[n][V] < 0)cout << 0 << endl;
+	else cout << f[n][V] << endl;
+
+}
+```
+
+::: details 空间优化
+
+- 考虑是否修改遍历顺序
+
+- 直接在源代码上，删掉第一位即可
+
+```c++
+#include<iostream>
+#include<algorithm>
+#include<cstring>
+using namespace std;
+
+const int N = 1010;
+
+int n, V;
+int v[N], w[N]; // v[i]：第 i 个物品的价值；w[i]：第 i 个物品的体积
+int f[N];
+
+int main() {
+	cin >> n >> V;
+	for (int i = 1; i <= n; i++)cin >> v[i] >> w[i];
+
+	// 第一问
+	for (int i = 1; i <= n; i++) {
+		for (int j = V; j >= v[i]; j--) { // 修改遍历顺序
+				f[j] = max(f[j], f[j - v[i]] + w[i]);
+		}
+	}
+	cout << f[V] << endl;
+
+	// 第二问
+	// 初始化
+	memset(f, -0x3f, sizeof f);
+	f[0] = 0;
+	for (int i = 1; i <= n; i++) {
+		for (int j = V; j >= v[i]; j--) { // 修改遍历顺序
+			if (j >= v[i]) {
+				f[j] = max(f[j], f[j - v[i]] + w[i]);
+			}
+		}
+	}
+	if (f[V] < 0)cout << 0 << endl;
+	else cout << f[V] << endl;
+}
+```
+
+:::
+
+例题：[P1048 [NOIP 2005 普及组] 采药](https://www.luogu.com.cn/problem/P1048)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P1164 小A点菜](https://www.luogu.com.cn/problem/P1164)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P2946 [USACO09MAR] Cow Frisbee Team S](https://www.luogu.com.cn/problem/P2946)
 
 ::: danger 警告
 
