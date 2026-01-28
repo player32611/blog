@@ -494,11 +494,15 @@ int main() {
 
 例题：[【模板】01背包](https://ac.nowcoder.com/acm/problem/226514)
 
+> v[i] 表示：第 i 个物品体积
+>
+> w[i] ：表示：第 i 个物品价值
+
 **第一问**：
 
 <p><font color="blue">状态表示：f[i][j] 表示：在 [1, i] 区间内挑选物品，总体积不能超过 j，所有的选法下，最大的价值</font></p>
 
-<p><font color="blue">状态转移方程：f[i][j] = max(f[i - 1][j], w[i] + f[i - 1][j - v[i]])（f[i - 1][j]：不选 i 的情况；w[i] + f[i - 1][j - v[i]]：选 i 的情况）</font></p>
+<p><font color="blue">状态转移方程：f[i][j] = max(f[i - 1][j], w[i] + f[i - 1][j - v[i]])（不选 i 的情况、选 i 的情况）</font></p>
 
 <p><font color="blue">初始化：第 0 行初始化为 0</font></p>
 
@@ -510,7 +514,7 @@ int main() {
 
 <p><font color="blue">状态表示：f[i][j]：在 [1, i] 区间内挑选物品，总体积必须为 j，所有的选法下，最大的价值</font></p>
 
-<p><font color="blue">状态转移方程：f[i][j] = max(f[i - 1][j], w[i] + f[i - 1][j - v[i]])（f[i - 1][j]：不选 i 的情况；w[i] + f[i - 1][j - v[i]]：选 i 的情况）</font></p>
+<p><font color="blue">状态转移方程：f[i][j] = max(f[i - 1][j], w[i] + f[i - 1][j - v[i]])（不选 i 的情况、选 i 的情况）</font></p>
 
 <p><font color="blue">初始化：非法的格子初始化为负无穷</font></p>
 
@@ -523,7 +527,7 @@ using namespace std;
 const int N = 1010;
 
 int n, V;
-int v[N], w[N]; // v[i]：第 i 个物品的价值；w[i]：第 i 个物品的体积
+int v[N], w[N]; // v[i]：第 i 个物品体积；w[i]：第 i 个物品价值
 int f[N][N]; // f[i][j] 表示：在 [1, i] 区间内挑选物品，总体积不能超过 j，所有的选法下，最大的价值
 
 int main() {
@@ -574,7 +578,7 @@ using namespace std;
 const int N = 1010;
 
 int n, V;
-int v[N], w[N]; // v[i]：第 i 个物品的价值；w[i]：第 i 个物品的体积
+int v[N], w[N]; // v[i]：第 i 个物品体积；w[i]：第 i 个物品价值
 int f[N];
 
 int main() {
@@ -634,6 +638,148 @@ int main() {
 ### 完全背包
 
 **完全背包问题**：每种物品可以选择无限次。
+
+例题：[【模板】完全背包](https://ac.nowcoder.com/acm/problem/226516)
+
+> v[i] 表示：第 i 个物品体积
+>
+> w[i] 表示：第 i 个物品价值
+
+**第一问**：
+
+<p><font color="blue">状态表示：f[i][j] ：在 [1, i] 区间内挑选物品，总体积不超过 j 的情况下，所有的选法下，最大价值</font></p>
+
+<p><font color="blue">状态转移方程：f[i][j] = max(f[i - 1][j], f[i - 1][j - k * v[i]] + k * w[i])（不选 i 的情况、选 k 个 i 的情况）</font></p>
+
+<p><font color="blue">初始化：第 0 行初始化为 0</font></p>
+
+<p><font color="blue">填表顺序：从上往下每一行，每一行从左往右</font></p>
+
+<p><font color="blue">最终结果：f[n][V]</font></p>
+
+**第二问**：
+
+<p><font color="blue">状态表示：f[i][j]：在 [1, i] 区间内挑选物品，总体积正好为 j，所有的选法下，最大价值</font></p>
+
+<p><font color="blue">初始化：非法的格子初始化为负无穷</font></p>
+
+::: tip 优化状态转移方程
+
+由原状态转移方程可知：
+
+$$f[i][j] = max(f[i - 1][j], f[i - 1][j - v[i]] + w[i], f[i - 1][j - 2 * v[i]] + 2 * w[i], ...)$$
+
+$$f[i][j - v[i]]= max(f[i - 1][j - v[i]], f[i - 1][j - 2 * v[i]] + w[i], ...)$$
+
+令 $x = max(f[i - 1][j - v[i]] + w[i], f[i - 1][j - 2 * v[i]] + 2 * w[i], ...)$，则 $x = f[i][j - v[i]] + w[i]$。
+
+所以原状态转移方程可表示为：
+
+$$f[i][j] = max(f[i - 1][j], f[i][j - v[i]] + w[i])$$
+
+:::
+
+```c++
+#include<iostream>
+#include<algorithm>
+#include<cstring>
+using namespace std;
+
+const int N = 1010;
+
+int n, V;
+int v[N], w[N];
+int f[N][N];
+
+int main() {
+	cin >> n >> V;
+	for (int i = 1; i <= n; i++)cin >> v[i] >> w[i];
+
+	// 第一问
+	for (int i = 1; i <= n; i++) {
+		for (int j = 0; j <= V; j++) {
+			f[i][j] = f[i - 1][j];;
+			if (j >= v[i])f[i][j] = max(f[i][j], f[i][j - v[i]] + w[i]);
+		}
+	}
+	cout << f[n][V] << endl;
+
+	// 第二问
+	memset(f, -0x3f, sizeof f);
+	f[0][0] = 0;
+	for (int i = 1; i <= n; i++) {
+		for (int j = 0; j <= V; j++) {
+			f[i][j] = f[i - 1][j];
+			if (j >= v[i])f[i][j] = max(f[i][j], f[i][j - v[i]] + w[i]);
+		}
+	}
+	if (f[n][V] < 0)cout << 0 << endl;
+	else cout << f[n][V] << endl;
+}
+```
+
+::: details 空间优化
+
+**01 背包**：第二层 for 循环要求从大到小
+
+**完全背包**：第二层 for 循环要求从小到大
+
+```c++
+#include<iostream>
+#include<algorithm>
+#include<cstring>
+using namespace std;
+
+const int N = 1010;
+
+int n, V;
+int v[N], w[N];
+int f[N];
+
+int main() {
+	cin >> n >> V;
+	for (int i = 1; i <= n; i++)cin >> v[i] >> w[i];
+
+	// 第一问
+	for (int i = 1; i <= n; i++) {
+		for (int j = v[i]; j <= V; j++) { // 从小到大循环
+			f[j] = max(f[j], f[j - v[i]] + w[i]);
+		}
+	}
+	cout << f[V] << endl;
+
+	// 第二问
+	memset(f, -0x3f, sizeof f);
+	f[0] = 0;
+	for (int i = 1; i <= n; i++) {
+		for (int j = v[i]; j <= V; j++) { // 从小到大循环
+			f[j] = max(f[j], f[j - v[i]] + w[i]);
+		}
+	}
+	if (f[V] < 0)cout << 0 << endl;
+	else cout << f[V] << endl;
+}
+```
+
+:::
+
+例题：[P1616 疯狂的采药](https://www.luogu.com.cn/problem/P1616)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P2918 [USACO08NOV] Buying Hay S](https://www.luogu.com.cn/problem/P2918)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P5662 [CSP-J 2019] 纪念品](https://www.luogu.com.cn/problem/P5662)
 
 ::: danger 警告
 
