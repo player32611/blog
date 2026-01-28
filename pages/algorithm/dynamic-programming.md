@@ -496,7 +496,7 @@ int main() {
 
 > v[i] 表示：第 i 个物品体积
 >
-> w[i] ：表示：第 i 个物品价值
+> w[i] 表示：第 i 个物品价值
 
 **第一问**：
 
@@ -647,7 +647,7 @@ int main() {
 
 **第一问**：
 
-<p><font color="blue">状态表示：f[i][j] ：在 [1, i] 区间内挑选物品，总体积不超过 j 的情况下，所有的选法下，最大价值</font></p>
+<p><font color="blue">状态表示：f[i][j]：在 [1, i] 区间内挑选物品，总体积不超过 j 的情况下，所有的选法下，最大价值</font></p>
 
 <p><font color="blue">状态转移方程：f[i][j] = max(f[i - 1][j], f[i - 1][j - k * v[i]] + k * w[i])（不选 i 的情况、选 k 个 i 的情况）</font></p>
 
@@ -790,6 +790,84 @@ int main() {
 ### 多重背包
 
 **多重背包问题**：每种物品有数量限制。
+
+例题：[多重背包](https://ac.nowcoder.com/acm/problem/235950)
+
+> v[i] 表示：第 i 个物品的价值
+>
+> w[i] 表示：第 i 个物品的重量
+>
+> x[i] 表示：第 i 个物品的数量
+
+<p><font color="blue">状态表示：f[i][j]：从 [1, i] 区间内挑选物品，总重量不超过 j 的情况下，此时的最大价值</font></p>
+
+<p><font color="blue">状态转移方程：f[i][j] = max(f[i - 1][j], f[i - 1][j - x[i] * w[i]] + x[i] * v[i])</font></p>
+
+<p><font color="blue">初始化：全为 0</font></p>
+
+<p><font color="blue">填表顺序：从上往下每一行，每一行从左往右（空间优化：第二维一定要从大到小循环）</font></p>
+
+<p><font color="blue">最终结果：f[n][V]</font></p>
+
+```c++
+#include<iostream>
+#include<algorithm>
+using namespace std;
+
+const int N = 110;
+
+int n, T;
+int x[N], w[N], v[N];
+int f[N][N];
+
+int main() {
+	cin >> n >> T;
+	for (int i = 1; i <= n; i++)cin >> x[i] >> w[i] >> v[i];
+	for (int i = 1; i <= n; i++) {
+		for (int j = T; j >= 0; j--) {
+			for (int k = 0; k <= x[i] && k * w[i] <= j; k++) {
+				f[i][j] = max(f[i][j], f[i - 1][j - k * w[i]] + k * v[i]);
+			}
+		}
+	}
+	cout << f[n][T] << endl;
+}
+```
+
+::: tip 空间优化
+
+```c++
+#include<iostream>
+#include<algorithm>
+using namespace std;
+
+const int N = 110;
+
+int n, T;
+int x[N], w[N], v[N];
+int f[N];
+
+int main() {
+	cin >> n >> T;
+	for (int i = 1; i <= n; i++)cin >> x[i] >> w[i] >> v[i];
+	for (int i = 1; i <= n; i++) {
+		for (int j = T; j >= 0; j--) {
+			for (int k = 0; k <= x[i] && k * w[i] <= j; k++) {
+				f[j] = max(f[j], f[j - k * w[i]] + k * v[i]);
+			}
+		}
+	}
+	cout << f[T] << endl;
+}
+```
+
+:::
+
+::: tip 二进制优化
+
+:::
+
+例题：[P1077 [NOIP 2012 普及组] 摆花](https://www.luogu.com.cn/problem/P1077)
 
 ::: danger 警告
 
