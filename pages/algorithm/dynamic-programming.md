@@ -865,6 +865,50 @@ int main() {
 
 ::: tip 二进制优化
 
+二进制优化可以将多重背包问题转化为 01 背包问题。并把时间复杂度由原来的 $O(n·m·x)$ 降低为 $O(n·m·\log x)$。但无法解决 “求方案数” 的问题。
+
+二进制优化的基本思路是将每一种物品分为数量分别为 1、2、4、8··· 的物品堆，并对分完后的物品对进行 01 背包处理。
+
+```c++
+#include<iostream>
+#include<algorithm>
+using namespace std;
+
+const int N = 110 * 5;
+
+int n, T;
+int w[N], v[N], pos;
+int f[N];
+
+int main() {
+	cin >> n >> T;
+	for (int i = 1; i <= n; i++) {
+		int x, y, z;
+		cin >> x >> y >> z;
+		// 按照二进制拆分
+		int t = 1;
+		while (x >= t) {
+			pos++;
+			w[pos] = t * y;
+			v[pos] = t * z;
+			x -= t;
+			t *= 2;
+		}
+		if (x) { // 处理剩余
+			pos++;
+			w[pos] = x * y;
+			v[pos] = x * z;
+		}
+	}
+
+	// 针对拆分后的物品，做一次 01 背包即可
+	for (int i = 1; i <= pos; i++)
+		for (int j = T; j >= w[i]; j--)
+			f[j] = max(f[j], f[j - w[i]] + v[i]);
+	cout << f[T] << endl;
+}
+```
+
 :::
 
 例题：[P1077 [NOIP 2012 普及组] 摆花](https://www.luogu.com.cn/problem/P1077)
