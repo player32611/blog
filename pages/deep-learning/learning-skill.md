@@ -178,7 +178,7 @@ class Momentum:
 
 在关于学习率的有效技巧中，有一种被称为**学习率衰减**（learning ratedecay）的方法，即随着学习的进行，使学习率逐渐减小。实际上，一开始 “多” 学，然后逐渐 “少” 学的方法，在神经网络的学习中经常被使用。
 
-逐渐减小学习率的想法，相当于将 “全体” 参数的学习率值一起降低。而 AdaGrad 进一步发展了这个想法，针对 “一个一个” 的参数，赋予其 “定制” 的值。
+逐渐减小学习率的想法，相当于将 “全体” 参数的学习率值一起降低。而 **AdaGrad** 进一步发展了这个想法，针对 “一个一个” 的参数，赋予其 “定制” 的值。
 
 AdaGrad 会为参数的每个元素适当地调整学习率，与此同时进行学习（AdaGrad 的 Ada 来自英文单词 Adaptive，即 “适当的” 的意思）。
 
@@ -233,14 +233,214 @@ class AdaGrad:
 
 ### Adam
 
+Momentum 参照小球在碗中滚动的物理规则进行移动，AdaGrad 为参数的每个元素适当地调整更新步伐。如果将这两个方法融合在一起会怎么样呢？这就是 **Adam** 方法的基本思路。
+
+Adam 是 2015 年提出的方法。它的理论有些复杂，直观地讲，就是融合了 Momentum 和 AdaGrad 的方法。通过组合前面两个方法的优点，有望实现参数空间的高效搜索。此外，进行超参数的 “偏置校正” 也是 Adam 的特征。
+
+```python
+class Adam:
+    def __init__(self, lr=0.001, beta1=0.9, beta2=0.999):
+        self.lr = lr
+        self.beta1 = beta1
+        self.beta2 = beta2
+        self.iter = 0
+        self.m = None
+        self.v = None
+    def update(self, params, grads):
+        if self.m is None:
+            self.m, self.v = {}, {}
+            for key, val in params.items():
+                self.m[key] = np.zeros_like(val)
+                self.v[key] = np.zeros_like(val)
+        self.iter += 1
+        lr_t  = self.lr * np.sqrt(1.0 - self.beta2**self.iter) / (1.0 - self.beta1**self.iter)
+        for key in params.keys():
+            self.m[key] += (1 - self.beta1) * (grads[key] - self.m[key])
+            self.v[key] += (1 - self.beta2) * (grads[key]**2 - self.v[key])
+            params[key] -= lr_t * self.m[key] / (np.sqrt(self.v[key]) + 1e-7)
+```
+
+现在尝试使用 Adam 解决函数 $f(x, y) = \frac{1}{20}x^2 + y^2$ 的最优化问题：
+
+![基于 Adam 的最优化的更新路径](/images/deep-learning/learning-skill/Adam-search.png)
+
+基于 Adam 的更新过程就像小球在碗中滚动一样。虽然 Momentun 也有类似的移动，但是相比之下，Adam 的小球左右摇晃的程度有所减轻。这得益于学习的更新程度被适当地调整了。
+
+::: tip 提示
+
+Adam 会设置 3 个超参数。一个是学习率（论文中以 $α$ 出现），另外两个是一次 momentum 系数 $β_1$ 和二次 momentum 系数 $β_2$。根据论文，标准的设定值是 $β_1$ 为 0.9，$β_2$ 为 0.999。设置了这些值后，大多数情况下都能顺利运行。
+
+:::
+
+### 使用哪种更新方法呢
+
+这里我们来比较一下 SGD、Momentum、AdaGrad、Adam 这 4 种方法：
+
+```python
+import sys, os
+sys.path.append(os.pardir)
+import numpy as np
+import matplotlib.pyplot as plt
+from collections import OrderedDict
+from common.optimizer import *
+
+def f(x, y):
+    return x**2 / 20.0 + y**2
+
+def df(x, y):
+    return x / 10.0, 2.0*y
+
+init_pos = (-7.0, 2.0)
+params = {}
+params['x'], params['y'] = init_pos[0], init_pos[1]
+grads = {}
+grads['x'], grads['y'] = 0, 0
+
+optimizers = OrderedDict()
+optimizers["SGD"] = SGD(lr=0.95)
+optimizers["Momentum"] = Momentum(lr=0.1)
+optimizers["AdaGrad"] = AdaGrad(lr=1.5)
+optimizers["Adam"] = Adam(lr=0.3)
+
+idx = 1
+
+for key in optimizers:
+    optimizer = optimizers[key]
+    x_history = []
+    y_history = []
+    params['x'], params['y'] = init_pos[0], init_pos[1]
+
+    for i in range(30):
+        x_history.append(params['x'])
+        y_history.append(params['y'])
+
+        grads['x'], grads['y'] = df(params['x'], params['y'])
+        optimizer.update(params, grads)
+
+    x = np.arange(-10, 10, 0.01)
+    y = np.arange(-5, 5, 0.01)
+
+    X, Y = np.meshgrid(x, y)
+    Z = f(X, Y)
+
+    # for simple contour line
+    mask = Z > 7
+    Z[mask] = 0
+
+    # plot
+    plt.subplot(2, 2, idx)
+    idx += 1
+    plt.plot(x_history, y_history, 'o-', color="red")
+    plt.contour(X, Y, Z)
+    plt.ylim(-10, 10)
+    plt.xlim(-10, 10)
+    plt.plot(0, 0, '+')
+    plt.title(key)
+    plt.xlabel("x")
+    plt.ylabel("y")
+
+plt.show()
+```
+
+![最优化方法的比较：SGD、Momentum、AdaGrad、Adam](/images/deep-learning/learning-skill/optimizer-compare.png)
+
+根据使用的方法不同，参数更新的路径也不同。只看这个图的话，AdaGrad 似乎是最好的，不过也要注意，结果会根据要解决的问题而变。并且，很显然，超参数（学习率等）的设定值不同，结果也会发生变化。
+
+这 4 种方法各有各的特点，都有各自擅长解决的问题和不擅长解决的问题。很多研究中至今仍在使用 SGD。Momentum 和 AdaGrad 也是值得一试的方法。最近，很多研究人员和技术人员都喜欢用 Adam。
+
+::: details 基于MNIST数据集的更新方法的比较
+
+我们以手写数字识别为例，比较前面介绍的 SGD、Momentum、AdaGrad、Adam 这 4 种方法，并确认不同的方法在学习进展上有多大程度的差异。
+
+```python
+# coding: utf-8
+import os
+import sys
+sys.path.append(os.pardir)  # 为了导入父目录的文件而进行的设定
+import matplotlib.pyplot as plt
+from dataset.mnist import load_mnist
+from common.util import smooth_curve
+from common.multi_layer_net import MultiLayerNet
+from common.optimizer import *
+
+
+# 0:读入MNIST数据==========
+(x_train, t_train), (x_test, t_test) = load_mnist(normalize=True)
+
+train_size = x_train.shape[0]
+batch_size = 128
+max_iterations = 2000
+
+
+# 1:进行实验的设置==========
+optimizers = {}
+optimizers['SGD'] = SGD()
+optimizers['Momentum'] = Momentum()
+optimizers['AdaGrad'] = AdaGrad()
+optimizers['Adam'] = Adam()
+#optimizers['RMSprop'] = RMSprop()
+
+networks = {}
+train_loss = {}
+for key in optimizers.keys():
+    networks[key] = MultiLayerNet(
+        input_size=784, hidden_size_list=[100, 100, 100, 100],
+        output_size=10)
+    train_loss[key] = []
+
+
+# 2:开始训练==========
+for i in range(max_iterations):
+    batch_mask = np.random.choice(train_size, batch_size)
+    x_batch = x_train[batch_mask]
+    t_batch = t_train[batch_mask]
+
+    for key in optimizers.keys():
+        grads = networks[key].gradient(x_batch, t_batch)
+        optimizers[key].update(networks[key].params, grads)
+
+        loss = networks[key].loss(x_batch, t_batch)
+        train_loss[key].append(loss)
+
+    if i % 100 == 0:
+        print( "===========" + "iteration:" + str(i) + "===========")
+        for key in optimizers.keys():
+            loss = networks[key].loss(x_batch, t_batch)
+            print(key + ":" + str(loss))
+
+
+# 3.绘制图形==========
+markers = {"SGD": "o", "Momentum": "x", "AdaGrad": "s", "Adam": "D"}
+x = np.arange(max_iterations)
+for key in optimizers.keys():
+    plt.plot(x, smooth_curve(train_loss[key]), marker=markers[key], markevery=100, label=key)
+plt.xlabel("iterations")
+plt.ylabel("loss")
+plt.ylim(0, 1)
+plt.legend()
+plt.show()
+```
+
+> 这个实验以一个 5 层神经网络为对象，其中每层有 100 个神经元。激活函数使用的是 ReLU。
+
+![基于MNIST数据集的更新方法的比较](/images/deep-learning/learning-skill/optimizer-compare-mnist.png)
+
+从图中结果可知，与 SGD 相比，其他 3 种方法学习得更快，而且速度基本相同，仔细看的话，AdaGrad 的学习进行得稍微快一点。这个实验需要注意的地方是，实验结果会随学习率等超参数、神经网络的结构（几层深等）的不同而发生变化。不过，一般而言，与 SGD 相比，其他 3 种方法可以学习得更快，有时最终的识别精度也更高。
+
+:::
+
 ## 小结
 
 ::: details 专有名词
 
 - **最优化**：神经网络的学习中寻找最优参数的过程
 
-- **随机梯度下降法**：一种最优化方法，使用参数的梯度，沿梯度方向更新参数，并重复这个步骤多次，从而逐渐靠近最优参数
+- **SGD（随机梯度下降法）**：一种最优化方法，使用参数的梯度，沿梯度方向更新参数，并重复这个步骤多次，从而逐渐靠近最优参数
 
 - **Momentum**：一种改进随机梯度下降法的方法，在梯度方向上受力，使参数的更新更平滑
+
+- **AdaGrad**：一种改进随机梯度下降法，会为参数的每个元素适当地调整学习率，与此同时进行学习
+
+- **Adam**：一种改进随机梯度下降法，融合了 Momentum 和 AdaGrad 的优点，并添加了超参数的 “偏置校正”
 
 :::
