@@ -131,7 +131,7 @@ int main() {
 }
 ```
 
-::: tip 空间优化
+::: details 空间优化版本
 
 由于 `f[n]` 只与 `f[i - 1]`、`f[i - 2]`、`f[i - 3]` 有关，因此可以空间优化，只存储三个变量：
 
@@ -198,7 +198,7 @@ int main() {
 }
 ```
 
-::: tip 空间优化
+::: details 空间优化版本
 
 采用从右往左的遍历方式，可以优化空间为一维数组：
 
@@ -241,7 +241,7 @@ int main() {
 
 例题：[P1192 台阶问题](https://www.luogu.com.cn/problem/P1192)
 
-<p><font color="blue">状态表示：f[i] 表示：到达第 i 个台阶时，一共有多少种不同的方案</font></p>
+<p><font color="blue">状态表示：f[i] 表示到达第 i 个台阶时，一共有多少种不同的方案</font></p>
 
 <p><font color="blue">状态转移方程：f[i] += f[i - j] (1 <= j <= k)</font></p>
 
@@ -304,7 +304,7 @@ int main() {
 
 例题：[矩阵的最小路径和](https://www.nowcoder.com/practice/38ae72379d42471db1c537914b06d48e?tpld=230&tqld=39755&ru=/exam/oj)
 
-<p><font color="blue">状态表示：f[i][j] ：从 [1, 1] 走到 [i, j] 时，所有方案下最小路径和</font></p>
+<p><font color="blue">状态表示：f[i][j] 表示从 [1, 1] 走到 [i, j] 时，所有方案下最小路径和</font></p>
 
 <p><font color="blue">状态转移方程：f[i][j] = min(f[i - 1][j], f[i][j - 1]) + a[i][j]</font></p>
 
@@ -365,7 +365,7 @@ int main() {
 
 例题：[B3637 最长上升子序列](https://www.luogu.com.cn/problem/B3637)
 
-<p><font color="blue">状态表示：f[i] 表示：以 i 位置元素为结尾的所有的子序列中，最长上升子序列的长度</font></p>
+<p><font color="blue">状态表示：f[i] 表示以 i 位置元素为结尾的所有的子序列中，最长上升子序列的长度</font></p>
 
 <p><font color="blue">状态转移方程：f[i] = max(f[i], f[j] + 1) (1 <= j < i)</font></p>
 
@@ -500,7 +500,7 @@ int main() {
 
 **第一问**：
 
-<p><font color="blue">状态表示：f[i][j] 表示：在 [1, i] 区间内挑选物品，总体积不能超过 j，所有的选法下，最大的价值</font></p>
+<p><font color="blue">状态表示：f[i][j] 表示在 [1, i] 区间内挑选物品，总体积不能超过 j，所有的选法下，最大的价值</font></p>
 
 <p><font color="blue">状态转移方程：f[i][j] = max(f[i - 1][j], w[i] + f[i - 1][j - v[i]])（不选 i 的情况、选 i 的情况）</font></p>
 
@@ -512,7 +512,7 @@ int main() {
 
 **第二问**：
 
-<p><font color="blue">状态表示：f[i][j]：在 [1, i] 区间内挑选物品，总体积必须为 j，所有的选法下，最大的价值</font></p>
+<p><font color="blue">状态表示：f[i][j] 表示在 [1, i] 区间内挑选物品，总体积必须为 j，所有的选法下，最大的价值</font></p>
 
 <p><font color="blue">状态转移方程：f[i][j] = max(f[i - 1][j], w[i] + f[i - 1][j - v[i]])（不选 i 的情况、选 i 的情况）</font></p>
 
@@ -563,7 +563,7 @@ int main() {
 }
 ```
 
-::: details 空间优化
+::: details 空间优化版本
 
 - 考虑是否修改遍历顺序
 
@@ -647,7 +647,7 @@ int main() {
 
 **第一问**：
 
-<p><font color="blue">状态表示：f[i][j]：在 [1, i] 区间内挑选物品，总体积不超过 j 的情况下，所有的选法下，最大价值</font></p>
+<p><font color="blue">状态表示：f[i][j] 表示在 [1, i] 区间内挑选物品，总体积不超过 j 的情况下，所有的选法下，最大价值</font></p>
 
 <p><font color="blue">状态转移方程：f[i][j] = max(f[i - 1][j], f[i - 1][j - k * v[i]] + k * w[i])（不选 i 的情况、选 k 个 i 的情况）</font></p>
 
@@ -659,7 +659,7 @@ int main() {
 
 **第二问**：
 
-<p><font color="blue">状态表示：f[i][j]：在 [1, i] 区间内挑选物品，总体积正好为 j，所有的选法下，最大价值</font></p>
+<p><font color="blue">状态表示：f[i][j]表示在 [1, i] 区间内挑选物品，总体积正好为 j，所有的选法下，最大价值</font></p>
 
 <p><font color="blue">初始化：非法的格子初始化为负无穷</font></p>
 
@@ -718,11 +718,11 @@ int main() {
 }
 ```
 
-::: details 空间优化
+::: details 空间优化版本
 
-**01 背包**：第二层 for 循环要求从大到小
+**01 背包**的空间优化：第二层 for 循环要求从大到小
 
-**完全背包**：第二层 for 循环要求从小到大
+**完全背包**的空间优化：第二层 for 循环要求从小到大
 
 ```c++
 #include<iostream>
@@ -799,7 +799,7 @@ int main() {
 >
 > x[i] 表示：第 i 个物品的数量
 
-<p><font color="blue">状态表示：f[i][j]：从 [1, i] 区间内挑选物品，总重量不超过 j 的情况下，此时的最大价值</font></p>
+<p><font color="blue">状态表示：f[i][j] 表示从 [1, i] 区间内挑选物品，总重量不超过 j 的情况下，此时的最大价值</font></p>
 
 <p><font color="blue">状态转移方程：f[i][j] = max(f[i - 1][j], f[i - 1][j - x[i] * w[i]] + x[i] * v[i])</font></p>
 
@@ -834,7 +834,7 @@ int main() {
 }
 ```
 
-::: tip 空间优化
+::: details 空间优化版本
 
 ```c++
 #include<iostream>
@@ -923,6 +923,102 @@ int main() {
 
 **分组背包问题**：物品被分为若干组，每组只能选一个物品。
 
+例题：[P1757 通天之分组背包](https://www.luogu.com.cn/problem/P1757)
+
+>
+
+<p><font color="blue">状态表示：f[i][j] 表示从前 i 个小组中挑选，总重量不超过 j 的情况下，最大的价值</font></p>
+
+<p><font color="blue">状态转移方程：f[i][j] = max(f[i - 1][j], f[i - 1][j - a[i]] + b[i])</font></p>
+
+<p><font color="blue">初始化：全部初始化为 0</font></p>
+
+<p><font color="blue">填表顺序：从上往下每一行（空间优化：第二维一定要从大到小循环）</font></p>
+
+<p><font color="blue">最终结果：f[n'][m]</font></p>
+
+```c++
+#include<iostream>
+#include<vector>
+#include<utility>
+#include<algorithm>
+using namespace std;
+
+typedef pair<int, int> PII;
+
+const int N = 1010;
+
+int n, m, cnt; // n：物品总数；m：背包最大承受重量；cnt：最大组数
+vector<PII> g[N]; // g[i]：第 i 组的所有物品
+int f[N][N];
+
+int main() {
+	cin >> m >> n;
+	for (int i = 1; i <= n; i++) {
+		int a, b, c;
+		cin >> a >> b >> c;
+		cnt = max(c, cnt);
+		g[c].push_back({ a,b });
+	}
+	// 动态规划
+	for (int i = 1; i <= cnt; i++) {
+		for (int j = m; j >= 0; j--) {
+			// 在这一组中不选择物品
+			f[i][j] = f[i - 1][j];
+			// 在这一组中选择物品
+			for (auto& t: g[i]) {
+				int a = t.first, b = t.second;
+				if (j >= a)f[i][j] = max(f[i][j], f[i - 1][j - a] + b);
+			}
+		}
+	}
+	cout << f[cnt][m] << endl;
+}
+```
+
+::: details 空间优化版本
+
+```c++
+#include<iostream>
+#include<vector>
+#include<utility>
+#include<algorithm>
+using namespace std;
+
+typedef pair<int, int> PII;
+
+const int N = 1010;
+
+int n, m, cnt; // n：物品总数；m：背包最大承受重量；cnt：最大组数
+vector<PII> g[N]; // g[i]：第 i 组的所有物品
+int f[N];
+
+int main() {
+	cin >> m >> n;
+	for (int i = 1; i <= n; i++) {
+		int a, b, c;
+		cin >> a >> b >> c;
+		cnt = max(c, cnt);
+		g[c].push_back({ a,b });
+	}
+	// 动态规划
+	for (int i = 1; i <= cnt; i++) {
+		for (int j = m; j >= 0; j--) {
+			// 在这一组中选择物品
+			for (auto& t: g[i]) {
+				int a = t.first, b = t.second;
+				if (j >= a)f[j] = max(f[j], f[j - a] + b);
+			}
+		}
+	}
+	cout << f[m] << endl;
+}
+```
+
+:::
+
+例题：[P5322 [BJOI2019] 排兵布阵](https://www.luogu.com.cn/problem/P5322)
+
 ::: danger 警告
 
 该部分尚未完工!
@@ -933,6 +1029,8 @@ int main() {
 
 **混合背包问题**：以上四种背包问题混在一起。
 
+例题：[P1833 樱花](https://www.luogu.com.cn/problem/P1833)
+
 ::: danger 警告
 
 该部分尚未完工!
@@ -942,6 +1040,8 @@ int main() {
 ### 多维费用的背包问题
 
 **多维费用的背包问题**：限定条件不止有体积，还会有其它因素（比如重量）。
+
+例题：[P1910 L 国的战斗之间谍](https://www.luogu.com.cn/problem/P1910)
 
 ::: danger 警告
 
