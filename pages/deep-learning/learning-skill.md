@@ -739,7 +739,7 @@ from common.optimizer import SGD, Adam
 
 (x_train, t_train), (x_test, t_test) = load_mnist(normalize=True)
 
-# 减少学习数据
+# 为了快速实验，只取前 1000 个样本
 x_train = x_train[:1000]
 t_train = t_train[:1000]
 
@@ -750,10 +750,9 @@ learning_rate = 0.01
 
 
 def __train(weight_init_std):
-    bn_network = MultiLayerNetExtend(input_size=784, hidden_size_list=[100, 100, 100, 100, 100], output_size=10,
-                                    weight_init_std=weight_init_std, use_batchnorm=True)
-    network = MultiLayerNetExtend(input_size=784, hidden_size_list=[100, 100, 100, 100, 100], output_size=10,
-                                weight_init_std=weight_init_std)
+    # 创建两个相同结构的网络：一个使用 Batch Norm 层，一个不用
+    bn_network = MultiLayerNetExtend(input_size=784, hidden_size_list=[100, 100, 100, 100, 100], output_size=10, weight_init_std=weight_init_std, use_batchnorm=True)
+    network = MultiLayerNetExtend(input_size=784, hidden_size_list=[100, 100, 100, 100, 100], output_size=10, weight_init_std=weight_init_std)
     optimizer = SGD(lr=learning_rate)
 
     train_acc_list = []
@@ -767,6 +766,7 @@ def __train(weight_init_std):
         x_batch = x_train[batch_mask]
         t_batch = t_train[batch_mask]
 
+        # 两个网络同时用相同的数据训练
         for _network in (bn_network, network):
             grads = _network.gradient(x_batch, t_batch)
             optimizer.update(_network.params, grads)
