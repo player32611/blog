@@ -676,6 +676,62 @@ plt.show()
 
 综上，在神经网络的学习中，权重初始值非常重要。很多时候权重初始值的设定关系到神经网络的学习能否成功。权重初始值的重要性容易被忽视，而任何事情的开始（初始值）总是关键的，
 
+## Batch Normalization
+
+如果设定了合适的权重初始值，则各层的激活值分布会有适当的广度，从而可以顺利地进行学习。
+
+那么，为了使各层拥有适当的广度，“强制性” 地调整激活值的分布会怎样呢？实际上，**Batch Normalization** 方法就是基于这个想法而产生的
+
+### Batch Normalization 的算法
+
+Batch Normalization（下文简称Batch Norm）是 2015 年提出的方法。Batch Norm 虽然是一个问世不久的新方法，但已经被很多研究人员和技术人员广泛使用。
+
+::: tip Batch Norm 的优点
+
+- 可以使学习快速进行（可以增大学习率）
+
+- 不那么依赖初始值（对于初始值不用那么神经质）
+
+- 抑制过拟合（降低 Dropout 等的必要性）
+
+考虑到深度学习要花费很多时间，第一个优点令人非常开心。另外，后两点也可以帮我们消除深度学习的学习中的很多烦恼。
+
+:::
+
+Batch Norm 的思路是调整各层的激活值分布使其拥有适当的广度。为此，要向神经网络中插入对数据分布进行正规化的层，即 Batch Normalization 层（下文简称 Batch Norm 层）：
+
+![使用了 Batch Normalization 的神经网络的例子（Batch Norm 层的背景为灰色）](/images/deep-learning/learning-skill/batch-norm.png)
+
+Batch Norm，顾名思义，以进行学习时的 mini-batch 为单位，按 minibatch 进行正规化。具体而言，就是进行使数据分布的均值为 0、方差为 1 的正规化。用数学式表示的话，如下所示：
+
+![Batch Norm 的算法](/images/deep-learning/learning-skill/batch-norm-algorithm.png)
+
+> $\mu_B$： minibatch 中数据的均值
+>
+> $\sigma_B^2$：minibatch 中数据的方差
+>
+> $ε$：一个微小值（比如，10e-7 等），防止出现除以 0 的情况。
+
+这里对 mini-batch 的 $m$ 个输入数据的集合 $B={\{x_1,x_2,...,x_m\}}$ 求均值 $\mu_B$ 和方差 $\sigma_B^2$。然后，对输入数据进行均值为 0、方差为 1（合适的分布）的正规化。
+
+接着，Batch Norm 层会对正规化后的数据进行缩放和平移的变换，用数学式可以如下表示：
+
+![Batch Norm 层对输入数据的变换](/images/deep-learning/learning-skill/batch-norm-transform.png)
+
+> $\gamma$ 和 $\beta$：两个参数，分别对输入数据进行缩放和平移的变换，一开始设置为 1 和 0，然后再通过学习调整到合适的值。
+
+上面就是 Batch Norm 的算法。这个算法是神经网络上的正向传播。如果使用计算图，Batch Norm 可以表示为：
+
+![Batch Norm 的计算图](/images/deep-learning/learning-skill/batch-norm-graph.png)
+
+### Batch Normalization 的评估
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
 ## 小结
 
 ::: details 专有名词
@@ -692,7 +748,7 @@ plt.show()
 
 - **权值衰减**：一种以减小权重参数的值为目的进行学习的方法。通过减小权重参数的值来抑制过拟合的发生
 
-- **激活值**：神经元在计算后的输出数据
+- **激活值**：神经元在通过激活函数计算后的输出数据
 
 - **梯度消失**：偏向 0 和 1 的数据分布会造成反向传播中梯度的值不断变小，最后消失
 
