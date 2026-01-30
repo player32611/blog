@@ -139,6 +139,19 @@ _倾斜字体_
 
 **_加粗倾斜字体_**
 
+## 数学符号
+
+| 代码     | 显示     | 代码       | 显示       | 代码     | 显示     |
+| -------- | -------- | ---------- | ---------- | -------- | -------- |
+| `\alpha` | $\alpha$ | `\beta`    | $\beta$    | `\gamma` | $\gamma$ |
+| `\delta` | $\delta$ | `\epsilon` | $\epsilon$ | `\zeta`  | $\zeta$  |
+| `\eta`   | $\eta$   | `\theta`   | $\theta$   | `\iota`  | $\iota$  |
+| `\kappa` | $\kappa$ | `\lambda`  | $\lambda$  | `\mu`    | $\mu$    |
+| `\nu`    | $\nu$    | `\xi`      | $\xi$      | `o`      | $o$      |
+| `\pi`    | $\pi$    | `\rho`     | $\rho$     | `\sigma` | $\sigma$ |
+| `\tau`   | $\tau$   | `\upsilon` | $\upsilon$ | `\phi`   | $\phi$   |
+| `\chi`   | $\chi$   | `\psi`     | $\psi$     | `\omega` | $\omega$ |
+
 ## 更多信息
 
 更多语法请点击[此处](https://vitepress.dev/guide/markdown).

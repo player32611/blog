@@ -830,6 +830,325 @@ plt.show()
 
 ## 正则化
 
+机器学习的问题中，**过拟合**是一个很常见的问题。过拟合指的是只能拟合训练数据，但不能很好地拟合不包含在训练数据中的其他数据的状态。
+
+机器学习的目标是提高泛化能力，即便是没有包含在训练数据里的未观测数据，也希望模型可以进行正确的识别。我们可以制作复杂的、表现力强的模型，但是相应地，抑制过拟合的技巧也很重要。
+
+### 过拟合
+
+发生过拟合的原因，主要有以下两个：
+
+- 模型拥有大量参数、表现力强。
+
+- 训练数据少。
+
+::: details 具体示例：制造过拟合现象
+
+这里，我们故意满足这两个条件，制造过拟合现象。为此，要从 MNIST 数据集原本的 60000 个训练数据中只选定 300 个，并且，为了增加网络的复杂度，使用 7 层网络（每层有 100 个神经元，激活函数为 ReLU）。
+
+```python
+import os
+import sys
+
+sys.path.append(os.pardir)  # 为了导入父目录的文件而进行的设定
+import numpy as np
+import matplotlib.pyplot as plt
+from dataset.mnist import load_mnist
+from common.multi_layer_net import MultiLayerNet
+from common.optimizer import SGD
+
+(x_train, t_train), (x_test, t_test) = load_mnist(normalize=True)
+
+# 为了再现过拟合，减少学习数据
+x_train = x_train[:300]
+t_train = t_train[:300]
+
+# weight decay（权值衰减）的设定 =======================
+weight_decay_lambda = 0 # 不使用权值衰减的情况
+# weight_decay_lambda = 0.1
+# ====================================================
+
+network = MultiLayerNet(
+    input_size=784,
+    hidden_size_list=[100, 100, 100, 100, 100, 100], # 6 个隐藏层，每层 100 个神经元
+    output_size=10,
+    weight_decay_lambda=weight_decay_lambda)
+optimizer = SGD(lr=0.01)
+
+max_epochs = 201
+train_size = x_train.shape[0]
+batch_size = 100
+
+train_loss_list = []
+train_acc_list = []
+test_acc_list = []
+
+iter_per_epoch = max(train_size / batch_size, 1)
+epoch_cnt = 0
+
+for i in range(1000000000):
+    # 小批量训练
+    batch_mask = np.random.choice(train_size, batch_size)
+    x_batch = x_train[batch_mask]
+    t_batch = t_train[batch_mask]
+
+    # 计算梯度并更新权重
+    grads = network.gradient(x_batch, t_batch)
+    optimizer.update(network.params, grads)
+
+    # 每完成一个epoch记录准确率
+    if i % iter_per_epoch == 0:
+        train_acc = network.accuracy(x_train, t_train)
+        test_acc = network.accuracy(x_test, t_test)
+        train_acc_list.append(train_acc)
+        test_acc_list.append(test_acc)
+
+        print("epoch:" + str(epoch_cnt) + ", train acc:" + str(train_acc) + ", test acc:" + str(test_acc))
+
+        epoch_cnt += 1
+        if epoch_cnt >= max_epochs:
+            break
+
+# 3.绘制图形==========
+markers = {'train': 'o', 'test': 's'}
+x = np.arange(max_epochs)
+plt.plot(x, train_acc_list, marker='o', label='train', markevery=10)
+plt.plot(x, test_acc_list, marker='s', label='test', markevery=10)
+plt.xlabel("epochs")
+plt.ylabel("accuracy")
+plt.ylim(0, 1.0)
+plt.legend(loc='lower right')
+plt.show()
+```
+
+![训练数据（train）和测试数据（test）的识别精度的变化](/images/deep-learning/learning-skill/overfitting-result.png)
+
+过了 100 个 epoch 左右后，用训练数据测量到的识别精度几乎都为 100%。但是，对于测试数据，离 100% 的识别精度还有较大的差距。如此大的识别精度差距，是只拟合了训练数据的结果。从图中可知，模型对训练时没有使用的一般数据（测试数据）拟合得不是很好。
+
+:::
+
+### 权值衰减
+
+**权值衰减**是一直以来经常被使用的一种抑制过拟合的方法。该方法通过在学习的过程中对大的权重进行惩罚，来抑制过拟合。很多过拟合原本就是因为权重参数取值过大才发生的。
+
+神经网络的学习目的是减小损失函数的值。这时，例如为损失函数加上权重的平方范数（L2 范数）。这样一来，就可以抑制权重变大。
+
+如果将权重记为 $W$，L2范数的权值衰减就是 $\frac{1}{2} \lambda W^2$，然后将这个 $\frac{1}{2} \lambda W^2$ 加到损失函数上。
+
+> $\lambda$ 是控制正则化强度的超参数，设置得越大，对大的权重施加的惩罚就越重。
+>
+> $\frac{1}{2} \lambda W^2$ 开头的 $\frac{1}{2}$ 是用于将 $\frac{1}{2} \lambda W^2$ 的求导结果变成 $\lambda W$ 的调整用常量。
+
+对于所有权重，权值衰减方法都会为损失函数加上 $\frac{1}{2} \lambda W^2$。因此，在求权重梯度的计算中，要为之前的误差反向传播法的结果加上正则化项的导数 $\lambda W$。
+
+::: tip 范数
+
+L2 范数相当于各个元素的平方和。用数学式表示的话，假设有权重 $W=(w_1, w_2, ..., w_n)$，则 L2 范数可用 $\sqrt{w_1^2 + w_2^2 + ... + w_n^2}$ 计算出来。
+
+除了 L2 范数，还有 L1 范数、L∞ 范数等。
+
+L1 范数是各个元素的绝对值之和，相当于 $|w_1| + |w_2| + ... + |w_n|$。
+
+L∞ 范数也称为 Max 范数，相当于各个元素的绝对值中最大的那一个。
+
+L2 范数、L1 范数、L∞ 范数都可以用作正则化项，它们各有各的特点。
+
+:::
+
+现在我们来进行实验。对于刚刚进行的实验，应用 λ=0.1 的权值衰减：
+
+![使用了权值衰减的训练数据（train）和测试数据（test）的识别精度的变化](/images/deep-learning/learning-skill/weight-decay-result.png)
+
+虽然训练数据的识别精度和测试数据的识别精度之间有差距，但是与没有使用权值衰减的结果相比，差距变小了。这说明过拟合受到了抑制。
+
+此外，还要注意，训练数据的识别精度没有达到 100%。
+
+### Dropout
+
+权值衰减方法实现简单，在某种程度上能够抑制过拟合。但是，如果网络的模型变得很复杂，只用权值衰减就难以应对了。在这种情况下，我们经常会使用 **Dropout** 方法。
+
+Dropout 是一种在学习的过程中随机删除神经元的方法。训练时，随机选出隐藏层的神经元，然后将其删除。被删除的神经元不再进行信号的传递。
+
+![Dropout的概念图：左边是一般的神经网络，右边是应用了 Dropout 的网络](/images/deep-learning/learning-skill/dropout.png)
+
+> 左边是一般的神经网络，右边是应用了 Dropout 的网络
+>
+> Dropout 通过随机选择并删除神经元，停止向前传递信号
+
+训练时，每传递一次数据，就会随机选择要删除的神经元。
+
+测试时，虽然会传递所有的神经元信号，但是对于各个神经元的输出，要乘上训练时的删除比例后再输出。
+
+```python
+class Dropout:
+    def __init__(self, dropout_ratio=0.5):
+        self.dropout_ratio = dropout_ratio # 丢弃率，默认50%
+        self.mask = None # 用于记录在前向传播中哪些神经元被保留
+
+    def forward(self, x, train_flg=True):
+        if train_flg: # 训练模式
+            self.mask = np.random.rand(*x.shape) > self.dropout_ratio
+            return x * self.mask
+        else: # 测试/推理模式
+            return x * (1.0 - self.dropout_ratio)
+
+    def backward(self, dout):
+        return dout * self.mask
+```
+
+::: details 代码解释
+
+每次正向传播时，`self.mask` 中都会以 `False` 的形式保存要删除的神经元。
+
+`self.mask` 会随机生成和 `x` 形状相同的数组，并将值比 `dropout_ratio` 大的元素设为 `True`。
+
+反向传播时的行为和 ReLU 相同。
+
+也就是说，正向传播时传递了信号的神经元，反向传播时按原样传递信号；正向传播时没有传递信号的神经元，反向传播时信号将停在那里。
+
+:::
+
+现在，我们使用 MNIST 数据集进行验证，以确认 Dropout 的效果：
+
+::: code-group
+
+```python [overfit_dropout.py]
+import os
+import sys
+sys.path.append(os.pardir)  # 为了导入父目录的文件而进行的设定
+import numpy as np
+import matplotlib.pyplot as plt
+from dataset.mnist import load_mnist
+from common.multi_layer_net_extend import MultiLayerNetExtend
+from common.trainer import Trainer
+
+(x_train, t_train), (x_test, t_test) = load_mnist(normalize=True)
+
+# 为了再现过拟合，减少学习数据
+x_train = x_train[:300]
+t_train = t_train[:300]
+
+# 设定是否使用Dropuout，以及比例 ========================
+use_dropout = True  # 不使用Dropout的情况下为False
+dropout_ratio = 0.2 # 丢弃率
+# ====================================================
+
+network = MultiLayerNetExtend(input_size=784, hidden_size_list=[100, 100, 100, 100, 100, 100],
+                              output_size=10, use_dropout=use_dropout, dropout_ration=dropout_ratio)
+trainer = Trainer(network, x_train, t_train, x_test, t_test,
+                  epochs=301, mini_batch_size=100,
+                  optimizer='sgd', optimizer_param={'lr': 0.01}, verbose=True)
+trainer.train()
+
+train_acc_list, test_acc_list = trainer.train_acc_list, trainer.test_acc_list
+
+# 绘制图形==========
+markers = {'train': 'o', 'test': 's'}
+x = np.arange(len(train_acc_list))
+plt.plot(x, train_acc_list, marker='o', label='train', markevery=10)
+plt.plot(x, test_acc_list, marker='s', label='test', markevery=10)
+plt.xlabel("epochs")
+plt.ylabel("accuracy")
+plt.ylim(0, 1.0)
+plt.legend(loc='lower right')
+plt.show()
+```
+
+```python [trainer.py]
+import sys, os
+sys.path.append(os.pardir)  # 为了导入父目录的文件而进行的设定
+import numpy as np
+from common.optimizer import *
+
+class Trainer:
+    """进行神经网络的训练的类
+    """
+    def __init__(self, network, x_train, t_train, x_test, t_test,
+                 epochs=20, mini_batch_size=100,
+                 optimizer='SGD', optimizer_param={'lr':0.01},
+                 evaluate_sample_num_per_epoch=None, verbose=True):
+        self.network = network
+        self.verbose = verbose
+        self.x_train = x_train
+        self.t_train = t_train
+        self.x_test = x_test
+        self.t_test = t_test
+        self.epochs = epochs
+        self.batch_size = mini_batch_size
+        self.evaluate_sample_num_per_epoch = evaluate_sample_num_per_epoch
+
+        # optimzer
+        optimizer_class_dict = {'sgd':SGD, 'momentum':Momentum, 'nesterov':Nesterov,
+                                'adagrad':AdaGrad, 'rmsprpo':RMSprop, 'adam':Adam}
+        self.optimizer = optimizer_class_dict[optimizer.lower()](**optimizer_param)
+
+        self.train_size = x_train.shape[0]
+        self.iter_per_epoch = max(self.train_size / mini_batch_size, 1)
+        self.max_iter = int(epochs * self.iter_per_epoch)
+        self.current_iter = 0
+        self.current_epoch = 0
+
+        self.train_loss_list = []
+        self.train_acc_list = []
+        self.test_acc_list = []
+
+    def train_step(self):
+        batch_mask = np.random.choice(self.train_size, self.batch_size)
+        x_batch = self.x_train[batch_mask]
+        t_batch = self.t_train[batch_mask]
+
+        grads = self.network.gradient(x_batch, t_batch)
+        self.optimizer.update(self.network.params, grads)
+
+        loss = self.network.loss(x_batch, t_batch)
+        self.train_loss_list.append(loss)
+        if self.verbose: print("train loss:" + str(loss))
+
+        if self.current_iter % self.iter_per_epoch == 0:
+            self.current_epoch += 1
+
+            x_train_sample, t_train_sample = self.x_train, self.t_train
+            x_test_sample, t_test_sample = self.x_test, self.t_test
+            if not self.evaluate_sample_num_per_epoch is None:
+                t = self.evaluate_sample_num_per_epoch
+                x_train_sample, t_train_sample = self.x_train[:t], self.t_train[:t]
+                x_test_sample, t_test_sample = self.x_test[:t], self.t_test[:t]
+
+            train_acc = self.network.accuracy(x_train_sample, t_train_sample)
+            test_acc = self.network.accuracy(x_test_sample, t_test_sample)
+            self.train_acc_list.append(train_acc)
+            self.test_acc_list.append(test_acc)
+
+            if self.verbose: print("=== epoch:" + str(self.current_epoch) + ", train acc:" + str(train_acc) + ", test acc:" + str(test_acc) + " ===")
+        self.current_iter += 1
+
+    def train(self):
+        for i in range(self.max_iter):
+            self.train_step()
+
+        test_acc = self.network.accuracy(self.x_test, self.t_test)
+
+        if self.verbose:
+            print("=============== Final Test Accuracy ===============")
+            print("test acc:" + str(test_acc))
+
+
+```
+
+:::
+
+> `trainer.py` 是一个神经网络训练器（Trainer）类，它封装了完整的神经网络训练流程，提供了灵活的训练配置和监控功能。
+
+Dropout 的实验和前面的实验一样，使用 7 层网络（每层有 100 个神经元，激活函数为 ReLU），一个使用 Dropout，另一个不使用 Dropout，实验的结果如下图所示：
+
+![左边没有使用 Dropout，右边使用了 Dropout（dropout_rate=0.15）](/images/deep-learning/learning-skill/dropout-example.png)
+
+> 左边没有使用 Dropout，右边使用了 Dropout（dropout_rate=0.15）
+
+通过使用 Dropout，训练数据和测试数据的识别精度的差距变小了。并且，训练数据也没有到达 100% 的识别精度。像这样，通过使用 Dropout，即便是表现力强的网络，也可以抑制过拟合。
+
+### 超参数的验证
+
 ::: danger 警告
 
 该部分尚未完工!
@@ -861,5 +1180,7 @@ plt.show()
 - **He 初始值**：一种权重初始化方法，推荐在 ReLU 作为激活函数时使用
 
 - **Batch Normalization**：一种对数据分布进行正规化的方法，使得各层激活值的分布有适当的广度，从而可以顺利地进行学习
+
+- **权值衰减**：一种抑制过拟合的方法，在学习的过程中对大的权重进行惩罚
 
 :::

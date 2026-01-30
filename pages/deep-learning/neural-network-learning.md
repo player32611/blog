@@ -657,7 +657,7 @@ import matplotlib.pyplot as plt
 from dataset.mnist import load_mnist
 from two_layer_net import TwoLayerNet
 
-# 读入数据：60,000个训练样本，10,000个测试样本
+# 读入数据：60,000 个训练样本，10,000 个测试样本
 (x_train, t_train), (x_test, t_test) = load_mnist(normalize=True, one_hot_label=True)
 
 # 创建两层神经网络
@@ -670,10 +670,10 @@ batch_size = 100 # 每个批次的样本数
 learning_rate = 0.1 # 学习率
 
 train_loss_list = [] # 记录每次迭代的训练损失
-train_acc_list = [] # 记录每个epoch的训练准确率
-test_acc_list = [] # 记录每个epoch的测试准确率
+train_acc_list = [] # 记录每个 epoch 的训练准确率
+test_acc_list = [] # 记录每个 epoch 的测试准确率
 
-iter_per_epoch = max(train_size / batch_size, 1) # 平均每个epoch的重复次数
+iter_per_epoch = max(train_size / batch_size, 1) # 平均每个 epoch 的重复次数
 
 for i in range(iters_num):
     # 获取mini - batch
