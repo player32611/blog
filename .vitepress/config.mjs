@@ -50,11 +50,12 @@ export default defineConfig({
         text: '算法',
         items: [
           { text: 'C++基础', link:'/pages/algorithm/c++-basic'},
-          { text: 'STL' , link:'/pages/algorithm/stl'},
           { text: '数据结构', link:'/pages/algorithm/data-structure'},
+          { text: 'STL' , link:'/pages/algorithm/stl'},
           { text: '算法基础', link:'/pages/algorithm/algorithm-basic'},
           { text: '搜索算法', link:'/pages/algorithm/search-algorithm'},
-          { text: '动态规划', link:'/pages/algorithm/dynamic-programming'}
+          { text: '动态规划', link:'/pages/algorithm/dynamic-programming'},
+          { text: '算法巩固', link:'/pages/algorithm/algorithm-consolidation'},
         ]
       },
       {

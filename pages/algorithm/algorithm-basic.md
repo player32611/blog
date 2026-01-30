@@ -20,6 +20,46 @@
 
 例题：[P1067 [NOIP 2009 普及组] 多项式输出](https://www.luogu.com.cn/problem/P1067)
 
+```c++
+#include<iostream>
+#include<vector>
+using namespace std;
+
+int ptr = 0;
+
+int main() {
+    int n;
+    cin >> n;
+    int* array = new int[++n];
+    for (int i = 0; i < n; i++) {
+        int a;
+        cin >> a;
+        array[ptr++] = a;
+    }
+    bool isFirst = true;
+    for (int i = 0; i < n; i++) {
+        if (!isFirst) {
+            if (array[i] > 0)cout << '+';
+        }
+        if (array[i]) {
+            if(array[i]==1){
+                if(i==n-1)cout<<1;
+            }
+            else if(array[i]==-1){
+                cout<<'-';
+                if(i==n-1)cout<<1;
+            }
+            else cout << array[i];
+            isFirst = false;
+        }
+        else continue;
+        if (n - i - 1 == 1)cout << "x";
+        else if (n - i - 1 == 0)continue;
+        else cout << "x^" << n - i - 1;
+    }
+}
+```
+
 ### 蛇形方阵
 
 例题：[P5731 【深基 5.习 6】蛇形方阵](https://www.luogu.com.cn/problem/P5731)
@@ -68,6 +108,14 @@ int main() {
 	}
 }
 ```
+
+### 字符串的展开
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
 
 ## 高精度
 
@@ -332,6 +380,22 @@ int main() {
 }
 ```
 
+例题：[P2010 [NOIP 2016 普及组] 回文日期](https://www.luogu.com.cn/problem/P2010)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[B4167 [GXPC-S 2024] 扫雷](https://www.luogu.com.cn/problem/B4167)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
 ### 二进制枚举
 
 二进制枚举：用二进制表示中的 0/1 表示两种状态，从而达到枚举各种情况。
@@ -460,6 +524,8 @@ int main() {
 
 前缀和与差分的核心思想是**预处理**，可以在暴力枚举的过程中，快速给出查询的结果，从而优化时间复杂度。是经典的**用空间替换时间**的做法。
 
+### 一维前缀和
+
 例题：[【模板】前缀和](https://ac.nowcoder.com/acm/problem/226282)
 
 <font color="blue">解法：先预处理出来一个前缀和数组 f ，f[i]表示区间[1, i]中，所有元素的和</font>
@@ -498,6 +564,8 @@ int main() {
 
 :::
 
+### 最大子段和
+
 例题：[P1115 最大子段和](https://www.luogu.com.cn/problem/P1115)
 
 <font color="blue">解法：利用前缀和</font>
@@ -531,6 +599,22 @@ int main() {
 	cout << ret << endl;
 }
 ```
+
+### 二维前缀和
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P2280 [HNOI2003] 激光炸弹](https://www.luogu.com.cn/problem/P2280)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
 
 ## 差分
 
@@ -686,7 +770,17 @@ int main() {
 ### 二维差分
 
 ::: danger 警告
+
 该部分尚未完工!
+
+:::
+
+例题：[P3397 地毯](https://www.luogu.com.cn/problem/P3397)
+
+::: danger 警告
+
+该部分尚未完工!
+
 :::
 
 ## 双指针
@@ -742,6 +836,22 @@ int main() {
 	}
 }
 ```
+
+例题：[P1638 逛画展](https://www.luogu.com.cn/problem/P1638)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P14171 【MX-X23-T1】丢手绢](https://www.luogu.com.cn/problem/P14171)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
 
 ## 二分算法
 
@@ -818,6 +928,24 @@ public:
 };
 ```
 
+### 二分查找
+
+例题：[P1102 A-B 数对](https://www.luogu.com.cn/problem/P1102)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P1678 烦恼的高考志愿](https://www.luogu.com.cn/problem/P1678)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
 ### 二分答案
 
 准确来说，应该叫做 [二分答案 + 判断]。
@@ -863,6 +991,22 @@ int main() {
 	cout << left << endl;
 }
 ```
+
+例题：[P1873 [COCI 2011/2012 #5] EKO / 砍树](https://www.luogu.com.cn/problem/P1873)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P2678 [NOIP 2015 提高组] 跳石头](https://www.luogu.com.cn/problem/P2678)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
 
 ### 二分模板
 
@@ -1021,10 +1165,38 @@ int main() {
 }
 ```
 
-### 推公式
+例题：[P1094 [NOIP 2007 普及组] 纪念品分组](https://www.luogu.com.cn/problem/P1094)
 
 ::: danger 警告
+
 该部分尚未完工!
+
+:::
+
+例题：[P1056 [NOIP 2008 普及组] 排座椅](https://www.luogu.com.cn/problem/P1056)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+### 推公式
+
+例题：[P14357 [CSP-J 2025] 拼数](https://www.luogu.com.cn/problem/P14357)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P1842 [USACO05NOV] 奶牛玩杂技](https://www.luogu.com.cn/problem/P1842)
+
+::: danger 警告
+
+该部分尚未完工!
+
 :::
 
 ### 哈夫曼编码
@@ -1089,10 +1261,30 @@ int main() {
 
 :::
 
-### 区间问题
+例题：[P1090 [NOIP 2004 提高组] 合并果子](https://www.luogu.com.cn/problem/P1090)
 
 ::: danger 警告
+
 该部分尚未完工!
+
+:::
+
+### 区间问题
+
+例题：[P1803 凌乱的yyy / 线段覆盖](https://www.luogu.com.cn/problem/P1803)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P2887 [USACO07NOV] Sunscreen G](https://www.luogu.com.cn/problem/P2887)
+
+::: danger 警告
+
+该部分尚未完工!
+
 :::
 
 ## 倍增思想
@@ -1141,19 +1333,63 @@ int main() {
 
 :::
 
-### 64 位整数乘法
+### 大整数乘法
+
+例题：[P10446 64位整数乘法](https://www.luogu.com.cn/problem/P10446)
 
 ::: danger 警告
+
 该部分尚未完工!
+
 :::
 
 ## 离散化
 
+例题：[P1496 火烧赤壁](https://www.luogu.com.cn/problem/P1496)
+
 ::: danger 警告
+
 该部分尚未完工!
+
+:::
+
+例题：[P3740 [HAOI2014] 贴海报](https://www.luogu.com.cn/problem/P3740)
+
+::: danger 警告
+
+该部分尚未完工!
+
 :::
 
 ## 递归初阶
+
+::: tip 为什么会用到递归？
+
+本质：在处理主问题时，需要解决子问题，两者的处理方式完全一致。
+
+问题 -> 相同的子问题 -> 相同的子子问题......直到子问题不能继续拆分
+
+:::
+
+::: tip 从宏观角度看待递归
+
+- 不要在意递归的细节展开图 --- 写完代码不要再去纠结递归展开图；
+
+- 把递归函数当成一个黑盒 --- 赋予这个黑盒一个任务；
+
+- 相信这个黑盒一定能帮助我们完成这个任务。
+
+:::
+
+::: tip 如何写好一个递归
+
+- 先找到相同的子问题 -> 确定函数的功能以及函数头的设计；
+
+- 只关心某一个子问题时如何解决的 -> 函数题；
+
+- 不能继续拆分的子问题 -> 递归出口。
+
+:::
 
 例题：[1205：汉诺塔问题](https://ybt.ssoier.cn/problem_show.php?pid=1205)
 
@@ -1181,31 +1417,19 @@ int main() {
 }
 ```
 
-::: tip 为什么会用到递归？
+例题：[P10457 占卜DIY](https://www.luogu.com.cn/problem/P10457)
 
-本质：在处理主问题时，需要解决子问题，两者的处理方式完全一致。
+::: danger 警告
 
-问题 -> 相同的子问题 -> 相同的子子问题......直到子问题不能继续拆分
-
-:::
-
-::: tip 从宏观角度看待递归
-
-- 不要在意递归的细节展开图 --- 写完代码不要再去纠结递归展开图；
-
-- 把递归函数当成一个黑盒 --- 赋予这个黑盒一个任务；
-
-- 相信这个黑盒一定能帮助我们完成这个任务。
+该部分尚未完工!
 
 :::
 
-::: tip 如何写好一个递归
+例题：[P1087 [NOIP 2004 普及组] FBI 树](https://www.luogu.com.cn/problem/P1087)
 
-- 先找到相同的子问题 -> 确定函数的功能以及函数头的设计；
+::: danger 警告
 
-- 只关心某一个子问题时如何解决的 -> 函数题；
-
-- 不能继续拆分的子问题 -> 递归出口。
+该部分尚未完工!
 
 :::
 
@@ -1258,6 +1482,30 @@ int main() {
 	cout << merge(1,n) << endl;
 }
 ```
+
+例题：[P1923 【深基9.例4】求第 k 小的数](https://www.luogu.com.cn/problem/P1923)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P1115 最大子段和](https://www.luogu.com.cn/problem/P1115)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P1228 地毯填补问题](https://www.luogu.com.cn/problem/P1228)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
 
 ## 其他
 
