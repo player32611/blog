@@ -1051,6 +1051,77 @@ int main() {
 
 ## 区间 dp
 
+区间 dp 也是线性 dp 的一种，它用区间的左右端点来描述状态，通过小区间的解来推导出大区间的解。因此，区间 dp 的核心思想是将大区间划分为小区间，它的状态转移方程通常依赖于区间的划分点。
+
+常用的划分点的方式有两个：
+
+- 基于区间的左右端点，分情况讨论；
+
+- 基于区间上某一点，划分成左右区间讨论。
+
+例题：[P1435 [IOI 2000] 回文字串](https://www.luogu.com.cn/problem/P1435)
+
+<p><font color="blue">状态表示：f[i][j] 表示将字符串 [i, j] 区间中的字串变成一个回文串的最小插入次数</font></p>
+
+<p><font color="blue">状态转移方程：f[i][j] = min(f[i + 1][j - 1], f[i + 1][j] + 1, f[i][j - 1] + 1)</font></p>
+
+<p><font color="blue">初始化：长度为 1 的位置初始化为 0</font></p>
+
+<p><font color="blue">填表顺序：第一层循环枚举区间的长度，第二层循环枚举区间的左端点</font></p>
+
+<p><font color="blue">最终结果：f[1][n]</font></p>
+
+```c++
+#include<iostream>
+#include<string>
+#include<algorithm>
+using namespace std;
+
+const int N = 1010;
+
+int f[N][N];
+
+int main() {
+	string s;
+	cin >> s;
+	int n = s.size();
+	s = " " + s;
+	for(int len = 2;len<=n;len++) // 枚举长度
+		for (int i = 1; i + len - 1 <= n; i++) { // 枚举左端点
+			int j = i + len - 1;
+			if (s[i] == s[j])f[i][j] = f[i + 1][j - 1];
+			else f[i][j] = min(f[i + 1][j], f[i][j - 1]) + 1;
+		}
+	cout << f[1][n] << endl;
+}
+```
+
+例题：[P2858 [USACO06FEB] Treats for the Cows G/S](https://www.luogu.com.cn/problem/P2858)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P1775 石子合并（弱化版）](https://www.luogu.com.cn/problem/P1775)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P1880 [NOI1995] 石子合并](https://www.luogu.com.cn/problem/P1880)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P3146 [USACO16OPEN] 248 G](https://www.luogu.com.cn/problem/P3146)
+
 ::: danger 警告
 
 该部分尚未完工!
