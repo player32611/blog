@@ -726,6 +726,110 @@ Batch Norm，顾名思义，以进行学习时的 mini-batch 为单位，按 min
 
 ### Batch Normalization 的评估
 
+现在我们使用 Batch Norm 层进行实验，观察使用 Batch Norm 层和不使用 Batch Norm 层时学习的过程会如何变化：
+
+```python
+import sys, os
+sys.path.append(os.pardir)  # 为了导入父目录的文件而进行的设定
+import numpy as np
+import matplotlib.pyplot as plt
+from dataset.mnist import load_mnist
+from common.multi_layer_net_extend import MultiLayerNetExtend
+from common.optimizer import SGD, Adam
+
+(x_train, t_train), (x_test, t_test) = load_mnist(normalize=True)
+
+# 减少学习数据
+x_train = x_train[:1000]
+t_train = t_train[:1000]
+
+max_epochs = 20
+train_size = x_train.shape[0]
+batch_size = 100
+learning_rate = 0.01
+
+
+def __train(weight_init_std):
+    bn_network = MultiLayerNetExtend(input_size=784, hidden_size_list=[100, 100, 100, 100, 100], output_size=10,
+                                    weight_init_std=weight_init_std, use_batchnorm=True)
+    network = MultiLayerNetExtend(input_size=784, hidden_size_list=[100, 100, 100, 100, 100], output_size=10,
+                                weight_init_std=weight_init_std)
+    optimizer = SGD(lr=learning_rate)
+
+    train_acc_list = []
+    bn_train_acc_list = []
+
+    iter_per_epoch = max(train_size / batch_size, 1)
+    epoch_cnt = 0
+
+    for i in range(1000000000):
+        batch_mask = np.random.choice(train_size, batch_size)
+        x_batch = x_train[batch_mask]
+        t_batch = t_train[batch_mask]
+
+        for _network in (bn_network, network):
+            grads = _network.gradient(x_batch, t_batch)
+            optimizer.update(_network.params, grads)
+
+        if i % iter_per_epoch == 0:
+            train_acc = network.accuracy(x_train, t_train)
+            bn_train_acc = bn_network.accuracy(x_train, t_train)
+            train_acc_list.append(train_acc)
+            bn_train_acc_list.append(bn_train_acc)
+
+            print("epoch:" + str(epoch_cnt) + " | " + str(train_acc) + " - " + str(bn_train_acc))
+
+            epoch_cnt += 1
+            if epoch_cnt >= max_epochs:
+                break
+
+    return train_acc_list, bn_train_acc_list
+
+# 3.绘制图形==========
+weight_scale_list = np.logspace(0, -4, num=16)
+x = np.arange(max_epochs)
+
+for i, w in enumerate(weight_scale_list):
+    print( "============== " + str(i+1) + "/16" + " ==============")
+    train_acc_list, bn_train_acc_list = __train(w)
+
+    plt.subplot(4,4,i+1)
+    plt.title("W:" + str(w))
+    if i == 15:
+        plt.plot(x, bn_train_acc_list, label='Batch Normalization', markevery=2)
+        plt.plot(x, train_acc_list, linestyle = "--", label='Normal(without BatchNorm)', markevery=2)
+    else:
+        plt.plot(x, bn_train_acc_list, markevery=2)
+        plt.plot(x, train_acc_list, linestyle="--", markevery=2)
+
+    plt.ylim(0, 1.0)
+    if i % 4:
+        plt.yticks([])
+    else:
+        plt.ylabel("accuracy")
+    if i < 12:
+        plt.xticks([])
+    else:
+        plt.xlabel("epochs")
+    plt.legend(loc='lower right')
+
+plt.show()
+```
+
+![基于 Batch Norm 的效果：使用 Batch Norm 后，学习进行得更快了](/images/deep-learning/learning-skill/batch-norm-result.png)
+
+从图中的结果可知，使用 Batch Norm 后，学习进行得更快了。
+
+接着，给予不同的初始值尺度，观察学习的过程如何变化：
+
+![图中的实线是使用了 Batch Norm时的结果，虚线是没有使用 Batch Norm 时的结果：图的标题处标明了权重初始值的标准差](/images/deep-learning/learning-skill/weight-init-scale-result.png)
+
+我们发现，几乎所有的情况下都是使用 Batch Norm 时学习进行得更快。同时也可以发现，实际上，在不使用 Batch Norm 的情况下，如果不赋予一个尺度好的初始值，学习将完全无法进行。
+
+综上，通过使用 Batch Norm，可以推动学习的进行。并且，对权重初始值变得健壮（表示不那么依赖初始值）。
+
+## 正则化
+
 ::: danger 警告
 
 该部分尚未完工!
@@ -755,5 +859,7 @@ Batch Norm，顾名思义，以进行学习时的 mini-batch 为单位，按 min
 - **Xavier 初始值**：一种智能的权重初始化方法，保持网络中每层的输入和输出方差一致，防止在前向传播和反向传播过程中信号消失或爆炸，推荐在 sigmoid 或 tanh 等 S 型曲线函数作为激活函数时使用
 
 - **He 初始值**：一种权重初始化方法，推荐在 ReLU 作为激活函数时使用
+
+- **Batch Normalization**：一种对数据分布进行正规化的方法，使得各层激活值的分布有适当的广度，从而可以顺利地进行学习
 
 :::
