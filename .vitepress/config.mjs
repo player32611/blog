@@ -66,6 +66,7 @@ export default defineConfig({
           { text: '神经网络的学习', link: '/pages/deep-learning/neural-network-learning' },
           { text: '误差反向传播法', link: '/pages/deep-learning/backpropagation' },
           { text: '与学习相关的技巧', link: '/pages/deep-learning/learning-skill' },
+          { text: '卷积神经网络', link: '/pages/deep-learning/convolutional-neural-network' },
           { text: '机器学习', link: '/pages/deep-learning/machine-learning' }
         ]
       }
