@@ -244,9 +244,9 @@ $$OW = \frac{31 + 2 \times 2 - 5}{3} + 1 = 11$$
 
 ![池化的处理顺序](/images/deep-learning/convolutional-neural-network/pooling-calculation.png)
 
-> 按步幅 2 进行 2×2 的 $Max$ 池化的处理顺序
+> 按步幅 2 进行 2×2 的 Max 池化的处理顺序
 >
-> “$Max$ 池化” 是获取最大值的运算
+> “Max 池化” 是获取最大值的运算
 >
 > “2×2” 表示目标区域的大小
 
@@ -274,6 +274,359 @@ $$OW = \frac{31 + 2 \times 2 - 5}{3} + 1 = 11$$
 
 ## 卷积层和池化层的实现
 
+### 四维数组
+
+CNN 中各层间传递的数据是 4 维数据。所谓 4 维数据，比如数据的形状是 (10, 1, 28, 28)，则它对应 10 个高为 28、长为 28、通道为 1 的数据。用 Python 来实现的话，如下所示：
+
+```python
+x = np.random.rand(10, 1, 28, 28) # 随机生成数据
+print(x.shape) # (10, 1, 28, 28)
+```
+
+如果要访问第 1 个数据，只要写 `x[0]` 就可以了：
+
+```python
+print(x[0].shape) # (1, 28, 28)
+print(x[1].shape) # (1, 28, 28)
+```
+
+如果要访问第 1 个数据的第 1 个通道的空间数据，可以写成下面这样：
+
+```python
+print(x[0, 0]) # 或者x[0][0]
+```
+
+### 基于 im2col 的展开
+
+但如果老老实实地实现卷积运算，估计要重复好几层的 for 语句。这样的实现有点麻烦，而且，NumPy 中存在使用 for 语句后处理变慢的缺点（NumPy 中，访问元素时最好不要用 for 语句）。
+
+这里，我们不使用 for 语句，而是使用 im2col 这个便利的函数进行简单的实现。
+
+im2col 是一个函数，将输入数据展开以适合滤波器（权重）。对 3 维的输入数据应用 im2col 后，数据转换为 2 维矩阵（正确地讲，是把包含批数量的 4 维数据转换成了 2 维数据）：
+
+![im2col的示意图](/images/deep-learning/convolutional-neural-network/im2col-intent.png)
+
+![将滤波器的应用区域从头开始依次横向展开为 1 列](/images/deep-learning/convolutional-neural-network/im2col-expand.png)
+
+> 为了便于观察，将步幅设置得很大，以使滤波器的应用区域不重叠
+>
+> 在实际的卷积运算中，滤波器的应用区域几乎都是重叠的
+>
+> 在滤波器的应用区域重叠的情况下，使用 im2col 展开后，展开后的元素个数会多于原方块的元素个数
+
+对于输入数据，将应用滤波器的区域（3 维方块）横向展开为 1 列。im2col 会在所有应用滤波器的地方进行这个展开处理。
+
+使用 im2col 的实现存在比普通的实现消耗更多内存的缺点。但是，汇总成一个大的矩阵进行计算，对计算机的计算颇有益处。比如，在矩阵计算的库（线性代数库）等中，矩阵计算的实现已被高度最优化，可以高速地进行大矩阵的乘法运算。
+
+使用 im2col 展开输入数据后，之后就只需将卷积层的滤波器（权重）纵向展开为 1 列，并计算 2 个矩阵的乘积即可。这和全连接层的 Affine 层进行的处理基本相同：
+
+![卷积运算的滤波器处理的细节](/images/deep-learning/convolutional-neural-network/convolution-calculation.png)
+
+> 将滤波器纵向展开为 1 列，并计算和 im2col 展开的数据的矩阵乘积，最后转换（reshape）为输出数据的大小
+>
+> 基于 im2col 方式的输出结果是 2 维矩阵。因为 CNN 中数据会保存为 4 维数组，所以要将 2 维输出数据转换为合适的形状
+
+### 卷积层的实现
+
+先来实现一下 im2col 函数：
+
+```python
+def im2col(input_data, filter_h, filter_w, stride=1, pad=0):
+    """
+
+    Parameters
+    ----------
+    input_data : 由(数据量, 通道, 高, 长)的4维数组构成的输入数据
+    filter_h : 滤波器的高
+    filter_w : 滤波器的长
+    stride : 步幅
+    pad : 填充
+
+    Returns
+    -------
+    col : 2维数组
+    """
+    N, C, H, W = input_data.shape
+    out_h = (H + 2*pad - filter_h)//stride + 1 # 输出高度
+    out_w = (W + 2*pad - filter_w)//stride + 1 # 输出宽度
+
+    img = np.pad(input_data, [(0,0), (0,0), (pad, pad), (pad, pad)], 'constant')
+    col = np.zeros((N, C, filter_h, filter_w, out_h, out_w))
+
+    for y in range(filter_h):
+        y_max = y + stride*out_h
+        for x in range(filter_w):
+            x_max = x + stride*out_w
+            col[:, :, y, x, :, :] = img[:, :, y:y_max:stride, x:x_max:stride]
+
+    col = col.transpose(0, 4, 5, 1, 2, 3).reshape(N*out_h*out_w, -1)
+    return col
+```
+
+::: details 代码解释
+
+`im2col(input_data, filter_h, filter_w, stride=1, pad=0)`
+
+- `input_data`：由（数据量，通道，高，长）的 4 维数组构成的输入数据
+
+- `filter_h`：滤波器的高
+
+- `filter_w`：滤波器的长
+
+- `stride`：步幅
+
+- `pad`：填充
+
+im2col 会考虑滤波器大小、步幅、填充，将输入数据展开为 2 维数组。
+
+:::
+
+::: details 具体示例
+
+现在，我们来实际使用一下这个 im2col：
+
+```python
+import sys, os
+import numpy as np
+sys.path.append(os.pardir)
+from common.util import im2col
+
+x1 = np.random.rand(1, 3, 7, 7)
+col1 = im2col(x1, 5, 5, stride=1, pad=0)
+print(col1.shape) # (9, 75)
+
+x2 = np.random.rand(10, 3, 7, 7) # 10个数据
+col2 = im2col(x2, 5, 5, stride=1, pad=0)
+print(col2.shape) # (90, 75)
+```
+
+第一个是批大小为 1、通道为 3 的 7×7 的数据，第二个的批大小为 10，数据形状和第一个相同。
+
+分别对其应用 im2col 函数，在这两种情形下，第 2 维的元素个数均为 75。这是滤波器（通道为 3、大小为 5×5）的元素个数的总和。
+
+批大小为 1 时，im2col 的结果是 (9, 75)。而第 2 个例子中批大小为 10，所以保存了 10 倍的数据，即 (90, 75)。
+
+:::
+
+现在使用 im2col 来实现卷积层。这里我们将卷积层实现为名为 Convolution 的类：
+
+```python{16-18}
+class Convolution:
+    def __init__(self, W, b, stride=1, pad=0):
+        self.W = W # 滤波器权重
+        self.b = b # 偏置
+        self.stride = stride # 步幅
+        self.pad = pad # 填充
+
+    def forward(self, x):
+        FN, C, FH, FW = self.W.shape # 滤波器参数
+        N, C, H, W = x.shape # 输入数据
+
+        # 计算输出尺寸
+        out_h = 1 + int((H + 2*self.pad - FH) / self.stride)
+        out_w = 1 + int((W + 2*self.pad - FW) / self.stride)
+
+        col = im2col(x, FH, FW, self.stride, self.pad)
+        col_W = self.W.reshape(FN, -1).T # 滤波器的展开
+        out = np.dot(col, col_W) + self.b
+
+        # 重塑输出形状
+        out = out.reshape(N, out_h, out_w, -1).transpose(0, 3, 1, 2)
+
+        return out
+```
+
+::: details 代码解释
+
+卷积层的初始化方法将滤波器（权重）、偏置、步幅、填充作为参数接收。滤波器是 (FN, C, FH, FW) 的 4 维形状。另外，FN、C、FH、FW 分别是 Filter Number（滤波器数量）、Channel、Filter Height、Filter Width 的缩写。
+
+高亮的部分表示 Convolution 层的实现中的重要部分。用 `im2col` 展开输入数据，并用 `reshape` 将滤波器展开为 2 维数组。然后，计算展开后的矩阵的乘积。
+
+展开滤波器的部分将各个滤波器的方块纵向展开为 1 列。这里通过 `reshape(FN, -1)` 将参数指定为 -1，这是 `reshape` 的一个便利的功能。通过在 `reshape` 时指定为 -1， `reshape` 函数会自动计算 -1 维度上的元素个数，以使多维数组的元素个数前后一致。比如，(10, 3, 5, 5) 形状的数组的元素个数共有 750 个，指定 `reshape(10, -1)` 后，就会转换成 (10, 75) 形状的数组。即将滤波器权重从 `(FN, C, FH, FW)` 重塑为 `(FN, C*FH*FW)`。
+
+`col` 的形状为 `(N × out_h × out_w, C × FH × FW)`，`col_W` 的形状为 `(C × FH × FW, FN)`，计算后 `out` 的形状为 `(N×out_h×out_w, FN)`。
+
+forward 的实现中，最后会将输出大小转换为合适的形状。转换时使用了 NumPy 的 `transpose` 函数。`transpose` 会更改多维数组的轴的顺序。通过指定从 0 开始的索引（编号）序列，就可以更改轴的顺序：
+
+![基于 NumPy 的 transpose 的轴顺序的更改：通过指定索引（编号），更改轴的顺序](/images/deep-learning/convolutional-neural-network/transpose.png)
+
+`reshape(N, out_h, out_w, FN)` 将输出恢复为 4 维，`transpose(0, 3, 1, 2)` 将通道维度放到第 1 维。
+
+:::
+
+以上就是卷积层的 forward 处理的实现。通过使用 im2col 进行展开，基本上可以像实现全连接层的 Affine 层一样来实现。
+
+接下来是卷积层的反向传播的实现：
+
+::: code-group
+
+```python [Convolution]
+class Convolution:
+    def __init__(self, W, b, stride=1, pad=0):
+        self.W = W
+        self.b = b
+        self.stride = stride
+        self.pad = pad
+
+        # 中间数据（backward时使用）
+        self.x = None
+        self.col = None
+        self.col_W = None
+
+        # 权重和偏置参数的梯度
+        self.dW = None
+        self.db = None
+
+    def forward(self, x):
+        FN, C, FH, FW = self.W.shape
+        N, C, H, W = x.shape
+        out_h = 1 + int((H + 2*self.pad - FH) / self.stride)
+        out_w = 1 + int((W + 2*self.pad - FW) / self.stride)
+
+        col = im2col(x, FH, FW, self.stride, self.pad)
+        col_W = self.W.reshape(FN, -1).T
+
+        out = np.dot(col, col_W) + self.b
+        out = out.reshape(N, out_h, out_w, -1).transpose(0, 3, 1, 2)
+
+        self.x = x
+        self.col = col
+        self.col_W = col_W
+
+        return out
+
+    def backward(self, dout):
+        FN, C, FH, FW = self.W.shape
+        dout = dout.transpose(0,2,3,1).reshape(-1, FN)
+
+        self.db = np.sum(dout, axis=0)
+        self.dW = np.dot(self.col.T, dout)
+        self.dW = self.dW.transpose(1, 0).reshape(FN, C, FH, FW)
+
+        dcol = np.dot(dout, self.col_W.T)
+        dx = col2im(dcol, self.x.shape, FH, FW, self.stride, self.pad)
+
+        return dx
+```
+
+```python [col2im]
+def col2im(col, input_shape, filter_h, filter_w, stride=1, pad=0):
+    """
+
+    Parameters
+    ----------
+    col :
+    input_shape : 输入数据的形状（例：(10, 1, 28, 28)）
+    filter_h :
+    filter_w
+    stride
+    pad
+
+    Returns
+    -------
+
+    """
+    N, C, H, W = input_shape
+    out_h = (H + 2*pad - filter_h)//stride + 1
+    out_w = (W + 2*pad - filter_w)//stride + 1
+    col = col.reshape(N, out_h, out_w, C, filter_h, filter_w).transpose(0, 3, 4, 5, 1, 2)
+
+    img = np.zeros((N, C, H + 2*pad + stride - 1, W + 2*pad + stride - 1))
+    for y in range(filter_h):
+        y_max = y + stride*out_h
+        for x in range(filter_w):
+            x_max = x + stride*out_w
+            img[:, :, y:y_max:stride, x:x_max:stride] += col[:, :, y, x, :, :]
+
+    return img[:, :, pad:H + pad, pad:W + pad]
+```
+
+:::
+
+::: details 代码解释
+
+在进行卷积层的反向传播时，必须进行 im2col 的逆处理，可以使用 col2im 函数。
+
+除了使用 col2im 这一点，卷积层的反向传播和 Affine 层的实现方式都一样。
+
+:::
+
+### 池化层的实现
+
+池化层的实现和卷积层相同，都使用 im2col 展开输入数据。
+
+不过，池化的情况下，在通道方向上是独立的，这一点和卷积层不同。池化的应用区域按通道单独展开：
+
+![对输入数据展开池化的应用区域（2×2的池化的例子）](/images/deep-learning/convolutional-neural-network/pooling.png)
+
+像这样展开之后，只需对展开的矩阵求各行的最大值，并转换为合适的形状即可：
+
+![池化层的实现流程：池化的应用区域内的最大值元素用灰色表示](/images/deep-learning/convolutional-neural-network/pooling-implementation.png)
+
+> 池化层的实现流程：池化的应用区域内的最大值元素用灰色表示
+
+```python
+class Pooling:
+    def __init__(self, pool_h, pool_w, stride=1, pad=0):
+        self.pool_h = pool_h # 池化窗口高度
+        self.pool_w = pool_w # 池化窗口宽度
+        self.stride = stride # 步幅
+        self.pad = pad # 填充
+
+        self.x = None # 存储输入用于反向传播
+        self.arg_max = None # 存储最大值位置用于反向传播
+
+    def forward(self, x):
+        # 计算输出尺寸
+        N, C, H, W = x.shape
+        out_h = int(1 + (H - self.pool_h) / self.stride)
+        out_w = int(1 + (W - self.pool_w) / self.stride)
+
+        # 展开
+        col = im2col(x, self.pool_h, self.pool_w, self.stride, self.pad)
+        col = col.reshape(-1, self.pool_h*self.pool_w)
+
+        arg_max = np.argmax(col, axis=1) # 每行的最大值索引
+        out = np.max(col, axis=1) # 每行的最大值
+        out = out.reshape(N, out_h, out_w, C).transpose(0, 3, 1, 2) # 转换
+
+        self.x = x
+        self.arg_max = arg_max
+
+        return out
+
+    def backward(self, dout):
+        dout = dout.transpose(0, 2, 3, 1)
+
+        pool_size = self.pool_h * self.pool_w
+        dmax = np.zeros((dout.size, pool_size))
+        dmax[np.arange(self.arg_max.size), self.arg_max.flatten()] = dout.flatten()
+        dmax = dmax.reshape(dout.shape + (pool_size,))
+
+        dcol = dmax.reshape(dmax.shape[0] * dmax.shape[1] * dmax.shape[2], -1)
+        dx = col2im(dcol, self.x.shape, self.pool_h, self.pool_w, self.stride, self.pad)
+
+        return dx
+```
+
+::: details 代码解释
+
+池化层的实现按下面 3 个阶段进行：
+
+- 展开输入数据
+
+- 求各行的最大值
+
+- 转换为合适的输出大小
+
+最大值的计算使用 NumPy 的 `np.max` 方法。`np.max` 可以指定 `axis` 参数，并在这个参数指定的各个轴方向上求最大值。
+
+比如，如果写成 `np.max(x, axis=1)`，就可以在输入 x 的第 1 维的各个轴方向上求最大值。
+
+:::
+
+## CNN 的实现
+
 ::: danger 警告
 
 该部分尚未完工!
@@ -290,7 +643,7 @@ $$OW = \frac{31 + 2 \times 2 - 5}{3} + 1 = 11$$
 
 ::: details 专有名词
 
-- **卷积神经网络**：
+- **卷积神经网络（CNN）**：
 
 - **卷积层（Convolution 层）**：
 
@@ -307,5 +660,9 @@ $$OW = \frac{31 + 2 \times 2 - 5}{3} + 1 = 11$$
 - **填充**：卷积运算中，向输入数据的周围填入固定的数据（比如 0 等），以调整输出的大小，增大填充后输出大小会变大
 
 - **步幅**：卷积运算中，应用滤波器的位置间隔，增大步幅后输出大小会变小
+
+- **Max 池化**：池化层处理方式的一种，从目标区域中取出最大值
+
+- **im2col**：一个函数，将输入数据展开以适合滤波器（权重）
 
 :::
