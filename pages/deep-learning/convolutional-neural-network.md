@@ -28,7 +28,7 @@ CNN 和之前介绍的神经网络一样，可以像乐高积木一样通过组�
 
 那么，CNN 会是什么样的结构呢：
 
-![基于 CNN 的网络的例子](/images/deep-learning/convolutional-neural-network/cnn.png)
+![基于 CNN 的网络的例子](/images/deep-learning/convolutional-neural-network/cnn-struct.png)
 
 > 新增了 Convolution 层和 Pooling 层（用灰色的方块表示）
 
@@ -626,6 +626,243 @@ class Pooling:
 :::
 
 ## CNN 的实现
+
+我们已经实现了卷积层和池化层，现在来组合这些层，搭建进行手写数字识别的 CNN。
+
+先来观察一下简单 CNN 的结构：
+
+![简单 CNN 的网络构成](/images/deep-learning/convolutional-neural-network/cnn-simple.png)
+
+网络的构成是 “Convolution - ReLU - Pooling - Affine - ReLU - Affine - Softmax”，我们将它实现为名为 `SimpleConvNet` 的类。
+
+### 初始化
+
+首先来看一下 `SimpleConvNet` 的初始化（`__init__`），取下面这些参数：
+
+- `input_dim` ——— 输入数据的维度：（通道，高，长）
+
+- `conv_param` ——— 卷积层的超参数（字典）。字典的关键字如下：
+  - `filter_num` ——— 滤波器的数量
+  - `filter_size` ——— 滤波器的大小
+  - `stride` ——— 步幅
+  - `pad` ——— 填充
+
+- `hidden_size` ——— 隐藏层的大小
+
+- `output_size` ——— 输出的维度
+
+- `weight_init_std` ——— 初始化时权重的标准差
+
+这里，卷积层的超参数通过名为 `conv_param` 的字典传入。我们设想它会像 `{'filter_num':30, 'filter_size':5, 'pad':0, 'stride':1}` 这样，保存必要的超参数值。
+
+```python
+# coding: utf-8
+import sys, os
+sys.path.append(os.pardir)  # 为了导入父目录的文件而进行的设定
+import pickle
+import numpy as np
+from collections import OrderedDict
+from common.layers import *
+from common.gradient import numerical_gradient
+
+
+class SimpleConvNet:
+    """简单的ConvNet
+
+    conv - relu - pool - affine - relu - affine - softmax
+
+    Parameters
+    ----------
+    input_size : 输入大小（MNIST 的情况下为 784）
+    hidden_size_list : 隐藏层的神经元数量的列表（e.g. [100, 100, 100]）
+    output_size : 输出大小（MNIST 的情况下为 10）
+    activation : 'relu' or 'sigmoid'
+    weight_init_std : 指定权重的标准差（e.g. 0.01）
+        指定 'relu' 或 'he' 的情况下设定 “He的初始值”
+        指定 'sigmoid' 或 'xavier' 的情况下设定 “Xavier的初始值”
+    """
+    def __init__(self, input_dim=(1, 28, 28),
+                 conv_param={'filter_num':30, 'filter_size':5, 'pad':0, 'stride':1},
+                 hidden_size=100, output_size=10, weight_init_std=0.01):
+
+        # 计算各层输出尺寸
+        filter_num = conv_param['filter_num']
+        filter_size = conv_param['filter_size']
+        filter_pad = conv_param['pad']
+        filter_stride = conv_param['stride']
+        input_size = input_dim[1] # 输入高度/宽度
+        conv_output_size = (input_size - filter_size + 2*filter_pad) / filter_stride + 1
+        pool_output_size = int(filter_num * (conv_output_size/2) * (conv_output_size/2))
+
+        # 初始化权重
+        self.params = {}
+        # 卷积层权重: (滤波器数量, 输入通道, 滤波器高度, 滤波器宽度)
+        self.params['W1'] = weight_init_std * np.random.randn(filter_num, input_dim[0], filter_size, filter_size)
+        self.params['b1'] = np.zeros(filter_num)
+        # 第一个全连接层权重
+        self.params['W2'] = weight_init_std * np.random.randn(pool_output_size, hidden_size)
+        self.params['b2'] = np.zeros(hidden_size)
+        # 第二个全连接层权重
+        self.params['W3'] = weight_init_std * np.random.randn(hidden_size, output_size)
+        self.params['b3'] = np.zeros(output_size)
+
+        # 生成必要的层
+        self.layers = OrderedDict()
+        self.layers['Conv1'] = Convolution(self.params['W1'], self.params['b1'],
+                                           conv_param['stride'], conv_param['pad'])
+        self.layers['Relu1'] = Relu()
+        self.layers['Pool1'] = Pooling(pool_h=2, pool_w=2, stride=2)
+        self.layers['Affine1'] = Affine(self.params['W2'], self.params['b2'])
+        self.layers['Relu2'] = Relu()
+        self.layers['Affine2'] = Affine(self.params['W3'], self.params['b3'])
+
+        self.last_layer = SoftmaxWithLoss()
+```
+
+::: details 代码解释
+
+首先将由初始化参数传入的卷积层的超参数从字典中取了出来（以方便后面使用），然后，计算卷积层的输出大小。
+
+在初始化权重部分，学习所需的参数是第 1 层的卷积层和剩余两个全连接层的权重和偏置。将这些参数保存在实例变量的 `params` 字典中。将第 1 层的卷积层的权重设为关键字 `W1`，偏置设为关键字 `b1`。同样，分别用关键字 `W2`、`b2` 和关键字 `W3`、`b3` 来保存第 2 个和第 3 个全连接层的权重和偏置。
+
+最后，生成必要的层，从最前面开始按顺序向有序字典（`OrderedDict`）的 `layers` 中添加层。只有最后的 SoftmaxWithLoss 层被添加到别的变量 `lastLayer` 中。
+
+:::
+
+以上就是 `SimpleConvNet` 的初始化中进行的处理。
+
+### 正向传播
+
+初始化后，进行推理的 `predict` 方法和求损失函数值的 `loss` 方法就可以像下面这样实现：
+
+```python
+    def predict(self, x):
+        for layer in self.layers.values():
+            x = layer.forward(x)
+        return x
+
+    def loss(self, x, t):
+        """求损失函数
+        参数 x 是输入数据、t 是教师标签
+        """
+        y = self.predict(x)
+        return self.last_layer.forward(y, t)
+```
+
+::: details 代码解释
+
+这里，参数 x 是输入数据，t 是教师标签。
+
+用于推理的 `predict` 方法从头开始依次调用已添加的层，并将结果传递给下一层。
+
+在求损失函数的 `loss` 方法中，除了使用 `predict` 方法进行的 `forward` 处理之外，还会继续进行 `forward` 处理，直到到达最后的 SoftmaxWithLoss 层。
+
+:::
+
+### 反向传播
+
+接下来是基于误差反向传播法求梯度的代码实现：
+
+```python
+    def gradient(self, x, t):
+        """求梯度（误差反向传播法）
+
+        Parameters
+        ----------
+        x : 输入数据
+        t : 教师标签
+
+        Returns
+        -------
+        具有各层的梯度的字典变量
+            grads['W1']、grads['W2']、...是各层的权重
+            grads['b1']、grads['b2']、...是各层的偏置
+        """
+        # forward
+        self.loss(x, t)
+
+        # backward
+        dout = 1
+        dout = self.last_layer.backward(dout)
+
+        layers = list(self.layers.values())
+        layers.reverse()
+        for layer in layers:
+            dout = layer.backward(dout)
+
+        # 设定
+        grads = {}
+        grads['W1'], grads['b1'] = self.layers['Conv1'].dW, self.layers['Conv1'].db
+        grads['W2'], grads['b2'] = self.layers['Affine1'].dW, self.layers['Affine1'].db
+        grads['W3'], grads['b3'] = self.layers['Affine2'].dW, self.layers['Affine2'].db
+
+        return grads
+```
+
+::: details 代码解释
+
+参数的梯度通过误差反向传播法（反向传播）求出，通过把正向传播和反向传播组装在一起来完成。
+
+因为已经在各层正确实现了正向传播和反向传播的功能，所以这里只需要以合适的顺序调用即可。
+
+最后，把各个权重参数的梯度保存到 `grads` 字典中。这就是 SimpleConvNet 的实现。
+
+:::
+
+### 学习 MNIST 数据集
+
+现在，使用这个 SimpleConvNet 学习 MNIST 数据集：
+
+```python
+import sys, os
+sys.path.append(os.pardir)
+import numpy as np
+import matplotlib.pyplot as plt
+from dataset.mnist import load_mnist
+from simple_convnet import SimpleConvNet
+from common.trainer import Trainer
+
+# 读入数据
+(x_train, t_train), (x_test, t_test) = load_mnist(flatten=False)
+
+# 处理花费时间较长的情况下减少数据
+#x_train, t_train = x_train[:5000], t_train[:5000]
+#x_test, t_test = x_test[:1000], t_test[:1000]
+
+max_epochs = 20
+
+network = SimpleConvNet(input_dim=(1,28,28),
+                        conv_param = {'filter_num': 30, 'filter_size': 5, 'pad': 0, 'stride': 1},
+                        hidden_size=100, output_size=10, weight_init_std=0.01)
+
+trainer = Trainer(network, x_train, t_train, x_test, t_test,
+                  epochs=max_epochs, mini_batch_size=100,
+                  optimizer='Adam', optimizer_param={'lr': 0.001},
+                  evaluate_sample_num_per_epoch=1000)
+trainer.train()
+
+# 保存参数
+network.save_params("params.pkl")
+print("Saved Network Parameters!")
+
+# 绘制图形
+markers = {'train': 'o', 'test': 's'}
+x = np.arange(max_epochs)
+plt.plot(x, trainer.train_acc_list, marker='o', label='train', markevery=2)
+plt.plot(x, trainer.test_acc_list, marker='s', label='test', markevery=2)
+plt.xlabel("epochs")
+plt.ylabel("accuracy")
+plt.ylim(0, 1.0)
+plt.legend(loc='lower right')
+plt.show()
+
+```
+
+如果使用 MNIST 数据集训练 SimpleConvNet，则训练数据的识别率为 99.82%，测试数据的识别率为 98.96%（每次学习的识别精度都会发生一些误差）。测试数据的识别率大约为 99%，就小型网络来说，这是一个非常高的识别率。
+
+如上所述，卷积层和池化层是图像识别中必备的模块。CNN 可以有效读取图像中的某种特性，在手写数字识别中，还可以实现高精度的识别。
+
+## CNN 的可视化
 
 ::: danger 警告
 
