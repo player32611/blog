@@ -1,0 +1,378 @@
+# 深度学习
+
+::: danger 警告
+
+该页面尚未完工!
+
+:::
+
+> 深度学习是加深了层的深度神经网络
+
+::: details 目录
+
+[[toc]]
+
+:::
+
+## 加深网络
+
+关于神经网络，我们已经学了很多东西，比如构成神经网络的各种层、学习时的有效技巧、对图像特别有效的 CNN、参数的最优化方法等，这些都是深度学习中的重要技术。
+
+接下来我们将这些已经学过的技术汇总起来，创建一个深度网络，挑战 MNIST 数据集的手写数字识别。
+
+### 向更深的网络出发
+
+我们来创建一个更深的网络结构的 CNN（一个比之前的网络都深的网络）：
+
+![进行手写数字识别的深度CNN](/images/deep-learning/deep-learning/deep-cnn.png)
+
+这里使用的卷积层全都是 3×3 的小型滤波器，特点是随着层的加深，通道数变大（卷积层的通道数从前面的层开始按顺序以 16、16、32、32、64、64 的方式增加）
+
+此外，还插入了池化层，以逐渐减小中间数据的空间大小；并且，后面的全连接层中使用了 Dropout 层。
+
+这个网络使用 He 初始值作为权重的初始值，使用 Adam 更新权重参数。
+
+总结起来，这个网络有如下特点：
+
+- 基于 3×3 的小型滤波器的卷积层
+
+- 激活函数是 ReLU
+
+- 全连接层的后面使用 Dropout 层
+
+- 基于 Adam 的最优化
+
+- 使用 He 初始值作为权重初始值
+
+可以看出，该网络中使用了多个之前介绍的神经网络技术。
+
+现在，我们使用这个网络进行学习：
+
+::: code-group
+
+```python [deep_convnet.py]
+import sys, os
+sys.path.append(os.pardir)  # 为了导入父目录的文件而进行的设定
+import pickle
+import numpy as np
+from collections import OrderedDict
+from common.layers import *
+
+
+class DeepConvNet:
+    """识别率为99%以上的高精度的ConvNet
+
+    网络结构如下所示
+        conv - relu - conv- relu - pool -
+        conv - relu - conv- relu - pool -
+        conv - relu - conv- relu - pool -
+        affine - relu - dropout - affine - dropout - softmax
+    """
+    def __init__(self, input_dim=(1, 28, 28),
+                 conv_param_1 = {'filter_num':16, 'filter_size':3, 'pad':1, 'stride':1},
+                 conv_param_2 = {'filter_num':16, 'filter_size':3, 'pad':1, 'stride':1},
+                 conv_param_3 = {'filter_num':32, 'filter_size':3, 'pad':1, 'stride':1},
+                 conv_param_4 = {'filter_num':32, 'filter_size':3, 'pad':2, 'stride':1},
+                 conv_param_5 = {'filter_num':64, 'filter_size':3, 'pad':1, 'stride':1},
+                 conv_param_6 = {'filter_num':64, 'filter_size':3, 'pad':1, 'stride':1},
+                 hidden_size=50, output_size=10):
+        # 初始化权重===========
+        # 各层的神经元平均与前一层的几个神经元有连接（TODO:自动计算）
+        pre_node_nums = np.array([1*3*3, 16*3*3, 16*3*3, 32*3*3, 32*3*3, 64*3*3, 64*4*4, hidden_size])
+        wight_init_scales = np.sqrt(2.0 / pre_node_nums)  # 使用ReLU的情况下推荐的初始值
+
+        self.params = {}
+        pre_channel_num = input_dim[0]
+        for idx, conv_param in enumerate([conv_param_1, conv_param_2, conv_param_3, conv_param_4, conv_param_5, conv_param_6]):
+            self.params['W' + str(idx+1)] = wight_init_scales[idx] * np.random.randn(conv_param['filter_num'], pre_channel_num, conv_param['filter_size'], conv_param['filter_size'])
+            self.params['b' + str(idx+1)] = np.zeros(conv_param['filter_num'])
+            pre_channel_num = conv_param['filter_num']
+        self.params['W7'] = wight_init_scales[6] * np.random.randn(64*4*4, hidden_size)
+        self.params['b7'] = np.zeros(hidden_size)
+        self.params['W8'] = wight_init_scales[7] * np.random.randn(hidden_size, output_size)
+        self.params['b8'] = np.zeros(output_size)
+
+        # 生成层===========
+        self.layers = []
+        self.layers.append(Convolution(self.params['W1'], self.params['b1'],
+                           conv_param_1['stride'], conv_param_1['pad']))
+        self.layers.append(Relu())
+        self.layers.append(Convolution(self.params['W2'], self.params['b2'],
+                           conv_param_2['stride'], conv_param_2['pad']))
+        self.layers.append(Relu())
+        self.layers.append(Pooling(pool_h=2, pool_w=2, stride=2))
+        self.layers.append(Convolution(self.params['W3'], self.params['b3'],
+                           conv_param_3['stride'], conv_param_3['pad']))
+        self.layers.append(Relu())
+        self.layers.append(Convolution(self.params['W4'], self.params['b4'],
+                           conv_param_4['stride'], conv_param_4['pad']))
+        self.layers.append(Relu())
+        self.layers.append(Pooling(pool_h=2, pool_w=2, stride=2))
+        self.layers.append(Convolution(self.params['W5'], self.params['b5'],
+                           conv_param_5['stride'], conv_param_5['pad']))
+        self.layers.append(Relu())
+        self.layers.append(Convolution(self.params['W6'], self.params['b6'],
+                           conv_param_6['stride'], conv_param_6['pad']))
+        self.layers.append(Relu())
+        self.layers.append(Pooling(pool_h=2, pool_w=2, stride=2))
+        self.layers.append(Affine(self.params['W7'], self.params['b7']))
+        self.layers.append(Relu())
+        self.layers.append(Dropout(0.5))
+        self.layers.append(Affine(self.params['W8'], self.params['b8']))
+        self.layers.append(Dropout(0.5))
+
+        self.last_layer = SoftmaxWithLoss()
+
+    def predict(self, x, train_flg=False):
+        for layer in self.layers:
+            if isinstance(layer, Dropout):
+                x = layer.forward(x, train_flg)
+            else:
+                x = layer.forward(x)
+        return x
+
+    def loss(self, x, t):
+        y = self.predict(x, train_flg=True)
+        return self.last_layer.forward(y, t)
+
+    def accuracy(self, x, t, batch_size=100):
+        if t.ndim != 1 : t = np.argmax(t, axis=1)
+
+        acc = 0.0
+
+        for i in range(int(x.shape[0] / batch_size)):
+            tx = x[i*batch_size:(i+1)*batch_size]
+            tt = t[i*batch_size:(i+1)*batch_size]
+            y = self.predict(tx, train_flg=False)
+            y = np.argmax(y, axis=1)
+            acc += np.sum(y == tt)
+
+        return acc / x.shape[0]
+
+    def gradient(self, x, t):
+        # forward
+        self.loss(x, t)
+
+        # backward
+        dout = 1
+        dout = self.last_layer.backward(dout)
+
+        tmp_layers = self.layers.copy()
+        tmp_layers.reverse()
+        for layer in tmp_layers:
+            dout = layer.backward(dout)
+
+        # 设定
+        grads = {}
+        for i, layer_idx in enumerate((0, 2, 5, 7, 10, 12, 15, 18)):
+            grads['W' + str(i+1)] = self.layers[layer_idx].dW
+            grads['b' + str(i+1)] = self.layers[layer_idx].db
+
+        return grads
+
+    def save_params(self, file_name="params.pkl"):
+        params = {}
+        for key, val in self.params.items():
+            params[key] = val
+        with open(file_name, 'wb') as f:
+            pickle.dump(params, f)
+
+    def load_params(self, file_name="params.pkl"):
+        with open(file_name, 'rb') as f:
+            params = pickle.load(f)
+        for key, val in params.items():
+            self.params[key] = val
+
+        for i, layer_idx in enumerate((0, 2, 5, 7, 10, 12, 15, 18)):
+            self.layers[layer_idx].W = self.params['W' + str(i+1)]
+            self.layers[layer_idx].b = self.params['b' + str(i+1)]
+```
+
+```python [train_deepnet.py]
+import sys, os
+sys.path.append(os.pardir)  # 为了导入父目录而进行的设定
+import numpy as np
+import matplotlib.pyplot as plt
+from dataset.mnist import load_mnist
+from deep_convnet import DeepConvNet
+from common.trainer import Trainer
+
+(x_train, t_train), (x_test, t_test) = load_mnist(flatten=False)
+
+network = DeepConvNet()
+trainer = Trainer(network, x_train, t_train, x_test, t_test,
+                  epochs=20, mini_batch_size=100,
+                  optimizer='Adam', optimizer_param={'lr':0.001},
+                  evaluate_sample_num_per_epoch=1000)
+trainer.train()
+
+# 保存参数
+network.save_params("deep_convnet_params.pkl")
+print("Saved Network Parameters!")
+```
+
+:::
+
+::: details 代码解释
+
+实现该网络的源代码在 `deep_convnet.py` 中，训练用的代码在 `train_deepnet.py` 中。
+
+虽然使用这些代码可以重现这里进行的学习，不过深度网络的学习需要花费较多的时间（大概要半天以上）。
+
+这里给出学习完的权重参数（`deep_conv_net_params.pkl`）。`deep_convnet.py` 备有读入学习完的参数的功能，根据需要进行使用。
+
+:::
+
+这个网络的识别精度为 99.38%，错误识别率只有 0.62%，可以说是非常优秀的性能了！
+
+这里我们实际看一下在什么样的图像上发生了识别错误：
+
+![识别错误的图像的例子](/images/deep-learning/deep-learning/recognition-error-example.png)
+
+> 各个图像的左上角显示了正确解标签，右下角显示了本网络的推理结果
+
+观察图像可知，这些图像对于我们人类而言也很难判断。这里面有几个图像很难判断是哪个数字，即使是我们人类，也同样会犯 “识别错误”。
+
+比如，左上角的图像（正确解是 “6”）看上去像 “0”，它旁边的图像（正确解是 “3”）看上去像 “5”。 整体上，“1” 和 “7”、“0” 和 “6”、“3” 和 “5” 的组合比较容易混淆。
+
+这次的深度 CNN 尽管识别精度很高，但是对于某些图像，也犯了和人类同样的 “识别错误”。从这一点上，我们也可以感受到深度 CNN 中蕴藏着巨大的可能性。
+
+### 进一步提高识别精度
+
+在一个标题为 “What is the class of this image ?” 的网站上，以排行榜的形式刊登了目前为止通过论文等渠道发表的针对各种数据集的方法的识别精度：
+
+![针对MNIST数据集的各种方法的排行](/images/deep-learning/deep-learning/mnist-ranking.png)
+
+可以发现 “Neural Networks”“Deep”“Convolutional” 等关键词特别显眼。实际上，排行榜上的前几名大都是基于 CNN 的方法。
+
+实际上，排行榜上的前几名大都是基于 CNN 的方法。
+
+截止到 2016 年 6 月，对 MNIST 数据集的最高识别精度是 99.79%（错误识别率为 0.21%），该方法也是以 CNN 为基础的。不过，它用的 CNN 并不是特别深层的网络（卷积层为 2 层、全连接层为 2 层的网络）
+
+::: details 为什么层不用特别深就获得了较高的识别精度
+
+对于 MNIST 数据集，层不用特别深就获得了（目前）最高的识别精度。
+
+一般认为，这是因为对于手写数字识别这样一个比较简单的任务，没有必要将网络的表现力提高到那么高的程度。
+
+因此，可以说加深层的好处并不大。
+
+而大规模的一般物体识别的情况，因为问题复杂，所以加深层对提高识别精度大有裨益。
+
+:::
+
+参考刚才排行榜中前几名的方法，可以发现进一步提高识别精度的技术和线索。比如，集成学习、学习率衰减、**Data Augmentation**（数据扩充）等都有助于提高识别精度。尤其是Data Augmentation，虽然方法很简单，但在提高识别精度上效果显著。
+
+::: details Data Augmentation
+
+Data Augmentation 基于算法 “人为地” 扩充输入图像（训练图像）。
+
+具体地说，对于输入图像，通过施加旋转、垂直或水平方向上的移动等微小变化，增加图像的数量：
+
+![Data Augmentation 的例子](/images/deep-learning/deep-learning/data-augmentation-example.png)
+
+这在数据集的图像数量有限时尤其有效。
+
+除了上图所示的旋转平移变形之外，Data Augmentation 还可以通过其他各种方法扩充图像，比如裁剪图像的 “crop 处理”、将图像左右翻转的 “flip 处理” 等。对于一般的图像，施加亮度等外观上的变化、放大缩小等尺度上的变化也是有效的。
+
+不管怎样，通过 Data Augmentation 巧妙地增加训练图像，就可以提高深度学习的识别精度。虽然这个看上去只是一个简单的技巧，不过经常会有很好的效果。
+
+:::
+
+### 加深层的动机
+
+关于加深层的重要性，现状是理论研究还不够透彻。尽管目前相关理论还比较贫乏，但是有几点可以从过往的研究和实验中得以解释（虽然有一些直观）。
+
+首先，从以 ILSVRC 为代表的大规模图像识别的比赛结果中可以看出加深层的重要性（详细内容请参考下一节）。这种比赛的结果显示，最近前几名的方法多是基于深度学习的，并且有逐渐加深网络的层的趋势。也就是说，可以看到层越深，识别性能也越高。
+
+加深层的其中一个好处就是可以减少网络的参数数量。
+
+说得详细一点，就是与没有加深层的网络相比，加深了层的网络可以用更少的参数达到同等水平（或者更强）的表现力。这一点结合卷积运算中的滤波器大小来思考就好理解了。
+
+::: details 具体示例
+
+比如，下图展示了由 5×5 的滤波器构成的卷积层：
+
+![5×5 的卷积运算的例子](/images/deep-learning/deep-learning/convolution-example.png)
+
+> 这里希望大家考虑一下输出数据的各个节点是从输入数据的哪个区域计算出来的。
+
+显然，在上图的例子中，每个输出节点都是从输入数据的某个 5×5 的区域算出来的。
+
+接下来我们思考一下图中重复两次 3×3 的卷积运算的情形：
+
+![重复两次 3×3 的卷积层的例子](/images/deep-learning/deep-learning/convolution-example-2.png)
+
+此时，每个输出节点将由中间数据的某个 3×3 的区域计算出来。
+
+那么，中间数据的 3×3 的区域又是由前一个输入数据的哪个区域计算出来的呢？仔细观察图可知它对应一个 5×5 的区域。
+
+也就是说，图中输出数据是 “观察” 了输入数据的某个 5×5 的区域后计算出来的。
+
+因此，一次 5×5 的卷积运算的区域可以由两次 3×3 的卷积运算抵充。
+
+并且，相对于前者的参数数量 25（5×5），后者一共是 18（2×3×3），通过叠加卷积层，参数数量减少了。
+
+而且，这个参数数量之差会随着层的加深而变大。比如，重复三次 3×3 的卷积运算时，参数的数量总共是 27。而为了用一次卷积运算 “观察” 与之相同的区域，需要一个 7×7 的滤波器，此时的参数数量是 49。
+
+所以，叠加小型滤波器来加深网络的好处是可以减少参数的数量，扩大**感受野**（receptive field，给神经元施加变化的某个局部空间区域）。并且通过叠加层，将 ReLU 等激活函数夹在卷积层的中间，进一步提高了网络的表现力。这是因为向网络添加了基于激活函数的 “非线性” 表现力，通过非线性函数的叠加，可以表现更加复杂的东西。
+
+:::
+
+加深层的另一个好处就是使学习更加高效。
+
+与没有加深层的网络相比，通过加深层，可以减少学习数据，从而高效地进行学习。
+
+::: details 直观理解
+
+大家可以回忆一下 CNN。CNN 的卷积层会分层次地提取信息。具体地说，在前面的卷积层中，神经元会对边缘等简单的形状有响应，随着层的加深，开始对纹理、物体部件等更加复杂的东西有响应。
+
+我们先牢记这个网络的分层结构，然后考虑一下 “狗” 的识别问题。
+
+要用浅层网络解决这个问题的话，卷积层需要一下子理解很多 “狗” 的特征。“狗” 有各种各样的种类，根据拍摄环境的不同，外观变化也很大。
+
+因此，要理解 “狗” 的特征，需要大量富有差异性的学习数据，而这会导致学习需要花费很多时间。
+
+不过，通过加深网络，就可以分层次地分解需要学习的问题。因此，各层需要学习的问题就变成了更简单的问题。
+
+比如，最开始的层只要专注于学习边缘就好，这样一来，只需用较少的学习数据就可以高效地进行学习。因为和印有 “狗” 的照片相比，包含边缘的图像数量众多，并且边缘的模式比 “狗” 的模式结构更简单。
+
+:::
+
+通过加深层，可以分层次地传递信息，这一点也很重要。
+
+比如，因为提取了边缘的层的下一层能够使用边缘的信息，所以应该能够高效地学习更加高级的模式。
+
+也就是说，通过加深层，可以将各层要学习的问题分解成容易解决的简单问题，从而可以进行高效的学习。
+
+## 深度学习的小历史
+
+一般认为，现在深度学习之所以受到大量关注，其契机是 2012 年举办的大规模图像识别大赛 ILSVRC（ImageNet Large Scale Visual RecognitionChallenge）。
+
+在那年的比赛中，基于深度学习的方法（通称 AlexNet）以压倒性的优势胜出，彻底颠覆了以往的图像识别方法。
+
+2012 年深度学习的这场逆袭成为一个转折点，在之后的比赛中，深度学习一直活跃在舞台中央。
+
+我们以 ILSVRC 这个大规模图像识别比赛为轴，看一下深度学习最近的发展趋势。
+
+### ImageNet
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+## 小结
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+::: details 专有名词
+
+- **感受野**：给神经元施加变化的某个局部空间区域
+
+:::
