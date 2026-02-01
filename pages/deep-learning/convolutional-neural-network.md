@@ -2,12 +2,6 @@
 
 > **卷积神经网络**（Convolutional Neural Network，CNN）被用于图像识别、语音识别等各种场合，在图像识别的比赛中，基于深度学习的方法几乎都以 CNN 为基础。
 
-::: danger 警告
-
-该页面尚未完工!
-
-:::
-
 ::: details 目录
 
 [[toc]]
@@ -948,27 +942,57 @@ filter_show(network.params['W1'])
 
 ## 具有代表性的 CNN
 
-::: danger 警告
+关于 CNN，迄今为止已经提出了各种网络结构。这里，我们介绍其中特别重要的两个网络，一个是在 1998 年首次被提出的 CNN 元祖 **LeNet**，另一个是在深度学习受到关注的 2012 年被提出的 **AlexNet**。
 
-该部分尚未完工!
+### LeNet
 
-:::
+LeNet 在 1998 年被提出，是进行手写数字识别的网络。它有连续的卷积层和池化层（正确地讲，是只 “抽选元素” 的子采样层），最后经全连接层输出结果。
+
+![LeNet 的网络结构](/images/deep-learning/convolutional-neural-network/lenet.png)
+
+和 “现在的 CNN” 相比，LeNet 有几个不同点。第一个不同点在于激活函数。LeNet 中使用 sigmoid 函数，而现在的 CNN 中主要使用 ReLU 函数。此外，原始的 LeNet 中使用子采样（subsampling）缩小中间数据的大小，而现在的 CNN 中 Max 池化是主流。
+
+综上，LeNet 与现在的 CNN 虽然有些许不同，但差别并不是那么大。
+
+### AlexNet
+
+在 LeNet 问世 20 多年后，AlexNet 被发布出来。AlexNet 是引发深度学习热潮的导火线，不过它的网络结构和 LeNet 基本上没有什么不同：
+
+![AlexNet 的网络结构](/images/deep-learning/convolutional-neural-network/alexnet.png)
+
+AlexNet 叠有多个卷积层和池化层，最后经由全连接层输出结果。虽然结构上 AlexNet 和 LeNet 没有大的不同，但有以下几点差异：
+
+- 激活函数使用 ReLU
+
+- 使用进行局部正规化的 LRN（Local Response Normalization）层
+
+- 使用 Dropout
+
+如上所述，关于网络结构，LeNet 和 AlexNet 没有太大的不同。但是，围绕它们的环境和计算机技术有了很大的进步。
 
 ## 小结
 
-::: danger 警告
+::: details 小结
 
-该部分尚未完工!
+- CNN 在此前的全连接层的网络中新增了卷积层和池化层
+
+- 使用 im2col 函数可以简单、高效地实现卷积层和池化层
+
+- 通过 CNN 的可视化，可知随着层次变深，提取的信息愈加高级
+
+- LeNet 和 AlexNet 是 CNN 的代表性网络
+
+- 在深度学习的发展中，大数据和 GPU 做出了很大的贡献
 
 :::
 
 ::: details 专有名词
 
-- **卷积神经网络（CNN）**：
+- **卷积神经网络（CNN）**：在普通的神经网络基础上，增加了卷积层和池化层
 
-- **卷积层（Convolution 层）**：
+- **卷积层（Convolution 层）**：进行卷积运算，通过滤波器对图像进行处理
 
-- **池化层（Pooling 层）**：
+- **池化层（Pooling 层）**：进行缩小高、长方向上的空间的运算
 
 - **全链接**：神经网络中，相邻层的所有神经元之间都有连接
 
