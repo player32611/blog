@@ -3,6 +3,7 @@ import { defineConfig } from 'vitepress'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
+  lang: 'zh-CN',
   base: "/blog/",
   title: "我的个人笔记网页",
   description: "A VitePress Site",
