@@ -14,14 +14,6 @@
 
 :::
 
-## 什么是 Transformer
-
-::: danger 警告
-
-该部分尚未完工!
-
-:::
-
 ## 词嵌入
 
 ### 处理文字
@@ -561,13 +553,17 @@ $$Cosine Siilarity = \frac{{\sum_{i=1}^{n}}{A_i}{B_i}}{\sqrt{{\sum_{i=1}^{n}}A_i
 
 事实证明，我们确实不再需要 LSTM 了。
 
-## 位置编码
+## Transformer
 
-::: danger 警告
+Transformer 使用词嵌入将单词转换为数字，位置编码来跟踪单词顺序，自注意力跟踪输入和输出短语中的单词关系，编码器解码器注意力跟踪输入和输出短语之间的关系以确保输入中的重要单词在翻译中不会丢失，以及残差连接使每个子单元（比如自注意力）专注于解决问题的一部分。
 
-该部分尚未完工!
+### 词嵌入
 
-:::
+现在，因为 Transformer 是一种神经网络，而神经网络通常只接受数字作为输入值，所以我们首先需要做的是使用词嵌入来将输入单词编码为数字。
+
+![词嵌入](/images/deep-learning/transformer/transformer-embedding.png)
+
+### 位置编码
 
 位置编码是一种为 Transformer 模型提供词语在序列中 "顺序" 和 "位置" 信息的技术。 它是解决 Transformer 核心缺陷——"自身不具备理解顺序能力"——的关键。
 
@@ -585,13 +581,273 @@ Transformer 的核心是自注意力机制。它的工作方式是：当处理�
 
 我们必须显式地告诉模型每个词在序列中的位置，否则它就无法理解语言的逻辑结构。位置编码就是完成这个任务的 "位置说明书"。
 
-## 残差链接
+也就是说，首先我们用词嵌入的方法先将句子转换为数字，再为每个单词的嵌入值添加一组对应词序的数字：
 
-::: danger 警告
+![位置编码](/images/deep-learning/transformer/transformer-position-encoding.png)
 
-该部分尚未完工!
+代表词序的数字，来自一系列交替的正弦和余弦曲线，每条曲线为每个词的嵌入提供特定的位置值。
+
+::: details 如何提供位置值
+
+![正余弦曲线](/images/deep-learning/transformer/transformer-position-encoding-sin-cos.png)
+
+具体来说，第一个词的位置值位于 x 轴的 1st 坐标上，第一个嵌入的位置值绿色曲线上的 y 轴坐标 0，第二个嵌入的位置值来自橙色曲线对应的 y 轴坐标 1。同理依次类推。
+
+第二个词的位置值位于 x 轴的 2nd 坐标上。等等。
+
+由于正弦和余弦曲线是重复的，有可能两个词会得到相同的位置或 y 轴值。
+
+但由于曲线在更大的嵌入位置上变得更宽，每个输入词最终都有一个独特的位置值序列。
 
 :::
+
+现在我们所要做的就是将位置值添加到嵌入值中：
+
+![位置编码结果](/images/deep-learning/transformer/transformer-position-encoding-result.png)
+
+我们最终得到了词嵌入加上整个句子 "Squatch eats pizza" 的位置编码。
+
+同理，我们可以计算句子 "Let's go" 的位置编码：
+
+![位置编码结果](/images/deep-learning/transformer/transformer-position-encoding-result-2.png)
+
+::: details 词序跟踪
+
+如果我们将输入词的顺序反过来变成 "pizza eats Squatch"，那么第一个词和第三个词的嵌入就会交换，但是它们的位置值保持不变。
+
+当我们将位置值添加到嵌入值中，我们又会得到第一个和第三个词的新位置编码，而第二个词由于没有移动，所以保持不变。
+
+![位置编码结果](/images/deep-learning/transformer/transformer-position-encoding-result-reverse.png)
+
+因此位置编码允许 Transformer 保持词序的跟踪。
+
+:::
+
+现在我们知道如何跟踪每个词的位置。
+
+### 自注意力
+
+让我们来谈谈 Transformer 如何保持词与词之间关系的跟踪。
+
+如果输入句子是 "The **pizza** came out of the **oven** and **it** tasted good!"，那么这个词 "it" 可以指 "pizza"，或者可能指 "oven"（烤箱）。
+
+这就是为什么 Transformer 正确地将 "it" 与 "pizza" 关联起来是很重要的。
+
+好消息是，Transformer 有一种叫做**自注意力**的机制，能将 "it" 与 "pizza" 正确关联。
+
+自注意力机制的原理是通过检查每个词与句子中所有词（包括它自己）的相似度。一旦相似度计算出来，它们被用来决定 Transformer 如何编码每个词。
+
+::: details 具体示例
+
+通常来说，"it" 这个词更常与 "pizza" 关联，而不是 "oven"，那么 "pizza" 的相似度得分会导致它对 Transformer 如何编码 "it" 这个词产生更大的影响。
+
+:::
+
+接下来让我们看看细节。
+
+我们刚刚将位置编码添加到单词 "Let's" 和 "go" 的嵌入值中：
+
+![位置编码结果](/images/deep-learning/transformer/transformer-position-encoding-result-3.png)
+
+我们首先将单词 "Let's" 的位置编码值乘以一对权重，并将这些乘积相加得到 -1.0。然后我们用不同的一对权重做同样的事情，得到 3.7。
+
+我们这样做两次，因为我们一开始有两个表示单词 "Let's" 的位置编码值，经过两次数学运算后，我们仍有两个表示单词 "Let's" 的值。
+
+![query 值](/images/deep-learning/transformer/transformer-query.png)
+
+::: details 为什么不直接使用一开始的两个位置编码好的值
+
+每个词的新自注意力值包含来自所有其他词的输入，这有助于为每个词提供上下文，并有助于建立输入中每个词之间的关系。
+
+:::
+
+在 Transformer 术语中，我们把它称为 **query**。
+
+现在我们有了单词 "Let's" 的 query 值，让我们用它们来计算它和单词 "go" 之间的相似度。
+
+我们需要再创建两个新值来实现这一点，并也为 "go" 做同样的事情：
+
+![key 值](/images/deep-learning/transformer/transformer-key.png)
+
+这两组新值都称为 **key**。
+
+我们用它们来计算与 "Let's" 的 query 值之间的相似度。计算它们之间的相似度的一种方法是计算点积。我们只需将每对数字相乘，然后将乘积相加。
+
+![计算点积](/images/deep-learning/transformer/transformer-similarity.png)
+
+"Let's" 与自身的相似度值为 11.7，比 "let's" 与单词 "go" 之间的相似度值 -2.6 更大。所以 "let's" 与它自己比单词 "go" 更加相似。
+
+因此，我们希望 "let's" 对其编码的影响大于单词 "go"。
+
+我们通过将相似度得分输入 softmax 函数来实现这一点：
+
+![相似度得分比例](/images/deep-learning/transformer/transformer-similarity-score.png)
+
+我们可以把 softmax 函数的输出看作一种确定我们应该为每个输入词用多少百分比来编码 "Let's" 的方式。
+
+在这种情况下，因为 "Let's" 比 "go" 相似得多，我们将使用 100% 的 "Let" 来编码 "Let's"，使用 0% 的 "go" 来编码 "Let's"。
+
+我们创建两个新值用来表示 "Let's"，并按 1.0 比例缩放 "let's" 的值。同时也创建两个新值来表示 "go"，并按 0.0 比例缩放 "go" 的值。最后我们将这些缩放值相加，就是 "Let's" 的自注意力值：
+
+!["Let's" 的自注意力值](/images/deep-learning/transformer/transformer-attention.png)
+
+接下来，我们以同样的方式计算单词 "go" 的自注意力值。好消息是，我们不需要重新计算 key 和 value。我们只需要创建表示单词 "go" 的 query 并进行数学计算：
+
+!["go" 的自注意力值](/images/deep-learning/transformer/transformer-attention-2.png)
+
+::: warning 注意
+
+我们用来计算自注意力 query 的权重是完全相同的。
+
+同样，我们为每个输入词计算自注意力 key 和 value 时的权重也分别是相同的。
+
+这意味着无论 Transformer 输入多少个单词，我们只需为自注意力 query、key 和 value 重复使用同一组权重。
+
+我们也可以同时计算每个词的 query、key 和 value。
+
+:::
+
+::: warning 注意
+
+实际应用中，我们会使用多个自注意力单元。
+
+:::
+
+::: details query、key 与 value
+
+- query 用于计算其他单词对自己的相似度
+
+- key 用于计算相似度比例
+
+- value 用于将相似度比例应用到输出的编码中
+
+:::
+
+### 残差链接
+
+整理一下：
+
+![Transformer 自注意力](/images/deep-learning/transformer/transformer-attention-result.png)
+
+我们还需要做一件事来对输入进行编码。
+
+我们取位置编码好的值，并将它们添加到自注意力值中：
+
+![残差链接](/images/deep-learning/transformer/transformer-residual-connection.png)
+
+这些旁路称为**残差连接**。它们使训练复杂的神经网络变得更容易。
+
+让自注意力层在建立输入词之间关系时，不必同时保留词嵌入和位置编码信息。
+
+::: warning 注意
+
+这个简单的 transformer 只包含编码输入所需的部分：词嵌入、位置编码、自注意力和残差连接。
+
+这四个特性使得 transformer 能够将单词编码成数字、编码单词的位置、编码单词之间的关系、并且可以相对容易和快速地并行训练。
+
+也就是说，我们可以在 transformer 中添加很多额外的东西。
+
+:::
+
+词嵌入、位置编码、自注意力和残差连接所组成的部分是 transformer 的编码器部分：
+
+![Transformer 编码器](/images/deep-learning/transformer/transformer-encoder.png)
+
+### 解码器
+
+现在我们已经编码了英文输入短语，让我们继续。是时候将其解码成西班牙语了。
+
+解码器和编码器一样，从词嵌入开始，不过是为输出词汇创建嵌入值。
+
+同样的，与编码&解码神经网络相同，我们使用 EOS 标记来启动解码，创建词嵌入，并添加位置编码：
+
+<img src="/images/deep-learning/transformer/transformer-decoder-input.png" alt="西班牙语输入" width="160">
+
+接下来为 EOS 标记创建 query、key 和 value，像以前一样计算它的自注意力值，并添加残差连接：
+
+<img src="/images/deep-learning/transformer/transformer-decoder-attention.png" alt="西班牙语输入" width="160">
+
+::: details 注意
+
+我们用来计算解码器自注意力的 query、key 和 value 权重集合与编码器中使用的不同。
+
+:::
+
+### 注意力连接
+
+让我们整合数学和图表：
+
+![Transformer 编码器与解码器](/images/deep-learning/transformer/transformer-encoder-decoder.png)
+
+到目前为止，我们已经讨论了自注意力机制如何帮助 transformer 跟踪单词在句子中的关系。
+
+然而，由于我们在翻译一个句子，我们还需要跟踪输入句子和输出句子之间的关系。
+
+::: details 具体示例
+
+例如，如果输入句子是 "Don't eat the delicious looking and smelling pizza."，那么在翻译时，非常重要的是要跟踪第一个单词 "Don't"。
+
+如果翻译只关注句子的其他部分并忽略的 "Don't"，那么我们最终会得到 "Eat the delicious looking and smelling pizza."，这两个句子的意思完全相反。
+
+因此，对于解码器来说，跟踪输入中的重要单词是非常重要的。
+
+:::
+
+所以，我们需要在编码器和解码器之间建立注意力连接。
+
+就像我们为自注意力做的那样，我们创建两个新值来表示解码器中 EOS 标记的 query 值，然后我们为编码器中的每个单词创建 key 值，并计算解码器中 EOS 标记与编码器中每个单词之间的相似性。像以前一样通过点积计算，通过 softmax 函数处理相似性：
+
+!["EOS" 的自注意力值](/images/deep-learning/transformer/transformer-encoder-decoder-attention-percent.png)
+
+结果告诉我们在解码器确定第一个翻译单词时，应该使用第一个单词的 100% 和第二个的 0%。现在我们知道了每个输入单词在决定第一个单词该被翻译成什么时应当被使用的百分比。
+
+我们计算每个输入单词的 value，然后按 softmax 百分比缩放这些值，然后将两对缩放值相加，得到编码器解码器的注意力值：
+
+![编码器解码器的注意力值](/images/deep-learning/transformer/transformer-encoder-decoder-attention.png)
+
+::: warning 注意
+
+我们用来计算编码器解码器注意力的 query、key 和 value 的权重集合与我们用来计算自注意力的权重集合不同
+
+即，三组不同的 query、key、value，分别用于编码器，解码器以及编码器解码器的注意力
+
+:::
+
+我们整合图表中编码器解码器注意力，并添加另一组残差连接：
+
+![编码器解码器的残差连接](/images/deep-learning/transformer/transformer-encoder-decoder-residual-connection.png)
+
+这使编码器解码器注意力能够专注于输出单词和输入单词之间的关系，而不必保留之前发生的自注意力或之前发生的单词和位置编码。
+
+### 全连接
+
+最后，我们需要一种方法来使用这两个值来表示解码器中的 EOS 标记并选择四个输出标记中的一个（"ir"、"Vamos"、"y" 或 EOS）。
+
+因此，我们将这两个值通过一个全连接层和 softmax 函数来选择输出：
+
+![编码器解码器的全连接](/images/deep-learning/transformer/transformer-encoder-decoder-fullconnected.png)
+
+接着整合我们的图表，并将翻译的词 "vamos"，插入下一个解码器嵌入层中进行数学计算：
+
+![编码器解码器的全部计算](/images/deep-learning/transformer/transformer-all.png)
+
+终于，我们展示了 transformer 如何编码一个简单的输入短语 "Let's go"，并将其编码解码成翻译短语 "Vamos"。
+
+### 额外内容
+
+在上面的例子中，我们保持了非常简单。
+
+但是，如果我们有更大的词汇表（原始 transformer 有 37000 个标记和更长的输入和输出短语）。
+
+为了让他们的模型正常工作，他们不得不在每一步之后归一化这些值。
+
+例如，他们在编码器和解码器中的位置编码和自注意力之后归一化这些值。
+
+此外，当我们计算注意力值时，我们使用点积来计算相似性，但你可以使用任何你想要的相似性函数。
+
+在原始的 transformer 论文中，他们通过点积计算这些相似性，再除以每个标记嵌入值的平方根。就像在每一步之后缩放值一样，他们发现缩放点积有助于编码和解码长而复杂的短语。
+
+最后，为了给 transformer 增加更多的权重和偏置以适应复杂的数据，你可以在编码器和解码器中添加带有隐藏层的额外神经网络。
 
 ## 小结
 
