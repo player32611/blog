@@ -172,6 +172,162 @@ int main() {
 }
 ```
 
+### Day 02
+
+[P1548 [NOIP 1997 普及组] 棋盘问题](https://www.luogu.com.cn/problem/P1548)
+
+<p><font color="blue">解法：暴力枚举</font></p>
+
+```c++
+#include<iostream>
+using namespace std;
+
+int main() {
+	int n, m;
+	cin >> n >> m;
+	int x = 0, y = 0;
+	for (int x1 = 0; x1 <= n; x1++)
+		for (int y1 = 0; y1 <= m; y1++)
+			for (int x2 = x1 + 1; x2 <= n; x2++)
+				for (int y2 = y1 + 1; y2 <= m; y2++) {
+					int dx = x2 - x1, dy = y2 - y1;
+					if (dx == dy)x++;
+					else y++;
+				}
+	cout << x << " " << y << endl;
+}
+```
+
+[P1208 [USACO1.3] 混合牛奶 Mixing Milk](https://www.luogu.com.cn/problem/P1208)
+
+<p><font color="blue">解法：贪心策略，每次选取单价最小的</font></p>
+
+```c++
+#include<iostream>
+#include<algorithm>
+using namespace std;
+
+const int N = 5010;
+
+int n, m;
+
+struct node {
+	int p, x;
+}a[N];
+
+bool cmp(node& a, node& b) {
+	return a.p < b.p;
+}
+
+int main() {
+	cin >> n >> m;
+	for (int i = 1; i <= m; i++)cin >> a[i].p >> a[i].x;
+	sort(a + 1, a + 1 + m, cmp);
+	int ret = 0, sum = 0;
+	for (int i = 1; i <= m; i++) {
+		int t = min(a[i].x, n - sum);
+		ret += t * a[i].p;
+		sum += t;
+	}
+	cout << ret << endl;
+}
+```
+
+[P1060 [NOIP 2006 普及组] 开心的金明](https://www.luogu.com.cn/problem/P1060)
+
+<p><font color="blue">解法：01 背包</font></p>
+
+<p><font color="blue">状态表示：f[i][j] 表示在前 i 个物品中挑选，总价格不超过 j 的情况下，最大的价值。</font></p>
+
+<p><font color="blue">状态转移方程：f[i][j] = max(f[i - 1][j], f[i - 1][j - v[i]] + v[i] * p[i])</font></p>
+
+```c++
+#include<iostream>
+#include<algorithm>
+using namespace std;
+
+const int N = 30010, M = 30;
+
+int n, m;
+int v[M], p[M];
+
+int f[N];
+
+int main() {
+    cin >> n >> m;
+    for (int i = 1; i <= m; i++)cin >> v[i] >> p[i];
+    for (int i = 1; i <= m; i++) {
+        for (int j = n; j >= v[i]; j--) {
+            f[j] = max(f[j], f[j - v[i]] + v[i] * p[i]);
+        }
+    }
+    cout << f[n] << endl;
+}
+```
+
+[P1083 [NOIP 2012 提高组] 借教室](https://www.luogu.com.cn/problem/P1083)
+
+<p><font color="blue">解法：差分 + 二分答案</font></p>
+
+```c++
+#include<iostream>
+using namespace std;
+
+const int N = 1e6 + 10;
+
+int n, m;
+int r[N];
+int d[N], s[N], t[N];
+
+int f[N]; // 差分数组
+
+// 把 [1, x] 所有的订单处理完毕之后，判断是否可行
+bool check(int x) {
+	// 初始差分数组
+	for (int i = 1; i <= n; i++) {
+		f[i] = r[i] - r[i - 1];
+	}
+
+	// 处理订单
+	for (int i = 1; i <= x; i++) {
+		// s[i] ~ t[i] - d[i]
+		f[s[i]] -= d[i];
+		f[t[i] + 1] += d[i];
+	}
+
+	for (int i = 1; i <= n; i++) {
+		f[i] = f[i - 1] + f[i];
+		if (f[i] < 0)return false;
+	}
+	return true;
+}
+
+int main() {
+	cin >> n >> m;
+	for (int i = 1; i <= n; i++)cin >> r[i];
+	for (int i = 1; i <= m; i++)cin >> d[i] >> s[i] >> t[i];
+
+	int l = 1, r = m;
+	while (l < r) {
+		int mid = (l + r) / 2;
+		if (check(mid))l = mid + 1;
+		else r = mid;
+	}
+	if (check(l))cout << 0;
+	else cout << -1 << endl << l << endl;
+}
+```
+
+### Day 03
+
+[CF25B Phone numbers](https://www.luogu.com.cn/problem/CF25B)
+
+[P2660 zzc 种田](https://www.luogu.com.cn/problem/P2660)
+
+[P2018 消息传递](https://www.luogu.com.cn/problem/P2018)
+
+[P6070 『MdOI R1』Decrease](https://www.luogu.com.cn/problem/P6070)
+
 ## 第 2 周
 
 ::: danger 警告
