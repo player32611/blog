@@ -322,11 +322,175 @@ int main() {
 
 [CF25B Phone numbers](https://www.luogu.com.cn/problem/CF25B)
 
+<p><font color="blue">解法：分类讨论</font></p>
+
+```c++
+#include<iostream>
+#include<string>
+using namespace std;
+
+int main() {
+	int n;
+	string s;
+	cin >> n >> s;
+	if (n % 2) { // 奇数
+		for (int i = 0; i < n; i++) {
+			cout << s[i];
+			if (i % 2 && i < n - 3)cout << '-';
+		}
+	}
+	else { // 偶数
+		for (int i = 0; i < n; i++) {
+			cout << s[i];
+			if (i % 2 && i < n - 2)cout << '-';
+		}
+	}
+}
+```
+
 [P2660 zzc 种田](https://www.luogu.com.cn/problem/P2660)
 
-[P2018 消息传递](https://www.luogu.com.cn/problem/P2018)
+<p><font color="blue">解法：尽可能的选择较大的正方形</font></p>
+
+```c++
+#include<iostream>
+#include<utility>
+using namespace std;
+
+typedef long long LL;
+
+int main() {
+	LL x, y;
+	cin >> x >> y;
+	LL ret = 0;
+	while (x && y) {
+		LL cnt = x / y;
+		ret += cnt * y * 4;
+		x %= y;
+		swap(x, y);
+	}
+	cout << ret << endl;
+}
+```
+
+[P2661 [NOIP 2015 提高组] 信息传递](https://www.luogu.com.cn/problem/P2661)
+
+<p><font color="blue">解法：拓扑排序 + DFS/BFS 计数</font></p>
+
+```c++
+#include<iostream>
+#include<queue>
+#include<algorithm>
+using namespace std;
+
+const int N = 2e5 + 10;
+
+int n;
+int ne[N];
+int in[N];
+
+bool st[N];
+
+int cnt;
+
+void dfs(int a) {
+	cnt++;
+	st[a] = true;
+	int b = ne[a];
+	if (!st[b])dfs(b);
+}
+
+int main() {
+	cin >> n;
+	for (int i = 1; i <= n; i++) {
+		cin >> ne[i];
+		// i -> ne[i]
+		in[ne[i]]++;
+	}
+	// 1.利用拓扑排序给环以外的点打上标记
+	queue<int> q;
+	for (int i = 1; i <= n; i++) {
+		if (in[i] == 0)q.push(i);
+	}
+	while (q.size()) {
+		auto a = q.front();
+		q.pop();
+		st[a] = true;
+		int b = ne[a];
+		// a -> b
+		in[b]--;
+		if (in[b] == 0)q.push(b);
+	}
+
+	// 2.利用 dfs 计算环的大小
+	int ret = n;
+	for (int i = 1; i <= n; i++) {
+		if (!st[i]) {
+			cnt = 0;
+			dfs(i);
+			ret = min(ret, cnt);
+		}
+	}
+	cout << ret << endl;
+}
+```
 
 [P6070 『MdOI R1』Decrease](https://www.luogu.com.cn/problem/P6070)
+
+<p><font color="blue">解法：二维差分</font></p>
+
+```c++
+#include<iostream>
+#include<cstdlib>
+using namespace std;
+
+typedef long long LL;
+
+const int N = 5e3 + 10;
+
+int n, m, k;
+LL f[N][N];
+
+void insert(int x1, int y1, int x2, int y2, int k) {
+	f[x1][y1] += k;
+	f[x1][y2 + 1] -= k;
+	f[x2 + 1][y1] -= k;
+	f[x2 + 1][y2 + 1] += k;
+}
+
+int main() {
+	cin >> n >> m >> k;
+	for (int i = 1; i <= m; i++) {
+		int x, y, z;
+		cin >> x >> y >> z;
+		insert(x, y, x, y, z);
+	}
+	// 输出差分数组
+	//for (int i = 1; i <= n; i++) {
+	//	for (int j = 1; j <= n; j++) {
+	//		cout << f[i][j] << " ";
+	//	}
+	//	cout << endl;
+	//}
+	LL ret = 0;
+	for (int x1 = 1; x1 <= n - k + 1; x1++) {
+		for (int y1 = 1; y1 <= n - k + 1; y1++) {
+			ret += abs(f[x1][y1]);
+			int x2 = x1 + k - 1, y2 = y1 + k - 1;
+			insert(x1, y1, x2, y2, -f[x1][y1]);
+		}
+	}
+	for (int i = 1; i <= n; i++) {
+		for (int j = 1; j <= n; j++) {
+			if (f[i][j] != 0) {
+				cout << -1 << endl;
+				return 0;
+			}
+		}
+	}
+	cout << ret << endl;
+}
+```
 
 ## 第 2 周
 
