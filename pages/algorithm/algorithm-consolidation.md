@@ -492,6 +492,20 @@ int main() {
 }
 ```
 
+### Day 04
+
+[P1046 [NOIP 2005 普及组] 陶陶摘苹果](https://www.luogu.com.cn/problem/P1046)
+
+[P1478 陶陶摘苹果（升级版）](https://www.luogu.com.cn/problem/P1478)
+
+[P9087 「SvR-2」音符](https://www.luogu.com.cn/problem/P9087)
+
+[P1032 [NOIP 2002 提高组] 字串变换（疑似错题）](https://www.luogu.com.cn/problem/P1032)
+
+### Day 05
+
+[P7071 [CSP-J 2020] 优秀的拆分](https://www.luogu.com.cn/problem/P7071)
+
 ## 第 2 周
 
 ::: danger 警告
