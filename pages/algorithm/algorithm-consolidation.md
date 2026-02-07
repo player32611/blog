@@ -496,15 +496,155 @@ int main() {
 
 [P1046 [NOIP 2005 普及组] 陶陶摘苹果](https://www.luogu.com.cn/problem/P1046)
 
+```c++
+#include<iostream>
+using namespace std;
+
+int a[15];
+
+int main() {
+	for (int i = 1; i <= 10; i++)cin >> a[i];
+	int h;
+	cin >> h;
+	h += 30;
+	int ret = 0;
+	for (int i = 1; i <= 10; i++)
+		if (a[i] <= h)ret++;
+	cout << ret << endl;
+}
+```
+
 [P1478 陶陶摘苹果（升级版）](https://www.luogu.com.cn/problem/P1478)
 
-[P9087 「SvR-2」音符](https://www.luogu.com.cn/problem/P9087)
+<p><font color="blue">解法：贪心</font></p>
+
+```c++
+#include<iostream>
+#include<algorithm>
+using namespace std;
+
+const int N = 5010;
+
+int n, s;
+int a, b;
+
+int cnt;
+int t[N];
+
+int main() {
+	cin >> n >> s;
+	cin >> a >> b;
+	a += b;
+	for (int i = 1; i <= n; i++) {
+		int x, y;
+		cin >> x >> y;
+		if (x <= a)t[++cnt] = y;
+	}
+	sort(t + 1, t + 1 + cnt);
+	int ret = 0, sum = 0;
+	for (int i = 1; i <= cnt; i++) {
+		sum += t[i];
+		if (sum <= s)ret++;
+	}
+	cout << ret << endl;
+}
+```
+
+[P2969 [USACO09DEC] Music Notes S](https://www.luogu.com.cn/problem/P2969)
+
+<p><font color="blue">解法：前缀和 + 二分</font></p>
+
+```c++
+#include<iostream>
+using namespace std;
+
+const int N = 5e4 + 10;
+
+int n, q;
+int f[N];
+
+int main() {
+	cin >> n >> q;
+	for (int i = 1; i <= n; i++) {
+		int x;
+		cin >> x;
+		f[i] = f[i - 1] + x;
+	}
+	while (q--) {
+		int t;
+		cin >> t;
+		int l = 1, r = n;
+		while (l < r) {
+			int mid = (l + r) / 2;
+			if (f[mid] > t)r = mid;
+			else l = mid + 1;
+		}
+		cout << l << endl;
+	}
+}
+```
 
 [P1032 [NOIP 2002 提高组] 字串变换（疑似错题）](https://www.luogu.com.cn/problem/P1032)
+
+<p><font color="blue">解法：BFS</font></p>
+
+```c++
+#include<iostream>
+#include<queue>
+#include<unordered_map>
+using namespace std;
+
+const int N = 10;
+
+string a, b;
+unordered_map<string, int>dist;
+
+int n; // 记录一共有多少个变化规则
+string x[N], y[N];
+
+int bfs() {
+	if (a == b)return 0;
+	queue<string> q;
+	q.push(a);
+	dist[a] = 0;
+	while (q.size()) {
+		string s = q.front();
+		q.pop();
+		if (dist[s] >= 10)return -1;
+		// 变
+		for (int i = 0; i < n; i++) {
+			// x[i] -> y[i]
+			int pos = 0;
+			while (s.find(x[i], pos) != -1) {
+				pos = s.find(x[i], pos);
+				// 拼接
+				string tmp = s.substr(0, pos) + y[i] + s.substr(pos + x[i].size());
+				pos++;
+				// s -> tmp
+				if (dist.count(tmp))continue;
+				dist[tmp] = dist[s] + 1;
+				q.push(tmp);
+				if (tmp == b)return dist[tmp];
+			}
+		}
+	}
+	return -1;
+}
+
+int main() {
+	cin >> a >> b;
+	while (cin >> x[n] >> y[n])n++;
+	int ret = bfs();
+	if (ret == -1)cout << "NO ANSWER!" << endl;
+	else cout << ret << endl;
+}
+```
 
 ### Day 05
 
 [P7071 [CSP-J 2020] 优秀的拆分](https://www.luogu.com.cn/problem/P7071)
+
+[P1466 [USACO2.2] 集合 Subset Sums](https://www.luogu.com.cn/problem/P1466)
 
 ## 第 2 周
 
