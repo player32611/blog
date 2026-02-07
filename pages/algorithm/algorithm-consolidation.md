@@ -644,7 +644,145 @@ int main() {
 
 [P7071 [CSP-J 2020] 优秀的拆分](https://www.luogu.com.cn/problem/P7071)
 
+<p><font color="blue">解法：数的二进制表示</font></p>
+
+```c++
+#include<iostream>
+using namespace std;
+
+int main() {
+	int n;
+	cin >> n;
+	if (n & 1) {
+		cout << -1 << endl;
+		return 0;
+	}
+	for (int i = 30; i >= 0; i--) {
+		if ((n >> i) & 1)cout << (1 << i) << " ";
+	}
+	return 0;
+}
+```
+
+[P1106 删数问题](https://www.luogu.com.cn/problem/P1106)
+
+<p><font color="blue">解法：贪心，删除极大值点</font></p>
+
+```c++
+#include<iostream>
+#include<string>
+using namespace std;
+
+int main() {
+	string s;
+	int k;
+	cin >> s >> k;
+	for (int i = 1; i <= k; i++) {
+		bool flag = false;
+		for (int j = 0; j < s.size() - 1; j++) {
+			if (s[j] > s[j + 1]) {
+				s.erase(j, 1);
+				flag = true;
+				break;
+			}
+		}
+		if (!flag)s.pop_back();
+	}
+	// 前导零
+	while (s.size() > 1 && s[0] == '0')s.erase(0, 1);
+	cout << s << endl;
+}
+```
+
 [P1466 [USACO2.2] 集合 Subset Sums](https://www.luogu.com.cn/problem/P1466)
+
+<p><font color="blue">解法：01 背包</font></p>
+
+<p><font color="blue">状态表示：f[i][j] 表示从 [1, i] 中挑选，总和为 j 时，一共有多少种方案</font></p>
+
+<p><font color="blue">状态转移方程：f[i][j] = f[i - 1][j] + f[i - 1][j - i]</font></p>
+
+<p><font color="blue">初始化：f[0][0] = 1</font></p>
+
+<p><font color="blue">最终结果：f[n][sum / 2] / 2</font></p>
+
+```c++
+#include<iostream>
+using namespace std;
+
+typedef long long LL;
+
+const int N = 45, M = 810;
+
+int n;
+LL f[N];
+
+int main() {
+	cin >> n;
+	int sum = (1 + n) * n / 2;
+	if (sum & 1) {
+		cout << 0 << endl;
+		return 0;
+	}
+	sum /= 2;
+	f[0] = 1;
+	for (int i = 1; i <= n; i++)
+		for (int j = sum; j >= i; j--)
+			f[j] = f[j] + f[j - i];
+	cout << f[sum] / 2 << endl;
+}
+```
+
+[P4537 [CQOI2007] 矩形](https://www.luogu.com.cn/problem/P4537)
+
+<p><font color="blue">解法：DFS 暴力搜索；任何一种分割方式，都可以看作在矩阵的四边选择一个非四角的点进入，然后在矩阵中随意行走，直到走到一个边界为止</font></p>
+
+```c++
+#include<iostream>
+using namespace std;
+
+const int N = 10;
+
+int n, m;
+bool st[N][N];
+int ret;
+
+int dx[] = { 0,0,1,-1 };
+int dy[] = { 1,-1,0,0 };
+
+void dfs(int i,int j) {
+	if (i < 1 || i >= n || j < 1 || j >= m) {
+		ret++;
+		return;
+	}
+	st[i][j] = true;
+	for (int k = 0; k < 4; k++) {
+		int x = i + dx[k], y = j + dy[k];
+		if (!st[x][y])dfs(x, y);
+	}
+	st[i][j] = false;
+}
+
+int main() {
+	cin >> n >> m;
+	// 从上
+	for (int j = 1; j < m; j++) {
+		// [0, j] -> [1, j]
+		st[0][j] = true;
+		dfs(1, j);
+		st[0][j] = false;
+	}
+
+	// 从左
+	for (int i = 1; i < n; i++) {
+		// [i, 0] -> [1, 1]
+		st[i][0] = true;
+		dfs(i, 1);
+		st[i][0] = false;
+	}
+	cout << ret << endl;
+}
+```
 
 ## 第 2 周
 
