@@ -57,6 +57,7 @@ export default defineConfig({
           { text: '搜索算法', link:'/pages/algorithm/search-algorithm'},
           { text: '动态规划', link:'/pages/algorithm/dynamic-programming'},
           { text: '算法巩固', link:'/pages/algorithm/algorithm-consolidation'},
+          { text: '算法提高', link:'/pages/algorithm/algorithm-improve'}
         ]
       },
       {
