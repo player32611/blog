@@ -234,6 +234,394 @@ int main() {
 
 ### 区间修改（懒标记）
 
+试想一下，如果某个结点维护的区间 [l, r] 被修改的区间 [x, y] 完全覆盖时，如果能够在 $O(1)$ 时间内修改区间维护的信息，那么左右子树其实没有必要修改。可以等到下次遇到的时候再去处理。
+
+借助这样的思想，我们会在每一个结点中额外维护一个懒标记：
+
+- 如果当前结点维护的区间 [l, r] 被待查询区间 [x, y] 完全覆盖时，停止递归，根据区间长度维护出增加元素之后的和；不去处理左右孩子，打上一个区间增加一个值的懒标记；
+
+- 等到下次修改或者查询操作，遇到该结点时，再把懒标记下放给左右孩子。
+
+这样，就可以把时间控制的与查询时间一致，都是 $O(\log n)$。
+
+::: code-group
+
+```c++ [结点维护信息]
+// 线段树的结点
+struct node {
+	int l, r;
+	LL sum, add;
+}tr[N * 4];
+```
+
+```c++ [创建线段树]
+// 创建线段树
+void build(int p, int l, int r) {
+	tr[p] = { l,r,a[l],0 }; // 初始化
+	if (l == r) return; // 如果是叶子结点
+	int mid = (l + r) >> 1; // 一分为二
+	build(lc, l, mid); // 构建左子树
+	build(rc, mid + 1, r); // 构建右子树
+	pushup(p); // 左右子树构建完成之后，维护 sum 信息
+}
+```
+
+```c++ [懒标记下放]
+// 接收到修改任务，修改完毕之后，把修改信息懒下来
+void lazy(int p, LL add) {
+	int l = tr[p].l, r = tr[p].r;
+	tr[p].sum += (r - l + 1) * add;
+	tr[p].add += add;
+}
+
+// 下放懒标记
+void pushdown(int p) {
+	if (tr[p].add) {
+		lazy(lc, tr[p].add); // 懒标记分给左孩子
+		lazy(rc, tr[p].add); // 懒标记分给右孩子
+		tr[p].add = 0;
+	}
+}
+```
+
+```c++ [区间查询]
+// 区间查询
+LL query(int p, int x, int y) {
+	LL l = tr[p].l, r = tr[p].r; // 当前结点维护的信息
+	if (x <= l && r <= y)return tr[p].sum; // 如果是查询区间的子区间，返回结果
+	pushdown(p); // 懒标记下放
+	LL sum = 0, mid = (l + r) >> 1;
+	if (x <= mid)sum += query(lc, x, y);
+	if (y > mid)sum += query(rc, x, y);
+	return sum;
+}
+```
+
+```c++ [区间修改]
+// 区间修改
+void modify(int p, int x, int y, LL k) {
+	LL l = tr[p].l, r = tr[p].r; // 当前结点维护的信息
+	if (x <= l && r <= y) {
+		lazy(p, k);
+		return;
+	}
+	int mid = (l + r) >> 1;
+	pushdown(p); // 懒标记下放
+	if (x <= mid) modify(lc, x, y, k);
+	if (y > mid) modify(rc, x, y, k);
+	pushup(p); // 更新父结点
+}
+```
+
+:::
+
+例题：[P3372 【模板】线段树 1](https://www.luogu.com.cn/problem/P3372)
+
+```c++
+#include<iostream>
+using namespace std;
+
+#define lc p << 1
+#define rc p << 1 | 1
+typedef long long LL;
+
+const int N = 1e5 + 10;
+
+int n, m;
+LL a[N];
+
+struct node {
+	int l, r;
+	LL sum, add;
+}tr[N * 4];
+
+void lazy(int p, LL k) {
+	tr[p].sum += (tr[p].r - tr[p].l + 1) * k;
+	tr[p].add += k;
+}
+
+void pushup(int p) {
+	tr[p].sum = tr[lc].sum + tr[rc].sum;
+}
+
+void pushdown(int p) {
+	if (tr[p].add) {
+		lazy(lc, tr[p].add);
+		lazy(rc, tr[p].add);
+		tr[p].add = 0;
+	}
+}
+
+void build(int p, int l, int r) {
+	tr[p] = { l,r,a[l],0 };
+	if (l == r)return;
+	int mid = (l + r) >> 1;
+	build(lc, l, mid);
+	build(rc, mid + 1, r);
+	pushup(p);
+}
+
+void modify(int p, int x, int y, LL k) {
+	int l = tr[p].l, r = tr[p].r;
+	if (x <= l && r <= y) {
+		lazy(p, k);
+		return;
+	}
+	pushdown(p);
+	int mid = (l + r) >> 1;
+	if (x <= mid)modify(lc, x, y, k);
+	if (y > mid)modify(rc, x, y, k);
+	pushup(p);
+}
+
+LL query(int p, int x, int y) {
+	int l = tr[p].l, r = tr[p].r;
+	if (x <= l && r <= y) return tr[p].sum;
+	pushdown(p);
+	int mid = (l + r) >> 1;
+	LL sum = 0;
+	if (x <= mid)sum += query(lc, x, y);
+	if (y > mid)sum += query(rc, x, y);
+	return sum;
+}
+
+int main() {
+	cin >> n >> m;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	build(1, 1, n);
+	while (m--) {
+		int op, x, y;
+		cin >> op >> x >> y;
+		LL k;
+		if (op == 1) {
+			cin >> k;
+			modify(1, x, y, k);
+		}
+		else cout << query(1, x, y) << endl;
+	}
+}
+```
+
+例题：[P3368 【模板】树状数组 2](https://www.luogu.com.cn/problem/P3368)
+
+```c++
+#include<iostream>
+using namespace std;
+
+#define lc p << 1
+#define rc p << 1 | 1
+typedef long long LL;
+
+const int N = 5e5 + 10;
+
+int n, m;
+LL a[N];
+
+struct node {
+	int l, r;
+	LL sum, add;
+}tr[N << 2];
+
+void lazy(int p, LL k) {
+	tr[p].sum += (tr[p].r - tr[p].l + 1) * k;
+	tr[p].add += k;
+}
+
+void pushup(int p) {
+	tr[p].sum = tr[lc].sum + tr[rc].sum;
+}
+
+void pushdown(int p) {
+	if (tr[p].add) {
+		lazy(lc, tr[p].add);
+		lazy(rc, tr[p].add);
+		tr[p].add = 0;
+	}
+}
+
+void build(int p, int l, int r) {
+	tr[p] = { l,r,a[l],0 };
+	if (l == r)return;
+	int mid = (l + r) >> 1;
+	build(lc, l, mid);
+	build(rc, mid + 1, r);
+	pushup(p);
+}
+
+void modify(int p, int x, int y, LL k) {
+	int l = tr[p].l, r = tr[p].r;
+	if (x <= l && r <= y) {
+		lazy(p, k);
+		return;
+	}
+	pushdown(p);
+	int mid = (l + r) >> 1;
+	if (x <= mid)modify(lc, x, y, k);
+	if (y > mid)modify(rc, x, y, k);
+	pushup(p);
+}
+
+LL query(int p, int x) {
+	int l = tr[p].l, r = tr[p].r;
+	if (l == x && x == r) return tr[p].sum;
+	pushdown(p);
+	int mid = (l + r) >> 1;
+	if (x <= mid)return query(lc, x);
+	else return query(rc, x);
+}
+
+int main() {
+	cin >> n >> m;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	build(1, 1, n);
+	while (m--) {
+		int op, x, y;
+		LL k;
+		cin >> op;
+		if (op == 1) {
+			cin >> x >> y >> k;
+			modify(1, x, y, k);
+		}
+		else {
+			cin >> x;
+			cout << query(1, x) << endl;
+		}
+	}
+}
+```
+
+### 小结
+
+由于懒标记的加入，使得线段树能够高效地应对多种类型的区间修改以及查询。
+
+在实现线段树时，可以根据下面几个方面来记忆以及修改模板代码：
+
+- 根据查询以及修改操作，决定结构体中维护什么信息；
+
+- `pushup()`：根据左右孩子维护的信息，更新当前结点维护的信息；
+
+- `pushdown()`：当前结点的懒信息往下发一层，让左右孩子接收信息，并清空当前结点懒信息；
+
+- `lazy()`：当前区间收到修改操作之后，更新当前结点维护的信息并且把修改操作 "懒" 下来；
+
+- `build()`：遇到叶子结点返回，否则递归处理左右孩子，然后整合左右孩子的信息；
+
+- `modify()`：遇到完全覆盖的区间，直接修改；否则有懒信息就先分给左右孩子懒信息，然后递归处理左右区间，最后整合左右孩子的信息；
+
+- `query()`：遇到完全覆盖的区间，直接返回结点维护的信息；否则有懒信息就先分给左右孩子懒信息，然后整合左右区间的查询信息。
+
+实现时易错的细节问题：
+
+- `lazy()` 函数只把懒信息存了下来，没有修改区间维护的信息；
+
+- `query()` 以及 `modify()` 操作，没有分配懒信息；
+
+- `pushdown()` 之后，没有清空当前结点的懒标记。
+
+线段树如果想做到单次区间修改操作的时间复杂度为 $O(\log n)$，那么在一段范围上执行修改操作之后，需要能够在 $O(1)$ 时间内得到需要维护的信息。
+
+### 维护更多类型的信息
+
+例题：[P1816 忠诚](https://www.luogu.com.cn/problem/P1816)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P3870 [TJOI2009] 开关](https://www.luogu.com.cn/problem/P3870)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P2184 贪婪大陆](https://www.luogu.com.cn/problem/P2184)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P1438 无聊的数列](https://www.luogu.com.cn/problem/P1438)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+### 多个区间操作
+
+例题：[P3373 【模板】线段树 2](https://www.luogu.com.cn/problem/P3373)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P1253 扶苏的问题](https://www.luogu.com.cn/problem/P1253)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+### 线段树 + 分治
+
+例题：[P4513 小白逛公园](https://www.luogu.com.cn/problem/P4513)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P2572 [SCOI2010] 序列操作](https://www.luogu.com.cn/problem/P2572)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+### 线段树 + 剪枝
+
+例题：[P4145 上帝造题的七分钟 2 / 花神游历各国](https://www.luogu.com.cn/problem/P4145)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+### 权值线段树 + 离散化
+
+例题：[P1908 逆序对](https://www.luogu.com.cn/problem/P1908)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+### 线段树 + 数学
+
+例题：[P5142 区间方差](https://www.luogu.com.cn/problem/P5142)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P10463 Interval GCD](https://www.luogu.com.cn/problem/P10463)
+
 ::: danger 警告
 
 该部分尚未完工!
