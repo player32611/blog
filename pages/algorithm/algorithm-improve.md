@@ -135,6 +135,105 @@ LL query(int p, int x, int y) {
 
 ### 单点修改
 
+具体流程：
+
+1. 递归找到叶子结点，并且维护修改之后的信息；
+
+2. 然后一路向上回溯，修改所有路径上的结点信息，使得维护的信息为修改之后的信息。
+
+::: details 具体示例
+
+以数组 $a=[5,1,3,0,2,2,7,4,5,8]$ 为例，如果将 $x=6$ 位置上的元素增加 3，维护的信息如下：
+
+![线段树单点修改](/images/algorithm/algorithm-improve/segment-tree-single-point-modify.png)
+
+:::
+
+```c++
+// 单点修改
+void modify(int p, int x, LL k) {
+	int l = tr[p].l, r = tr[p].r;
+	if (l == x && r == x) { // 找到叶子结点
+		tr[p].sum += k;
+		return;
+	}
+	int mid = (l + r) >> 1;
+	if (x <= mid)modify(lc, x, k);
+	else modify(rc, x, k);
+	pushup(p);
+}
+```
+
+[P3374 【模板】树状数组 1](https://www.luogu.com.cn/problem/P3374)
+
+```c++
+#include<iostream>
+using namespace std;
+
+#define lc p<<1
+#define rc p<<1|1
+typedef long long LL;
+
+const int N = 5e5 + 10;
+
+int n, m;
+LL a[N];
+
+struct node {
+	int l, r;
+	LL sum;
+}tr[N << 2];
+
+void pushup(int p) {
+	tr[p].sum = tr[lc].sum + tr[rc].sum;
+}
+
+void build(int p,int l,int r) {
+	tr[p] = { l,r,a[l] };
+	if (l == r)return;
+	int mid = (l + r) >> 1;
+	build(lc, l, mid);
+	build(rc, mid + 1, r);
+	pushup(p);
+}
+
+void modify(int p, int x, LL k) {
+	int l = tr[p].l, r = tr[p].r;
+	if (x == l && r == x) {
+		tr[p].sum += k;
+		return;
+	}
+	int mid = (l + r) >> 1;
+	if (x <= mid)modify(lc, x, k);
+	else modify(rc, x, k);
+	pushup(p);
+}
+
+LL query(int p, int x, int y) {
+	int l = tr[p].l, r = tr[p].r;
+	if (x <= l && r <= y)return tr[p].sum;
+	int mid = (l + r) >> 1;
+	LL sum = 0;
+	if (x <= mid)sum += query(lc, x, y);
+	if (y > mid) sum += query(rc, x, y);
+	return sum;
+}
+
+int main() {
+	cin >> n >> m;
+	for (int i = 1; i <= n; i++)cin >> a[i];
+	build(1, 1, n);
+	while (m--) {
+		int op, x, y;
+		cin >> op >> x >> y;
+		if (op == 1)modify(1, x, y);
+		else cout << query(1, x, y) << endl;
+	}
+}
+```
+
+### 区间修改（懒标记）
+
 ::: danger 警告
 
 该部分尚未完工!
