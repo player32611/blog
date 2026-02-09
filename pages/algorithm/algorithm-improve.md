@@ -750,11 +750,176 @@ int main() {
 
 ## kmp
 
-::: danger 警告
+> 前置：[动态规划](dynamic-programming.md)
 
-该部分尚未完工!
+### 相关概念
+
+- **字符串**：用字符构成的序列就是字符串
+
+::: tip 提示
+
+在字符串匹配问题中，我们会i让字符串的下标从 1 开始，这样便于我们处理一些边界问题。因此，在输入字符串时，我们一般会在前面加上一个空格，这样字符就从 1 开始计数了。
+
+```c++
+string s;
+cin >> s;
+int n = s.size();
+s = ' ' + s;
+```
 
 :::
+
+- **子串**：选取字符串中连续的一段
+
+- **前缀**：从字符串的首端开始，到某一个位置结束的字串。字符串长度为 i 的前缀，就是字符串 [1, i] 区间的字串
+
+- **真前缀**：不包含字符串本身的前缀
+
+- **后缀**：从字符串的某个位置开始，到字符串末端的字串。字符串长度为 i 的后缀，就是字符串 [n - i + 1, n] 区间的字串
+
+- **真后缀**：不包含字符串本身的后缀子串
+
+- **真公共前后缀（border）**：字符串 s 的真公共前后缀为 s 的一个子串 t，满足 t 即是 s 的真前缀，又是 s 的真后缀，又称为字符串 s 的 border
+
+::: tip 性质
+
+- **传递性**：字符串 s 的 border 的 border 也是字符串 s 的 border
+
+:::
+
+- **最长真公共前后缀（$\pi$）**：在一个字符串中，最长的真公共前后缀的长度用 $\pi$ 表示
+
+::: details 具体示例
+
+例如，字符串 `aabaaba` 的真公共前后缀有：`a`、`aaba`。
+
+字符串 `abaaba` 的 border 有：`a`、`aba`，因此 $\pi$ 值为 3。
+
+字符串 `aaaaaa` 的 border 有：`a`、`aa`、`aaa`、`aaaa`、`aaaaa`，因此 $\pi$ 值为 5。
+
+:::
+
+- **字符串匹配（模式匹配）**：给定两个字符串 $S$ 和 $T$，需要在主串 $S$ 中找到模式串 $T$
+
+::: details 具体示例
+
+主串 `S = "abcdefcde"`，模式串 `T="cde"`。如果下标从 1 开始计数，模式串会在主串 3，7 位置出现
+
+:::
+
+### 前缀函数
+
+**前缀函数**：字符串每一个前缀子串的 $\pi$ 值
+
+::: details 具体示例
+
+以字符串 `aabaab` 为例，$\pi[i]$ 表示：字符串 s 长度为 i 的前缀，最长的 border 长度（最长真公共前后缀）。
+
+|   下标   |  1  |  2  |  3  |  4   |   5   |   6    |
+| :------: | :-: | :-: | :-: | :--: | :---: | :----: |
+| 前缀子串 |  a  | aa  | aab | aaba | aabaa | aabaab |
+|  $\pi$   |  0  |  1  |  0  |  1   |   2   |   3    |
+
+:::
+
+前缀函数可以用于从大到小枚举字符串 s 某个前缀的所有的 border。
+
+::: details 证明
+
+假设我们此时生成了一个字符串 s 的前缀表，我们可以利用这张表，从大到小拿到某个前缀所有的 border。
+
+原理就是 border 的传递性：字符串 border 的 border 还是 border。
+
+![前缀函数](/images/algorithm/algorithm-improve/prefix-function.png)
+
+- 首先 $\pi[i]$ 存的是最长的 border 的长度，母庸置疑；
+
+- 其次，如果下一个 $\pi[\pi[i]]$ 如果不是次长的，那么 $\pi[\pi[i]]$ 就不是长度为 $\pi[i]$ 的前缀的最长 border 的长度，与我们的定义相违背；
+
+- 因此，整个过程一定能够不重不漏的将所有的 border 从大到小枚举出来。
+
+:::
+
+```c++
+string s;
+int pi[N]; // 假设已经生成好了前缀函数
+
+// 长度为 i 的前缀中，所有 border 的长度
+void get_border(int i) {
+	int j = pi[i];
+	while (j) {
+		cout << j << endl;
+		j = pi[j];
+	}
+}
+```
+
+### 计算前缀函数
+
+计算前缀函数的过程包含了动态规划的思想，就是推导状态转移方程。
+
+对于字符串 s：
+
+<p><font color="blue">状态表示：pi[i] 表示字符串 s 长度为 i 的前缀，最长的 border 长度（最长真公共前后缀）</font></p>
+
+<p><font color="blue">状态转移方程：f[i][j] = min(f[i + 1][j - 1], f[i + 1][j] + 1, f[i][j - 1] + 1)</font></p>
+
+::: details 推导状态转移方程
+
+我们发现，如果，如果将长度为 i 的前缀中的 border 删去最后一个字符，就变成了长度为 i - 1 的前缀中的 border。
+
+那么，我们就可以从大到小枚举长度为 i - 1 的前缀中所有的 border，然后判断这个 border 的下一个字符是否和 s[i] 相等：
+
+![前缀函数的计算 ](/images/algorithm/algorithm-improve/prefix-function-calculation.png)
+
+- 如果相等，说明这个就是最长的；
+
+- 如果不相等，那就继续判断下一个 border，直到将所有的 border 验证完毕。
+
+:::
+
+::: code-group
+
+```c++
+string s;
+int pi[N];
+
+void get_pi() {
+	cin >> s;
+	int n = s.size();
+	s = ' ' + s;
+	// pi[1] = 0
+	for (int i = 2; i <= n; i++) {
+		int j = pi[i - 1];
+		while (j && s[i] != s[j + 1])j = pi[j];
+		if (s[i] == s[j + 1])j++;
+		pi[i] = j;
+	}
+}
+```
+
+```c++ [优化]
+string s;
+int pi[N];
+
+void get_pi() {
+	cin >> s;
+	int n = s.size();
+	s = ' ' + s;
+	// 我们注意到 i++ 之后，pi[i - 1] 依旧是上一次的 j，所以代码也可以这样写
+	// 更能体现到 j 指针基本上不回退
+	for (int i = 2; i <= n; i++) {
+		int j = pi[i - 1];
+		while (j && s[i] != s[j + 1])j = pi[j];
+		if (s[i] == s[j + 1])j++;
+		pi[i] = j;
+	}
+}
+```
+
+:::
+
+时间复杂度：$O(n)$
 
 ## manacher
 
