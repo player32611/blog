@@ -908,8 +908,7 @@ void get_pi() {
 	s = ' ' + s;
 	// 我们注意到 i++ 之后，pi[i - 1] 依旧是上一次的 j，所以代码也可以这样写
 	// 更能体现到 j 指针基本上不回退
-	for (int i = 2; i <= n; i++) {
-		int j = pi[i - 1];
+	for (int i = 2, j = 0; i <= n; i++) {
 		while (j && s[i] != s[j + 1])j = pi[j];
 		if (s[i] == s[j + 1])j++;
 		pi[i] = j;
@@ -920,6 +919,121 @@ void get_pi() {
 :::
 
 时间复杂度：$O(n)$
+
+### 用字符串解决字符串匹配
+
+设主串 `S = "abcabaaaba"`，模式串 `T = "aba"`，主串的长度为 `n`，模式串的长度为 `m`。
+
+将两个字符串拼起来：`S = T + '#' + S = "aba#abcabaaaba"`（`#` 可替换成主串和模式串中不会出现的字符），对于新的字符串，可以在 $O(n + m)$ 时间内生成前缀函数：
+
+| 下标  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  | 10  | 11  | 12  | 13  | 14  |
+| :---: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| $\pi$ |  0  |  0  |  1  |  0  |  1  |  2  |  0  |  1  |  2  |  3  |  1  |  1  |  2  |  3  |
+
+前缀函数等于模式串长度的位置 $i$,就是能够匹配的末端。在主串中，出现的位置就是 $i-2 \times m$。
+
+那么，有了前缀函数之后，不仅能知道匹配了几次，还能知道每次匹配的起始位置。
+
+### kmp 算法模板
+
+例题：[P3375 【模板】KMP](https://www.luogu.com.cn/problem/P3375)
+
+```c++
+#include<iostream>
+using namespace std;
+
+const int N = 2e6 + 10;
+
+string s, t;
+int n, m;
+int pi[N];
+
+int main() {
+	cin >> s >> t;
+	n = s.size();
+	m = t.size();
+	s = ' ' + t + '#' + s;
+	for (int i = 2; i <= n + m + 1; i++) {
+		int j = pi[i - 1];
+		while (j && s[i] != s[j + 1])j = pi[j];
+		if (s[i] == s[j + 1])j++;
+		pi[i] = j;
+		if (j == m)cout << i - 2 * m << endl; // 能够匹配
+	}
+	for (int i = 1; i <= m; i++)cout << pi[i] << " ";
+	cout << endl;
+
+}
+```
+
+### next 数组版本
+
+大多数教材中的 next 数组版本，其实是把 "用前缀函数解决字符串匹配问题" 的过程拆成两部分：
+
+- 先预处理模式串 $t$ 的前缀函数 - next 数组；
+
+- 在暴力匹配的过程中，用生成的 bext 数组，加速匹配。当第一次匹配失败的时候，前面已经匹配的字符串的信息我们是已知的。此时，可以利用前面已经匹配的字符串的 border，来加速匹配。
+
+```c++
+string s, t;
+int n, m;
+int ne[N];
+
+void kmp() {
+	n = s.size();
+	m = t.size();
+	s = ' ' + s;
+	t = ' ' + t;
+	// 预处理模式串的 next 数组
+	for (int i = 2, j = 0; i <= m; i++) {
+		while (j && t[i] != t[j + 1])j = ne[j];
+		if (t[i] = t[j + 1])j++;
+		ne[i] = j;
+	}
+	// 利用 next 数组匹配
+	for (int i = 1, j = 0; j <= n; i++) {
+		while (j && s[i] != t[j + 1])j = ne[j];
+		if (s[i] == t[j + 1])j++;
+		if (j == a)cout << i - m + 1 << endl;
+	}
+}
+```
+
+### 周期和循环节
+
+例题：[UVA10298 Power Strings](https://www.luogu.com.cn/problem/UVA10298)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P4391 [BalticOI 2009] Radio Transmission 无线传输](https://www.luogu.com.cn/problem/P4391)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+### 练习题
+
+例题：[P4824 [USACO15FEB] Censoring S](https://www.luogu.com.cn/problem/P4824)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
+例题：[P9606 [CERC2019] ABB](https://www.luogu.com.cn/problem/P9606)
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
 
 ## manacher
 
