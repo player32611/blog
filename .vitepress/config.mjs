@@ -42,6 +42,13 @@ export default defineConfig({
         ]
       },
       {
+        text: '后端',
+        items: [
+          { text: 'Java', link: '/pages/back-end/java'},
+          { text: 'Node.js', link: '/pages/back-end/nodejs'}
+        ]
+      },
+      {
         text: 'GameMakerStudio 2',
         items: [
           { text: '常用函数', link: '/pages/gms2/common-functions' }

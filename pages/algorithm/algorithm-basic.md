@@ -382,11 +382,113 @@ int main() {
 
 例题：[P2010 [NOIP 2016 普及组] 回文日期](https://www.luogu.com.cn/problem/P2010)
 
-::: danger 警告
+```c++
+#include<bits/stdc++.h>
+using namespace std;
 
-该部分尚未完工!
+string date1, date2;
+int year1,month1,day1;
+int year2,month2,day2;
+int res;
 
-:::
+void add(){
+    day1++;
+    if((year1%4==0&&year1%100!=0)||year1%400==0){
+        if(month1==2&&day1>29){
+            day1 = 1;
+            month1++;
+        }
+        else{
+            switch(month1){
+                case 1:
+                case 3:
+                case 5:
+                case 7:
+                case 8:
+                case 10:
+                case 12:
+                    if(day1>31){
+                        day1=0;
+                        month1++;
+                    }
+                break;
+                case 4:
+                case 6:
+                case 9:
+                case 11:
+                    if(day1>30){
+                        day1=0;
+                        month1++;
+                    }
+            }
+        }
+    }
+    else{
+        if(month1==2&&day1>28){
+            day1 = 1;
+            month1++;
+        }
+        else{
+            switch(month1){
+                case 1:
+                case 3:
+                case 5:
+                case 7:
+                case 8:
+                case 10:
+                case 12:
+                    if(day1>31){
+                        day1=0;
+                        month1++;
+                    }
+                break;
+                case 4:
+                case 6:
+                case 9:
+                case 11:
+                    if(day1>30){
+                        day1=0;
+                        month1++;
+                    }
+            }
+        }
+    }
+    if(month1>12){
+        month1 = 1;
+        year1++;
+    }
+}
+
+bool isEcho(){
+    if(year1/1000!=day1%10)return false;
+    if(year1/100%10!=day1/10)return false;
+    if(year1/10%10!=month1%10)return false;
+    if(year1%10!=month1/10)return false;
+    return true;
+}
+
+bool isOver(){
+    if(year1>year2)return true;
+    if(year1==year2&&month1>month2)return true;
+    if(year1==year2&&month1==month2&&day1>day2)return true;
+    return false;
+}
+
+int main(){
+    cin>>date1>>date2;
+    year1 = stoi(date1.substr(0,4));
+    year2 = stoi(date2.substr(0,4));
+    month1 = stoi(date1.substr(4,2));
+    month2 = stoi(date2.substr(4,2));
+    day1 = stoi(date1.substr(6,2));
+    day2 = stoi(date2.substr(6,2));
+    while(!isOver()){
+        if(isEcho())res++;
+        add();
+    }
+    cout<<res<<endl;
+}
+```
 
 例题：[B4167 [GXPC-S 2024] 扫雷](https://www.luogu.com.cn/problem/B4167)
 
