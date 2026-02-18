@@ -276,6 +276,16 @@ var person = {firstName:"Bill", lastName:"Gates", age:62, eyeColor:"blue"};
 delete person.age;   // 或 delete person["age"];
 ```
 
+## Common JS 与 ES 模块
+
+CommonJS 和 ES 模块（ESM）是 JavaScript 的两种模块系统，它们在语法、加载时机、特性等方面有明显区别。
+
+::: danger 警告
+
+该部分尚未完工!
+
+:::
+
 ## TypeScript
 
 点击[此处](https://typescript.p6p.net/typescript-tutorial/intro.html)
