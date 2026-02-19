@@ -1,7 +1,9 @@
 # Node.js
 
 ::: danger 警告
+
 该页面尚未完工!
+
 :::
 
 ::: details 目录
@@ -108,7 +110,9 @@ fs.writeFile("./files/1.txt", "Hello Node.js", function (err) {});
 
 ::: warning 注意
 
-写入文件的内容会覆盖掉文件中的旧内容
+- `fs.writeFile()` 方法只能用来创建文件，不能用来创建路径
+
+- 重复调用 `fs.writeFile()` 写入同一个文件，新写入的内容会覆盖之前的旧内容
 
 :::
 
@@ -361,5 +365,13 @@ fs.readFile(path.join(__dirname, "./index.html"), "utf-8", (err, dataStr) => {
   resolveHTML(dataStr);
 });
 ```
+
+:::
+
+## http 模块
+
+::: danger 警告
+
+该部分尚未完工!
 
 :::
