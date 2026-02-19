@@ -206,3 +206,160 @@ fs.readFile(__dirname + "/files/1.txt", "utf-8", function (err, dataStr) {
 ```
 
 ## path 路径模块
+
+**path 模块**是 Node.js 官方提供的，用来处理路径的模块。它提供了一系列的方法和属性，用来满足用户对路径的处理需求。
+
+如果要在 JavaScript 代码中，使用 path 模块来处理路径，则需要使用如下的方式先导入它：
+
+```javascript
+const path = require("path");
+```
+
+```javascript
+import path from "path";
+```
+
+### 路径拼接
+
+使用 `path.join()` 方法，可以把多个路径片段拼接为完整的路径字符串，语法格式如下：
+
+```javascript
+path.join([...paths]);
+```
+
+- **...paths**: 路径片段的序列
+
+- **返回值**：string 类型
+
+::: details 具体示例
+
+```javascript
+const pathStr = path.join("/a", "/b/c", "../", "./d", "e");
+console.log(pathStr); // 输出 /a/b/d/e
+
+const pathStr2 = path.join(__dirname, "./files/1.txt");
+console.log(pathStr2); // 输出当前文件所处目录 \files\1.txt
+```
+
+:::
+
+### 获取路径中的文件名
+
+使用 `path.basename()` 方法，可以获取路径中的最后一部分，经常通过这个方法获取路径中的文件名，语法格式如下：
+
+```javascript
+path.basename(path[, ext])
+```
+
+- **path**: 必选参数，表示一个路径的字符串
+
+- **ext**: 可选参数，文件扩展名
+
+- **返回值**: 表示路径中的最后一部分
+
+::: details 具体示例
+
+```javascript
+const fpath = "/a/b/c/index.html"; // 文件的存放路径
+
+const fullName = path.basename(fpath);
+console.log(fullName); // 输出 index.html
+
+const nameWithoutExt = path.basename(fpath, ".html");
+console.log(nameWithoutExt); // 输出 index
+```
+
+:::
+
+### 获取路径中的文件扩展名
+
+使用 `path.extname()` 方法，可以获取路径中的扩展名部分，语法格式如下：
+
+```javascript
+path.extname(path);
+```
+
+- **path**: 表示一个路径的字符串
+
+- **返回值**: 返回得到的扩展名字符串
+
+::: details 具体示例
+
+```javascript
+const fpath = "/a/b/c/index.html"; // 路径字符串
+
+const fext = path.extname(fpath);
+console.log(fext); // 输出 .html
+```
+
+:::
+
+::: details 综合案例 - 拆分出 html、css、js 文件
+
+**案例的实现步骤**：
+
+① 创建两个正则表达式，分别用来匹配 `<style>` 和 `<script>` 标签
+
+② 使用 fs 模块，读取需要被处理的 HTML 文件
+
+③ 自定义 `resolveCSS` 方法，来写入 index.css 样式文件
+
+④ 自定义 `resolveJS` 方法，来写入 index.js 脚本文件
+
+⑤ 自定义 `resolveHTML` 方法，来写入 index.html 文件
+
+```javascript
+const regStyle = /<style>[\s\S]*<\/style>/; // 匹配 style 标签的正则
+const regScript = /<script>[\s\S]*<\/script>/; // 匹配 script 标签的正则
+
+// 自定义 resolveCSS 方法
+const resolveCSS = (htmlStr) => {
+  // 1. 使用正则来匹配 <style>...</style>
+  const r1 = regStyle.exec(htmlStr);
+  // 2. 如果匹配成功，就调用 fs.writeFile 将结果写入到 css 文件中
+  const newCSS = r1[0].replace("<style>", "").replace("</style>", "");
+  fs.writeFile(
+    path.join(__dirname, "./clock/index.css"),
+    newCSS,
+    function (err) {
+      if (err) return console.log("写入 CSS 失败！" + err.message);
+      console.log("写入 CSS 样式文件成功！");
+    },
+  );
+};
+
+// 自定义 resolveJS 方法
+const resolveJS = (htmlStr) => {
+  // 1. 使用正则来匹配 <script>...</script>
+  const r2 = regScript.exec(htmlStr);
+  // 2. 如果匹配成功，就调用 fs.writeFile 将结果写入到 js 文件中
+  const newJS = r2[0].replace("<script>", "").replace("</script>", "");
+  fs.writeFile(path.join(__dirname, "./clock/index.js"), newJS, function (err) {
+    if (err) return console.log("写入 JavaScript 脚本失败！" + err.message);
+    console.log("写入 JavaScript 脚本成功！");
+  });
+};
+
+// 自定义 resolveHTML 方法
+const resolveHTML = (htmlStr) => {
+  const newHTML = htmlStr
+    .replace(regStyle, '<link rel="stylesheet" href="./index.css"/>')
+    .replace(regScript, '<script src="./index.js"></script>');
+  fs.writeFile(path.join(__dirname, "./clock/index.html"), newHTML, (err) => {
+    if (err) return console.log("写入 HTML 文件失败！" + err.message);
+    console.log("写入 HTML 文件成功！");
+  });
+};
+
+// 读取需要被处理的 HTML 文件
+fs.readFile(path.join(__dirname, "./index.html"), "utf-8", (err, dataStr) => {
+  if (err) {
+    return console.log("读取 HTML 文件失败！" + err.message);
+  }
+  resolveCSS(dataStr);
+  resolveJS(dataStr);
+  resolveHTML(dataStr);
+});
+```
+
+:::
