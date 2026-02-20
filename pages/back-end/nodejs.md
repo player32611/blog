@@ -370,6 +370,248 @@ fs.readFile(path.join(__dirname, "./index.html"), "utf-8", (err, dataStr) => {
 
 ## http 模块
 
+**http 模块**是 Node.js 官方提供的，用于创建 web 服务器的模块。通过 http 模块，就能方便的把一台普通的电脑，变成一台 Web 服务器，从而对外提供 Web 资源服务。
+
+如果要希望使用 http 模块创建 Web 服务器，则需要先导入它：
+
+```javascript
+const http = require("http");
+```
+
+```javascript
+import http from "http";
+```
+
+::: details 进一步理解 http 模块的作用
+
+服务器和普通电脑的区别在于，服务器上安装了 web 服务器软件，例如：IIS、Apache 等。通过安装这些服务器软件，就能把一台普通的电脑变成一台 web 服务器。
+
+在 Node.js 中，我们不需要使用 ISS、Apache 等这些第三方 web 服务器软件。因为我们可以基于 Node.js 提供的 http 模块，通过几行简单的代码，就能轻松的手写一个服务器软件，从而对外提供 web 服务。
+
+:::
+
+### IP 地址
+
+**IP 地址**就是互联网上每台计算机的唯一地址，因此 IP 地址具有唯一性。
+
+IP 地址的格式通常用 "点分十进制" 表示成（a.b.c.d）的形式，其中，a、b、c、d 都是 0~255 之间的十进制整数。
+
+::: warning 注意
+
+互联网中每台 Web 服务器，都有自己的 IP 地址
+
+在开发期间，自己的电脑即是一台服务器，也是一个客户端，为了方便测试，可以在自己的浏览器中输入 127.0.0.1 这个 IP 地址，就能把自己的电脑当作一台服务器进行访问了
+
+:::
+
+### 域名和域名服务器
+
+尽管 IP 地址能够唯一地标记网络上的计算机，但 IP 地址是一长串数子，不直观，而且不便于记忆，于是人们又发明了另一套字符型的地址方案，即所谓的**域名**（Domain Name）地址。
+
+IP 地址和域名是相对应的关系，这份对应关系存放在一种叫做**域名服务器**（DNS，Domain Name Server）的电脑中。使用者只需通过好记的域名访问对应的服务器即可，对应的转换工作由域名服务器实现。因此，域名服务器就是提供 IP 地址和域名之间的转换服务的服务器。
+
+::: warning 注意
+
+单纯使用 IP 地址，互联网中的电脑也能够正常工作。但是有了域名的加持，能让互联网的世界变得更加方便
+
+在开发测试期间，127.0.0.1 对应的域名是 localhost，它们都代表我们自己的这台电脑，在使用效果上没有任何区别
+
+:::
+
+### 端口号
+
+计算机中的端口号，就好像是显示生活中的门牌号一样。通过门牌号，外卖小哥可以在整栋大楼众多的房间中，准确把外卖送到你的手中。
+
+同样的道理，在一台电脑中，可以运行成百上千个 web 服务。每个 web 服务都对应一个唯一的端口号。客户端发送过来的网络请求，通过端口号，可以准确地交给对应的 web 服务进行处理。
+
+::: warning 注意
+
+每个端口号不能被多个 web 服务占用
+
+在实际应用中，URL 中的 80 端口可以被省略
+
+:::
+
+### 创建最基本的 web 服务器
+
+**创建 web 服务器的基本步骤**：
+
+① 导入 http 模块
+
+② 创建 web 服务器实例
+
+③ 为服务器实例绑定 request 事件，监听客户端的请求
+
+④ 启动服务器
+
+```javascript
+import http from "http";
+
+// 创建 web 服务器实例
+const server = http.createServer();
+
+// 使用服务器实例的 .on() 方法，即可监听客户端发送过来的网络请求
+server.on("request", (req, res) => {
+  // 只要有客户端来请求我们自己的服务器，就会触发 request 事件，从而调用这个事件处理函数
+  console.log("Some visit our web server.");
+});
+
+// 调用 server.listen(端口号, 回调函数) 方法，即可启动 web 服务器
+server.listen(80, () => {
+  console.log("http server running at http://127.0.0.1");
+});
+```
+
+### req 请求对象
+
+只要服务器接收到了客户端的请求，就会调用通过 `server.on()` 为服务器绑定的 request 事件处理函数。
+
+如果想在事件处理函数中，访问与客户端相关的数据或属性，可以使用如下的方式：
+
+```javascript
+server.on("request", (req, res) => {
+  // req.url 是客户端请求的 URL 地址
+  const url = req.url;
+  // req.method 是客户端请求的 method 类型
+  const method = req.method;
+  const str = `Your request url is ${url}, and request method is ${method}`;
+  console.log(str);
+});
+```
+
+::: tip 提示
+
+req 是请求对象，包含了与客户端相关的数据和属性。
+
+:::
+
+### res 响应对象
+
+在服务器的 request 事件处理函数中，如果想访问与服务器相关的数据活属性，可以使用如下的方式：
+
+```javascript
+server.on("request", (req, res) => {
+  const url = req.url;
+  const method = req.method;
+  const str = `Your request url is ${url}, and request method is ${method}`;
+  console.log(str);
+  // 调用 res.end() 方法，向客户端响应一些内容
+  res.end(str);
+});
+```
+
+### 解决中文乱码问题
+
+当调用 res.end() 方法，向客户端发送中文内容的时候，会出现乱码问题，此时，需要手动设置内容的编码格式：
+
+```javascript
+server.on("request", (req, res) => {
+  // 发送的内容包含中文
+  const str = `您请求的 url 地址是 ${req.url}, 请求的 method 类型是 ${req.method}`;
+  // 为了防止中文显示乱码的问题，需要设置响应头 Content-Type 为 text/html；charset=utf-8
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.end(str);
+});
+```
+
+### 根据不同的 url 响应不同的 html 内容
+
+**核心实现步骤**：
+
+① 获取请求的 url 地址
+
+② 设置默认的响应内容为 404 Not Found
+
+③ 根据不同的 url 地址，设置不同的响应内容
+
+④ 设置 Content-Type 响应头，防止中文乱码
+
+⑤ 使用 res.end() 把内容响应给客户端
+
+```javascript
+server.on("request", (req, res) => {
+  const url = req.url; // 获取请求的 url 地址
+  let content = "<h1>404 Not Found</h1>"; // 设置默认的内容为 404 Not Found
+  if (url === "/" || url === "/index.html") {
+    content = "<h1>首页</h1>"; // 用户请求的是首页
+  } else if (url === "/about.html") {
+    content = "<h1>关于</h1>"; // 用户请求的是关于页面
+  }
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.end(content);
+});
+```
+
+::: details 综合案例 - 通过服务器访问网页文件
+
+**核心思路**：把文件的实际存放路径，作为每个资源的请求 url 地址
+
+**实现步骤**：
+
+① 导入需要的模块
+
+② 创建基本的 web 服务器
+
+③ 将资源的请求 url 地址映射为文件的存放路径
+
+④ 读取文件内容并响应给客户端
+
+```javascript
+// 1 导入需要的模块
+const http = require("http");
+const path = require("path");
+const fs = require("fs");
+
+// 2.1 创建 web 服务器
+const server = http.createServer();
+
+// 2.2 监听 web 服务器的 request 事件
+server.on("request", (req, res) => {
+  // 3.1 获取到客户端请求的 url 地址
+  const url = req.url; // 获取请求的 url 地址
+  // 3.2 把请求的 url 地址映射为本地文件的存放路径
+  const fpath = path.join(__dirname, url);
+  // 4.1 根据映射过来的文件路径读取文件
+  fs.readFile(fpath, "utf8", (err, dataStr) => {
+    // 4.2 读取文件失败后，向客户端响应固定的 "错误消息"
+    if (err) return res.end("404 Not Found");
+    // 4.3 读取文件成功后，将 "读取成功的内容" 响应给客户端
+    res.end(dataStr);
+  });
+});
+
+// 2.3 启动 web 服务器
+server.listen(80, () => {
+  console.log("http server running at http://127.0.0.1");
+});
+```
+
+⑤ 优化资源的请求路径
+
+```javascript
+server.on("request", (req, res) => {
+  const url = req.url; // 获取请求的 url 地址
+  // 5.1 预定义空白的文件存放路径
+  let fpath = "";
+  if (url === "/") {
+    // 5.2 如果请求的路径是否为 /，则手动指定文件的存放路径
+    fpath = path.join(__dirname, "./clock/index.html");
+  } else {
+    fpath = path.join(__dirname, "clock", url);
+  }
+  fs.readFile(fpath, "utf8", (err, dataStr) => {
+    // 4.2 读取文件失败后，向客户端响应固定的 "错误消息"
+    if (err) return res.end("404 Not Found");
+    // 4.3 读取文件成功后，将 "读取成功的内容" 响应给客户端
+    res.end(dataStr);
+  });
+});
+```
+
+:::
+
+### 模块化
+
 ::: danger 警告
 
 该部分尚未完工!
