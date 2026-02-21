@@ -610,10 +610,86 @@ server.on("request", (req, res) => {
 
 :::
 
-### 模块化
+## 模块化
 
-::: danger 警告
+**模块化**是指解决一个复杂问题时，自顶层向下逐层把系统划分成若干模块的过程。对于整个系统来说，模块是可组合、分解和更换的单元。
 
-该部分尚未完工!
+在编程邻域中的模块化，就是遵守固定的规则，把一个大文件拆分成独立并互相依赖的多个小模块。
+
+::: tip 把代码进行模块化拆分的好处
+
+- 提高了代码的复用性
+
+- 提高了代码的可维护性
+
+- 可以实现按需加载
 
 :::
+
+**模块化规范**就是对代码进行模块化的拆分与组合时，需要遵守的那些规则。
+
+例如：
+
+- 使用什么样的语法格式来引用模块
+
+- 在模块中使用什么样的语法格式向外暴露成员
+
+### Node.js 中的模块化
+
+Node.js 中根据模块化来源的不同，将模块分为了 3 大类，分别是：
+
+- **内置模块**：由 Node.js 官方提供的，例如 fs、path、http 等
+
+- **自定义模块**：用户创建的每个 .js 文件，都是自定义模块
+
+- **第三方模块**：由第三方开发出来的模块，并非官方提供的内置模块，也不是用户创建的自定义模块，使用前需要先下载
+
+### Node.js 中的模块作用域
+
+和函数作用域类似，在自定义模块中定义的变量、方法等成员，只能在当前模块内被访问，这种模块级别的访问限制，叫做**模块作用域**。
+
+::: tip 模块作用域的好处
+
+防止了全局变量污染的问题
+
+:::
+
+### module 对象
+
+在每个 .js 自定义模块中都有一个 module 对象，它里面存储了和当前模块有关的信息，打印如下：
+
+```javascript
+console.log(module);
+```
+
+```console
+{
+  id: '.',
+  path: 'e:\\files\\我的git库\\blog',
+  exports: {},
+  filename: 'e:\\files\\我的git库\\blog\\test.js',
+  loaded: false,
+  children: [],
+  paths: [
+    'e:\\files\\我的git库\\blog\\node_modules',
+    'e:\\files\\我的git库\\node_modules',
+    'e:\\files\\node_modules',
+    'e:\\node_modules'
+  ],
+  Symbol(kIsMainSymbol): true,
+  Symbol(kIsCachedByESMLoader): false,
+  Symbol(kURL): undefined,
+  Symbol(kFormat): undefined,
+  Symbol(kIsExecuting): true
+}
+```
+
+### CommonJS 模块化规范
+
+CommonJS 规定：
+
+- 每个模块内部，`module` 变量代表当前模块
+
+- `module` 变量是一个对象，它的 `exports` 属性（即 `module.exports`）是对外的接口
+
+- 加载某个模块，其实是加载该模块的 `module.exports` 属性。`require()` 方法用于加载模块

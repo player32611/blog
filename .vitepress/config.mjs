@@ -33,7 +33,7 @@ export default defineConfig({
           { text: 'CSS', link: '/pages/front-end/css' },
           { text: 'JavaScript', link: '/pages/front-end/javascript' },
           { text: 'DOM', link: '/pages/front-end/dom' },
-          { text: 'npm与其他东西', link: '/pages/front-end/npm-and-others' },
+          { text: 'npm 与其他', link: '/pages/front-end/npm-and-others' },
           { text: '网络请求', link: '/pages/front-end/network-requests' },
           { text: 'webpack', link: '/pages/front-end/webpack' },
           { text: 'React', link: '/pages/front-end/react' },
@@ -57,7 +57,7 @@ export default defineConfig({
       {
         text: '算法',
         items: [
-          { text: 'C++基础', link:'/pages/algorithm/c++-basic'},
+          { text: 'C++ 基础', link:'/pages/algorithm/c++-basic'},
           { text: '数据结构', link:'/pages/algorithm/data-structure'},
           { text: 'STL' , link:'/pages/algorithm/stl'},
           { text: '算法基础', link:'/pages/algorithm/algorithm-basic'},
