@@ -734,10 +734,150 @@ CommonJS 规定：
 
 - 加载某个模块，其实是加载该模块的 `module.exports` 属性。`require()` 方法用于加载模块
 
-## express
+## Express
+
+Express 是基于 Node.js 平台，快速、开放、极简的 Web 开发框架。
+
+Express 的作用和 Node.js 内置的 http 模块类似，是专门用来创建 Web 服务器的。
+
+**Express 的本质**：就是一个 npm 上的第三方包，提供了快速创建 Web 服务器的便捷方法。
+
+对于前端程序员来说，最常见的两种服务器，分别是：
+
+- **Web 网站服务器**：专门对外提供 Web 网页资源的服务器
+
+- **API 接口服务器**：专门对外提供 API 接口的服务器
+
+使用 Express，我们可以方便、快速的创建 Web 网站的服务器或 API 接口的服务器。
+
+在项目所处的目录中，运行如下的终端命令，即可将 express 安装到项目中使用：
+
+```bash
+npm install express
+```
+
+### 创建基本的 Web 服务器
+
+```javascript
+import express from "express";
+
+// 创建 web 服务器
+const app = express();
+
+// 调用 app.listen(端口号, 回调函数)，启动服务器
+app.listen(80, () => {
+  console.log("express server running at http://127.0.0.1");
+});
+```
+
+通过 `app.get()` 方法，可以监听客户端的 GET 请求，具体的语法格式如下：
+
+```javascript
+app.get(url, (req, res) => {});
+```
+
+- **参数 1**：客户端请求的 URL 地址
+
+- **参数 2**：请求对应的处理函数
+  - **req**：请求对象（包含了与请求相关的属性与方法）
+  - **res**：响应对象（包含了与响应相关的属性与方法）
+
+通过 `res.send()` 方法，可以把处理好的内容，发送给客户端：
+
+```javascript
+res.send({});
+```
+
+::: details 具体示例
+
+监听客户端的 GET 和 POST 请求，并向客户端响应对应的内容：
+
+```javascript
+import express from "express";
+
+const app = express();
+
+// 监听客户端的 GET 和 POST 请求，并向客户端响应对应的内容
+app.get("/user", (req, res) => {
+  // 调用 express 提供的 res.send() 方法，向客户端响应一个 JSON 对象
+  res.send({ name: "zs", age: 20, gender: "男" });
+});
+
+app.post("/user", (req, res) => {
+  // 调用 express 提供的 res.send() 方法，向客户端响应一个文本字符串
+  res.send("请求成功");
+});
+
+app.listen(80, () => {
+  console.log("express server running at http://127.0.0.1");
+});
+```
+
+:::
+
+通过 `req.query` 对象，可以访问到客户端通过查询字符串的形式（`?name=za&age=20`），发送到服务器的参数：
+
+```javascript
+app.get("/", (req, res) => {
+  console.log(req.query);
+  res.send({ name: req.query.name, age: req.query.age, gender: "男" });
+});
+```
+
+默认情况下，`req.query` 是一个空对象。
+
+通过 `req.params` 对象，可以访问到 URL 中，通过 `:` 匹配到的动态参数：
+
+```javascript
+app.get("/user/:id", (req, res) => {
+  console.log(req.params);
+  res.send(req.params);
+});
+```
+
+默认情况下，`req.params` 是一个空对象。
+
+通过 `express.static()`，我们可以非常方便地创建一个静态资源服务器。
+
+例如，通过以下代码就可以将 public 目录下的图片、CSS 文件、JavaScript 文件对外开放访问了：
+
+```javascript
+app.use(express.static("public"));
+```
+
+此时即可通过 URL 路径直接访问对应文件。
+
+::: warning 注意
+
+Express 在指定的静态目录中查找文件，并对外提供资源的访问路径。
+
+因此，存放静态文件的目录名不会出现在 URL 中。
+
+:::
+
+如果要托管多个静态资源目录，请多次调用 `express.static()` 函数：
+
+```javascript
+app.use(express.static("public"));
+app.use(express.static("./files"));
+```
+
+::: warning 注意
+
+访问静态资源文件时，`express.static()` 函数会根据目录的添加顺序查找所需的文件
+
+:::
+
+如果希望在托管的静态资源访问路径之前，挂载路径前缀（即在访问的 URL 中添加静态资源目录），则可以使用如下的方式：
+
+```javascript
+app.use("/abc", express.static("./files"));
+```
+
+### Express 路由
 
 ::: danger 警告
 
-该页面尚未完工!
+该部分尚未完工!
 
 :::
