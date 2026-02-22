@@ -1261,10 +1261,198 @@ app.post("/book", (req, res) => {
 
 - **第三方中间件**：非 Express 官方内置的，而是由第三方开发出来的中间件，可以按需下载并配置
 
-### 编写接口
+## 编写接口
+
+::: code-group
+
+```javascript [apiRouter.js]
+import express from "express";
+
+// 创建路由对象
+const apiRouter = express.Router();
+
+// 挂载对应的路由
+apiRouter.get("/get", (req, res) => {
+  // 获取客户端通过查询字符串，发送到服务器的数据
+  const query = req.query;
+  // 把数据响应给客户端
+  res.send({
+    status: 0,
+    message: "GET 请求成功", // 状态的描述
+    data: query, // 需要响应给客户端的数据
+  });
+});
+
+apiRouter.post("/post", (req, res) => {
+  // 获取客户端通过请求体，发送到服务器的 URL-encoded 数据
+  const body = req.body;
+  // 把数据响应给客户端
+  res.send({
+    status: 0,
+    message: "POST 请求成功", // 状态的描述
+    data: body, // 需要响应给客户端的数据
+  });
+});
+
+export default apiRouter;
+```
+
+```javascript [index.js]
+import express from "express";
+import apiRouter from "./router/apiRouter.js";
+
+// 创建服务器实例
+const app = express();
+app.use(express.urlencoded({ extended: true }));
+app.use("/api", apiRouter);
+
+app.listen(80, () => {
+  console.log("express server running at http://127.0.0.1");
+});
+```
+
+:::
+
+### 接口跨域问题
+
+刚才编写的 GET 和 POST 接口，存在一个很严重的问题：**不支持跨域请求**
+
+解决接口跨域问题的方案主要有两种：
+
+- **CORS**：主流的解决方案，推荐使用
+
+- **JSONP**：有缺陷的解决方案，只支持 GET 请求
+
+::: details 什么是 CORS
+
+CORS（Cross-Origin Resource Sharing，跨域资源共享）由一系列 HTTP 响应头组成，这些 HTTP 响应头决定浏览器是否阻止前端 JS 代码跨域获取资源。
+
+浏览器的同源安全策略默认会阻止网页 "跨域" 获取资源。但如果接口服务器配置了 CORS 相关的 HTTP 响应头，就可以解除浏览器端的跨域访问限制。
+
+CORS 主要在服务器端进行配置。客户端浏览器无须做任何额外的配置，即可请求开启了 CORS 的接口。
+
+CORS 在浏览器中由兼容性。只有支持 XMLHttpRequest Level2 的浏览器，才能正常访问开启了 CORS 的服务端接口（例如：IE10+、Chrome4+、Firefox3.5+）。
+
+:::
+
+### 使用 cors 中间件解决接口跨域问题
+
+cors 是 Express 的一个第三方中间件。通过安装和配置 CORS 中间件，可以很方便地解决跨域问题。
+
+**使用步骤**：
+
+① 运行 `npm install cors` 安装中间件
+
+② 使用 `import cors from "cors"` 导入中间件
+
+③ 在路由之前调用 `app.use(cors())` 配置中间件
+
+```javascript
+// 在路由之前，配置 CORS 中间件
+app.use(cors());
+```
+
+### CORS 响应头
+
+响应头部中可以携带一个 **Access-Control-Allow-Origin** 字段，其语法如下：
+
+```http
+Access-Control-Allow-Origin: <origin> | *
+```
+
+- **origin**：指定了允许访问该资源的外域 URL
+
+例如，下面的字段值将只允许来自 http://itcast.cn 的请求：
+
+```javascript
+res.setHeader("Access-Control-Allow-Origin", "http://itcast.cn");
+```
+
+如果指定了 Access-Control-Allow-Origin 字段的值为通配符 \*，表示允许来自任何域的请求：
+
+```javascript
+res.setHeader("Access-Control-Allow-Origin", "*");
+```
+
+默认情况下，CORS 仅支持客户端向服务器发送如下的 9 个请求头：Accept、Accept-Language、Content-Language、DPR、Downlink、Save-Data、Viewport-Width、Width、Content-Type（值仅限于 text/plain、multipart/form-data、application/x-www-form-urlencoded 三者之一）
+
+如果客户端向服务器发送了额外的请求头信息，则需要在服务器端，通过 **Access-Control-Allow-Headers** 对额外的请求头进行声明，否则这次请求会失败。
+
+```javascript
+res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Custom-Header");
+```
+
+默认情况下，CORS 仅支持客户端发起 GET、POST、HEAD 请求。
+
+如果客户端希望通过 PUT、DELETE 等方式请求服务器的资源，则需要在服务器端，通过 **Access-Control-Allow-Methods** 来指明事件请求所允许使用的 HTTP 方法。
+
+```javascript
+res.setHeader("Access-Control-Allow-Methods", "GET, POST, HEAD, DELETE");
+// 允许所有的 HTTP 请求方法
+res.setHeader("Access-Control-Allow-Methods", "*");
+```
+
+### CORS 请求的分类
+
+客户端在请求 CORS 接口时，根据请求方式和请求头的不同，可以将 CORS 的请求分为两大类：
+
+- **简单请求**：请求方式属于 GET、POST、HEAD 三者之一，且 HTTP 头部信息不超过以下几种字段：无自定义头部字段、Accept、Accept-Language、Content-Language、DPR、Downlink、Save-Data、Viewport-Width、Width、Content-Type（值仅限于 text/plain、multipart/form-data、application/x-www-form-urlencoded 三者之一）
+
+- **预检请求**：请求方式为 GET、POST、HEAD 之外的请求方式，或请求头中包含自定义头部字段，或向服务器发送了 application/json 格式的数据
+
+在浏览器与服务器正式通信之前，浏览器会先发送 OPTIONS 请求进行预检，以获知服务器是否允许该实际请求，所以这一次的 OPTION 请求称为 "预检请求"。服务器成功响应预检请求后，才会发送真正的请求，并携带真实数据。
+
+::: tip 简单请求和预检请求的区别
+
+**简单请求的特点**：客户端与服务器之间只会发生一次请求
+
+**预检请求的特点**：客户端与服务器之间会发生两次请求，OPTION 预检请求成功之后，才会发起真正的请求
+
+:::
+
+### JSONP 接口
+
+**JSONP**（JSON with Padding）是一种跨域数据交互的解决方案，主要用于解决浏览器同源策略限制下的跨域请求问题。
+
+浏览器端通过 `<script>` 标签的 `scr` 属性，请求服务器上的数据，同时，服务器返回一个函数的调用。这种请求数据的方式叫做 **JSONP**。
+
+::: warning 注意
+
+- JSONP 不属于真正的 Ajax 请求，因为它没有使用 XMLHttpRequest 这个对象
+
+- JSONP 仅支持 GET 请求，不支持 POST、PUT、DELETE 等请求
+
+:::
+
+如果项目中已经配置了 CORS 跨域资源共享，为了防止冲突，必须在配置 CORS 中间件之前声明 JSONP 的接口。否则 JSONP 接口会被处理成开启了 CORS 的接口。
+
+**实现 JSONP 接口的步骤**：
+
+① 获取客户端发送过来的回调函数的名字
+
+② 得到要通过 JSONP 形式发送给客户端的数据
+
+③ 根据前两步得到的数据，拼接出一个函数调用的字符串
+
+④ 把上一步拼接得到的字符串，响应给客户端的 `<script>` 标签进行解析执行
+
+```javascript
+app.get("/api/jsonp", (req, res) => {
+  const funcName = req.query.callback;
+  const data = { name: "zs", age: 22 };
+  const scriptStr = `${funcName}(${JSON.stringify(data)})`;
+  res.send(scriptStr);
+});
+
+app.use(cors());
+app.use("/api", apiRouter);
+// ...
+```
+
+### MySQL 数据库
 
 ::: danger 警告
 
-该页面尚未完工!
+该部分尚未完工!
 
 :::
