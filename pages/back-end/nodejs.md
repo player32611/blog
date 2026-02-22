@@ -1449,7 +1449,7 @@ app.use("/api", apiRouter);
 // ...
 ```
 
-### MySQL 数据库
+## MySQL 数据库
 
 ::: danger 警告
 
