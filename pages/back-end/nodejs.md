@@ -997,8 +997,274 @@ app.use("/api", router);
 
 ### Express 中间件
 
+**中间件**（Middleware），特指业务流程的中间处理环节。
+
+当一个请求到达 Express 的服务器之后，可以连续调用多个中间件，从而对这次请求进行预处理。
+
+Express 的中间件，本质上就是一个处理函数，Express 中间件的格式如下：
+
+```javascript
+app.use(function (req, res, next) {
+  next();
+});
+```
+
+- **next 函数**：实现多个中间件连续调用的关键，表示把流转关系转交给下一个中间件或路由。
+
+::: warning 注意
+
+中间件的形参列表中，必须包含 next 参数。而路由处理函数中只包含 req 和 res。
+
+:::
+
+可以通过如下的方式，定义一个最简单的中间件函数：
+
+```javascript
+const mw = (req, res, next) => {
+  console.log("这是最简单的中间件函数");
+  // 把流转关系，转交给下一个中间件或路由
+  next();
+};
+```
+
+客户端发起的任何请求，到达服务器之后，都会触发的中间件，叫做全局生效的中间件。
+
+通过调用 `app.use()` 方法，即可定义一个全局生效的中间件：
+
+```javascript
+app.use(mw);
+
+// 简化形式
+app.use((req, res, next) => {
+  console.log("这是最简单的中间件函数");
+  next();
+});
+```
+
+::: tip 中间件的作用
+
+多个中间件之间，共享同一份 req 和 res。基于这样的特性，我们可以在上游的中间件中，统一为 req 或 res 对象添加自定义的属性或方法，供下游的中间件或路由进行使用。
+
+:::
+
+::: details 具体示例 - 添加到达服务器的时间戳
+
+```javascript
+app.use((req, res, next) => {
+  req.startTime = Date.now();
+  next();
+});
+
+app.get("/", (req, res) => {
+  res.send("Home page." + req.startTime);
+});
+```
+
+:::
+
+也可以使用 `app.use()` 连续定义多个全局中间件。客户端请求到达服务器之后，会按照中间件定义的先后顺序依次进行调用：
+
+```javascript
+app.use((req, res, next) => {
+  console.log("调用了第 1 个全局中间件");
+  next();
+});
+
+app.use((req, res, next) => {
+  console.log("调用了第 2 个全局中间件");
+  next();
+});
+```
+
+不使用 `app.use()` 定义的中间件，叫做局部生效的中间件：
+
+```javascript
+// 定义中间件函数 mw1
+const mw1 = (req, res, next) => {
+  console.log("这是中间件函数");
+  next();
+};
+
+// mw1 这个中间件只在 "当前路由中生效"，这种用法属于 "局部生效的中间件"
+app.get("/", mw1, (req, res) => {
+  res.send("Home page.");
+});
+
+// mw1 这个中间件不会影响下面这个路由
+app.get("/user", (req, res) => {
+  res.send("User page.");
+});
+```
+
+也可以在路由中，通过如下两种等价的方式，使用多个局部中间件：
+
+```javascript
+app.get("/", mw1, mw2, (req, res) => {
+  res.send("Home page.");
+});
+app.get("/", [mw1, mw2], (req, res) => {
+  res.send("Home page.");
+});
+```
+
+::: warning 中间件的使用注意事项
+
+- 大部分中间件都要在路由之前注册
+
+- 客户端发送过来的请求，可以连续调用多个中间件进行处理
+
+- 执行完中间件的业务代码之后，不要忘记调用 `next()` 函数
+
+- 为了防止代码逻辑混乱，调用 `next()` 函数后不要再写额外的代码
+
+- 连续调用多个中间件时，多个中间件之间，共享 `req` 和 `res` 对象
+
+:::
+
+如果数据量比较大，无法一次性发送完毕，则客户端会把数据切割后，分批发送到服务器。所以 data 事件可能会触发多次，每一次触发 data 事件时，获取到的数据只是完整的一部分，需要手动对接收到的数据进行拼接：
+
+```javascript
+let str = "";
+req.on("data", (chunk) => {
+  str += chunk;
+});
+```
+
+当请求体数据接收完毕之后，会自动触发 req 的 end 事件。
+
+因此，我们可以在 req 的 end 事件中，拿到并处理完整的请求体数据：
+
+```javascript
+req.on("end", () => {
+  console.log(str);
+});
+```
+
+::: details 具体示例 - 模拟 `express.urlencoded()`
+
+手动模拟一个类似于 `express.urlencoded()` 这样的中间件，来解析 POST 提交到服务器的表单数据。
+
+**实现步骤**：
+
+① 定义中间件
+
+② 监听 `req` 的 `data` 事件
+
+③ 监听 `req` 的 `end` 事件
+
+④ 使用 `querystring` 模块解析请求体数据
+
+⑤ 将解析出来的数据对象挂载为 `req.body`
+
+⑥ 将自定义中间件封装为模块
+
+::: code-group
+
+```javascript [custom-body-parser.js]
+import queryString from "querystring";
+const bodyParser = (req, res, next) => {
+  let str = "";
+  req.on("data", (chunk) => {
+    str += chunk;
+  });
+  req.on("end", () => {
+    // 调用 parse() 方法，把查询字符串解析成对象格式
+    req.body = queryString.parse(str);
+    next();
+  });
+};
+export default bodyParser;
+```
+
+```javascript [index.js]
+import bodyParser from "./custom-body-parser.js";
+app.use(bodyParser);
+```
+
+:::
+
+### 中间件的分类
+
+Express 官方把常见的中间件用法，分成了 5 大类，分别是：
+
+- **应用级别的中间件**：通过 `app.use()`、`app.get()`、`app.post()` 等绑定到 app 实例上的中间件：
+
+```javascript
+app.use((req, res, next) => {
+  next();
+});
+```
+
+- **路由级别的中间件**：绑定到 `express.Router()` 实例上的中间件，用法和应用级别中间件没有任何区别：
+
+```javascript
+const router = express.Router();
+
+router.use((req, res, next) => {
+  next();
+});
+
+app.use(router);
+```
+
+- **错误级别的中间件**：专门用来捕获整个项目中发生的异常错误，从而防止项目异常崩溃的问题：
+
+```javascript
+app.use((err, req, res, next) => {
+  console.log("Error：", err.message);
+  res.send("Error：" + err.message);
+});
+```
+
+::: warning 注意
+
+错误级别的中间件，必须注册在所有路由之后
+
+:::
+
+- **Express 内置的中间件**：自 Express 4.16.0 版本开始，Express 内置了 3 个常用的中间件：`express.static()` 快速托管静态资源的内置中间件（HTML 文件、图片、CSS 样式等）、`express.json()` 解析 JSON 格式的请求体数据（仅在 4.16.0+ 版本中可用）、`express.urlencoded()` 解析 URL-encoded 格式的请求体数据（仅在 4.16.0+ 版本中可用）：
+
+```javascript
+// 配置解析 application/json 格式数据的内置中间件
+app.use(express.json());
+// 配置解析 application/x-www-form-urlencoded 格式数据的内置中间件
+app.use(express.urlencoded({ extended: false }));
+```
+
+::: details 具体示例 - 解析 JSON 格式数据
+
+```javascript
+app.use(express.json());
+
+app.post("/", (req, res) => {
+  console.log(req.body);
+  res.send("ok");
+});
+```
+
+默认情况下，如果不配置解析表单数据的中间件，则 req.body 默认等于 undefined
+
+:::
+
+::: details 具体示例 - 解析 URL-encoded 格式数据
+
+```javascript
+app.use(express.urlencoded({ extended: false }));
+
+app.post("/book", (req, res) => {
+  console.log(req.body);
+  res.send("aaa");
+});
+```
+
+:::
+
+- **第三方中间件**：非 Express 官方内置的，而是由第三方开发出来的中间件，可以按需下载并配置
+
+### 编写接口
+
 ::: danger 警告
 
-该部分尚未完工!
+该页面尚未完工!
 
 :::
