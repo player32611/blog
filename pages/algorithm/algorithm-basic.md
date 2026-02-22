@@ -949,11 +949,31 @@ int main() {
 
 例题：[P14171 【MX-X23-T1】丢手绢](https://www.luogu.com.cn/problem/P14171)
 
-::: danger 警告
+```c++
+#include<bits/stdc++.h>
+using namespace std;
 
-该部分尚未完工!
+const int N = 1e5+10;
 
-:::
+int n;
+int m;
+int a[N];
+
+int main(){
+    cin>>n;
+    for(int i = 0;i<n;i++){
+        int pos;
+        cin>>pos;
+        int idx = (i+pos+n)%n;
+        a[idx]++;
+        if(m<a[idx])m=a[idx];
+    }
+    for(int i = 0;i<n;i++){
+        if(a[i]==m)cout<<i+1<<" ";
+    }
+    cout<<endl;
+}
+```
 
 ## 二分算法
 
@@ -1034,11 +1054,43 @@ public:
 
 例题：[P1102 A-B 数对](https://www.luogu.com.cn/problem/P1102)
 
-::: danger 警告
+```c++
+#include<bits/stdc++.h>
+using namespace std;
 
-该部分尚未完工!
+const int N = 2e5+10;
 
-:::
+typedef long long ll;
+
+ll n,c;
+ll num[N];
+ll length[N];
+ll res;
+
+int main(){
+    cin>>n>>c;
+    num[0] = -1;
+    for(ll i = 1;i<=n;i++){
+        cin>>num[i];
+    }
+    sort(num+1,num+1+n);
+    for(ll i = 1;i<=n;i++){
+        if(num[i]==num[i-1])length[i]=length[i-1]+1;
+        else length[i]=1;
+    }
+    ll l=n,r=n;
+    while(l>0&&r>0){
+        if(num[r]-num[l]>c)r--;
+        else if(num[r]-num[l]<c)l--;
+        else if(num[r]-num[l]==c){
+            res+=length[l]*length[r];
+            l-=length[l];
+            r-=length[r];
+        }
+    }
+    cout<<res<<endl;
+}
+```
 
 例题：[P1678 烦恼的高考志愿](https://www.luogu.com.cn/problem/P1678)
 
