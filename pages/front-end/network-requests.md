@@ -64,7 +64,7 @@ Axios 简单的理解就是 ajax 的封装
 
 使用 npm:
 
-```
+```bash
 npm install axios
 ```
 

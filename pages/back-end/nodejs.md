@@ -1,11 +1,5 @@
 # Node.js
 
-::: danger 警告
-
-该页面尚未完工!
-
-:::
-
 ::: details 目录
 
 [[toc]]
@@ -2077,3 +2071,229 @@ app.get("/index.html", (req, res) => {
 - 服务端渲染推荐使用 **Session 认证机制**
 
 - 前后端分离推荐使用 **JWT 认证机制**
+
+### Session 认证机制
+
+当前端请求后端接口不存在跨域问题的时候，推荐使用 Session 身份认证机制。
+
+::: tip HTTP 协议的无状态性
+
+HTTP 协议的无状态性，指的是客户端的每次 HTTP 请求都是独立的，连续多个请求之间没有直接的关系，服务器不会主动保留每次 HTTP 请求的状态。
+
+:::
+
+::: tip Cookie
+
+Cookie 是存储在用户浏览器中的一段不超过 4 KB 的字符串。它由一个名称（Name）、一个值（Value）和其他几个用于控制 Cookie 有效期、安全性、使用范围的可选属性组成。
+
+不同域名下的 Cookie 各自独立，每当客户端发起请求时，会自动把当前域名下所有未过期的 Cookie 一同发送到服务器。
+
+Cookie 的几大特性：自动发送、域名独立、过期时限、4 KB 限制
+
+客户端第一次请求服务器的时候，服务器通过响应头的形式，向客户端发送一个身份认证的 Cookie，客户端会自动将 Cookie 保存在浏览器这种
+
+随后，当客户端浏览器每次请求服务器的时候，浏览器会自动将身份认证相关的 Cookie，通过请求头的形式发送给服务器，服务器即可验明客户端的身份。
+
+由于 Cookie 是存储在浏览器中的，而且浏览器也提供了读写 Cookie 的 AOI，因此 Cookie 很容易被伪造，不具有安全性。因此不建议服务器将虫咬的隐私数据，通过 Cookie 的形式发送给浏览器
+
+:::
+
+**Session 的工作原理**：
+
+![Session 的工作原理](/images/back-end/nodejs/session.png)
+
+在 Express 项目中，只需要安装 express-session 中间件，即可在项目中使用 Session 认证：
+
+```bash
+npm install express-session
+```
+
+express-session 中间件安装超过后，需要通过 `app.use()` 来注册 session 中间件：
+
+```javascript
+import session from "express-session";
+
+// 配置 Session 中间件
+app.use(
+  session({
+    secret: "itheima", // secret 属性的只可以为任意字符串
+    resave: false, // 固定写法
+    saveUninitialized: true, // 固定写法
+  }),
+);
+```
+
+当 express-session 中间件配置成功后，即可通过 `req.session` 来访问和使用 session 对象，从而存储用户的关键信息：
+
+```javascript
+// 登录的 API 接口
+app.post("/api/login", (req, res) => {
+  // 判断用户提交的登录信息是否正确
+  if (req.body.username !== "admin" || req.body.password != "000000") {
+    return res.send({ status: 1, msg: "登录失败" });
+  }
+  req.session.user = req.body; // 将用户的信息，存储到 Session 中
+  req.session.islogin = true; // 将用户的登录状态，存储到 Session 中
+  res.send({ status: 0, msg: "登录成功" });
+});
+```
+
+此时其他接口便可以直接从 `req.session` 对象上获取之前存储的数据：
+
+```javascript
+// 获取用户姓名的接口
+app.get("/api/username", (req, res) => {
+  if (!req.session.islogin) {
+    return res.send({ status: 1, msg: "fail" });
+  }
+  res.send({
+    status: 0,
+    msg: "success",
+    username: req.session.user.username,
+  });
+});
+```
+
+调用 `req.session.destroy()` 函数，即可清空服务器保存的 session 信息：
+
+```javascript
+// 退出登录的接口
+app.post("/api/logout", (req, res) => {
+  // 清空当前客户端对应的 session 信息
+  req.session.destroy();
+  res.send({
+    status: 0,
+    msg: "退出登录成功",
+  });
+});
+```
+
+::: warning 注意
+
+Session 认证机制需要配合 Cookie 才能实现。由于 Cookie 默认不支持跨域访问，所以，当涉及到前端跨域请求后端接口的时候，需要做很多额外的配置。才能实现跨域 Session 认证
+
+:::
+
+### JWT 认证机制
+
+当前端需要跨域请求后端接口的时候，不推荐使用 Session 身份认证机制，推荐使用 JWT 认证机制。
+
+**JWT**（JSON Web Token）是目前最流行的跨域认证解决方案。
+
+**JWT 的工作原理**：
+
+![JWT 的工作原理](/images/back-end/nodejs/jwt.png)
+
+用户的信息通过 Token 字符串的形式，保存在客户端浏览器中。服务器通过还原 Token 字符串的形式来认证用户的身份。
+
+JWT 通常由三部分组成，分别是 **Header**（头部）、**Payload**（有效荷载）、**Signature**（签名），三者之间使用英文的 "." 分隔：
+
+```
+Header.Payload.Signature
+```
+
+- **Payload**：真正的用户信息，是用户信息经过加密之后生成的字符串
+
+- **Header** 和 **Signature**：安全性相关的部分，只是为了保证 Token 的安全性
+
+当客户端收到服务器返回的 JWT 之后，通常会将它存储在 localStorage 或 sessionStorage 中。此后，客户端每次与服务器通信，都要带上这个 JWT 的字符串，从而进行身份认证。推荐的做法是把 JWT 放在 HTTP 请求头的 Authorization 字段中，格式如下：
+
+```
+Authorization: Bearer <token>
+```
+
+在 Express 中使用 JWT，需要安装如下两个 JWT 相关的包并导入：
+
+```bash
+npm install jsonwebtoken express-jwt
+```
+
+- **jsonwebtoken**：用于生成 JWT 字符串
+
+- **express-jwt**：用于将 JWT 字符串解析还原成 JSON 对象
+
+为了保证 JWT 字符串的安全性，防止 JWT 字符串在网络传输过程中被别人破解，我们需要专门定义一个用于加密和解密的 secret 密钥：
+
+- 当生成 JWT 字符串的时候，需要使用 secret 密钥对用户的信息进行加密，最终得到加密好的 JWT 字符串
+
+- 当把 JWT 字符串解析还原成 JSON 对象的时候，需要使用 secret 密钥进行解密
+
+```javascript
+// secret 密钥的本质：一个字符串
+const secretKey = "itheima";
+```
+
+在登录成功后，调用 jsonwebtoken 包提供的 `sign()` 方法，将用户的信息加密成 JWT 字符串，响应给客户端：
+
+```javascript
+import jwt from "jsonwebtoken";
+
+// 登录接口
+app.post("/api/login", (req, res) => {
+  // ...
+  // 用户登录成功之后，生成 JWT 字符串，通过 token 属性响应给客户端
+  const userinfo = req.body;
+  res.send({
+    status: 200,
+    msg: "登录成功",
+    // 调用 jwt.sign() 生成 JWT 字符串，三个参数分别是：用户信息对象、加密密钥、配置对象
+    token: jwt.sign({ username: userinfo.username }, secretKey, {
+      expiresIn: "30s",
+    }),
+  });
+});
+```
+
+- **参数 1**：用户的信息对象
+
+- **参数 2**：加密的密钥
+
+- **参数 3**：配置对象，可以配置当前 token 的有效期
+
+客户端每次在访问那些有权限接口的时候，都需要主动通过请求头中的 Authorization 字段，将 Token 字符串发送到服务器进行身份认证。此时服务器可以通过 express-jwt 这个中间件，自动将客户端发送过来的 Token 解析还原成 JSON 对象：
+
+```javascript
+import { expressjwt } from "express-jwt";
+
+app.use(
+  expressJWT({ secret: secretKey, algorithms: ["HS256"] }).unless({
+    path: [/^\/api\//],
+  }),
+);
+```
+
+- **expressJwt()**：用来解析 Token 的中间件
+
+- **unless()**：用来指定哪些接口不需要访问权限
+
+当 express-jwt 这个中间件配置成功之后，即可在那些有权限的接口中，使用 `req.auth` 对象，来访问从 JWT 字符串中解析出来的用户信息了：
+
+```javascript
+// 一个有权限的 API 接口
+app.get("/admin/getinfo", (req, res) => {
+  res.send({
+    status: 200,
+    msg: "获取用户信息成功",
+    data: req.auth,
+  });
+});
+```
+
+::: warning 注意
+
+不要把密码加密到 token 字符串中
+
+:::
+
+当使用 express-jwt 解析 Token 字符串时，如果客户端发送过来的 Token 字符串过期或不合法，会产生一个解析失败的错误，影响项目的正常运行。我们可以通过 Express 的错误中间件，捕获这个错误并进行相关的处理：
+
+```javascript
+app.use((err, req, res, next) => {
+  // token 解析失败导致的错误
+  if (err.name === "UnauthorizedError") {
+    return res.send({ status: 401, msg: "无效的 token" });
+  }
+  // 其他原因导致的错误
+  res.send({ status: 500, msg: "未知错误" });
+});
+```
