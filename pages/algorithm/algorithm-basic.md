@@ -1096,11 +1096,47 @@ int main(){
 
 例题：[P1678 烦恼的高考志愿](https://www.luogu.com.cn/problem/P1678)
 
-::: danger 警告
+```c++
+#include<bits/stdc++.h>
+using namespace std;
 
-该部分尚未完工!
+const int N = 1e5+10;
 
-:::
+int m,n;
+int a[N];
+
+
+int main(){
+    cin>>m>>n;
+    memset(a,0x3F,sizeof(a));
+    for(int i =1;i<=m;i++)cin>>a[i];
+    sort(a+1,a+m+1);
+    long long sum=0;
+    for(int i =1;i<=n;i++){
+        int b;
+        cin>>b;
+        int l=1,r=m;
+        while(l<r){
+            int mid = (l+r)/2;
+            if(a[mid]==b){
+                l=mid;
+                r=mid;
+                break;
+            }
+            else if(a[mid]>b){
+                r=mid;
+            } else{
+                l=mid+1;
+            }
+        }
+        int res;
+        if(a[l]<b)res=min(abs(a[l]-b),abs(a[l+1]-b));
+        else res=min(abs(a[l-1]-b),abs(a[l]-b));
+        sum+=res;
+    }
+    cout<<sum;
+}
+```
 
 ### 二分答案
 
@@ -1575,11 +1611,88 @@ int main() {
 
 例题：[P10457 占卜DIY](https://www.luogu.com.cn/problem/P10457)
 
-::: danger 警告
+```c++
+#include<bits/stdc++.h>
+using namespace std;
+typedef pair<bool, char> pbc;
 
-该部分尚未完工!
+deque<pbc> de[13];
 
-:::
+void solve(char ch){
+    if(ch=='A'){
+        de[0].push_front({true,'A'});
+        char newch = de[0].back().second;
+        de[0].pop_back();
+        solve(newch);
+    } else if(ch-'0'>=1&&ch-'0'<=9){
+        int idx = ch-'0' - 1;
+        de[idx].push_front({true,ch});
+        char newch = de[idx].back().second;
+        de[idx].pop_back();
+        solve(newch);
+    } else if(ch=='0'){
+        de[9].push_front({true,'0'});
+        char newch = de[9].back().second;
+        de[9].pop_back();
+        solve(newch);
+    } else if(ch=='J'){
+        de[10].push_front({true,'J'});
+        char newch = de[10].back().second;
+        de[10].pop_back();
+        solve(newch);
+    } else if(ch=='Q'){
+        de[11].push_front({true,'Q'});
+        char newch = de[11].back().second;
+        de[11].pop_back();
+        solve(newch);
+    } else if(ch=='K'){
+        return;
+    }
+}
+
+int main(){
+    for(int i = 0;i<13;i++){
+        for(int j = 0;j<4;j++){
+            char a;
+            cin>>a;
+            de[i].push_back({false,a});
+        }
+    }
+    for(int i = 0;i<4;i++){
+        char ch = de[12].front().second;
+        de[12].pop_front();
+        if(ch=='K')continue;
+        solve(ch);
+    }
+    int res = 0;
+    for(int i = 0;i<12;i++){
+        bool sign = true;
+        char flag;
+        switch(i){
+            case 0:
+                flag = 'A';
+                break;
+            case 9:
+                flag = '0';
+                break;
+            case 10:
+                flag = 'J';
+                break;
+            case 11:
+                flag = 'Q';
+                break;
+            default:
+                flag = '1'+i;
+                break;
+        }
+        for(auto j : de[i]){
+            if(!j.first||j.second!=flag)sign = false;
+        }
+        if(sign)res++;
+    }
+    cout<<res<<endl;
+}
+```
 
 例题：[P1087 [NOIP 2004 普及组] FBI 树](https://www.luogu.com.cn/problem/P1087)
 
