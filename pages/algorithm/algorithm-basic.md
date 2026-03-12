@@ -1696,11 +1696,44 @@ int main(){
 
 例题：[P1087 [NOIP 2004 普及组] FBI 树](https://www.luogu.com.cn/problem/P1087)
 
-::: danger 警告
+```c++
+#include<bits/stdc++.h>
+using namespace std;
 
-该部分尚未完工!
+struct node{
+    char type;
+    int lchild;
+    int rchild;
+};
 
-:::
+vector<node> li;
+string str;
+int length;
+int n;
+
+int make(string s){
+    if(s.size()==1){
+        li.push_back({s=="0"?'B':'I',-1,-1});
+        length++;
+        return length-1;
+    }
+    int left = make(s.substr(0,s.size()/2));
+    int right = make(s.substr(s.size()/2,s.size()-1));
+    char type = li[left].type == li[right].type ? li[left].type: 'F';
+    li.push_back({type,left,right});
+    length++;
+    return length - 1;
+}
+
+int main(){
+    cin>>n;
+    cin>>str;
+    make(str);
+    for(auto i: li){
+        cout<<i.type;
+    }
+}
+```
 
 ## 分治
 
@@ -1754,11 +1787,59 @@ int main() {
 
 例题：[P1923 【深基9.例4】求第 k 小的数](https://www.luogu.com.cn/problem/P1923)
 
-::: danger 警告
+```c++
+#include<bits/stdc++.h>
+using namespace std;
 
-该部分尚未完工!
+typedef long long ll;
 
-:::
+const int N = 5e6+10;
+
+int n,k;
+ll a[N];
+ll mi[N];
+
+void sort(int l,int r){
+    if(l==r)return;
+    int mid = (l+r)/2;
+    sort(l,mid);
+    sort(mid+1,r);
+    int lptr=l,rptr = mid+1,idx = l;
+    while(lptr<=mid&&rptr<=r){
+        if(a[lptr]<=a[rptr]){
+            mi[idx] = a[lptr];
+            lptr++;
+        } else{
+            mi[idx] = a[rptr];
+            rptr++;
+        }
+        idx++;
+    }
+    while(lptr<=mid){
+        mi[idx]=a[lptr];
+        idx++;
+        lptr++;
+    }
+    while(rptr<=r){
+        mi[idx]=a[rptr];
+        idx++;
+        rptr++;
+    }
+    for(int i = l;i<=r;i++)a[i] = mi[i];
+}
+
+int main(){
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+    cout.tie(nullptr);
+    cin>>n>>k;
+    for(int i=1;i<=n;i++){
+        cin>>a[i];
+    }
+    sort(1,n);
+    cout<<a[k+1]<<endl;
+}
+```
 
 例题：[P1115 最大子段和](https://www.luogu.com.cn/problem/P1115)
 
