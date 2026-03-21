@@ -279,6 +279,29 @@ int result = switch (expression) {
 
 这种写法表示将语句结果返回给 `result`。
 
+### 相等与同一
+
+当我们使用通常的等号 `==` 来判断两个对象是否相等时，实际上判断的是这两个对象是否同一。
+
+::: details 具体示例
+
+```java
+public class Demo {
+  public static void main(String[] args) {
+    Student s1 = new Student("张三");
+    Student s2 = new Student("张三");
+    Student s3 = s1;
+    System.out.println(s1 == s2); // false
+    System.out.println(s1 == s3); // true
+    System.out.println(s1.equals(s2)); // true
+  }
+}
+```
+
+:::
+
+如果想判断两个对象的属性值是否相等，通常的办法是使用 `equals()` 方法进行判断。
+
 ## 数组
 
 ::: danger 警告
@@ -384,6 +407,14 @@ public class Memory{
 
 :::
 
+### 类的分类
+
+**Javabean 类**：描述一类事物的类
+
+**抽象类**：就是不能使用 new 方法进行初始化的类，即没有具体实例对象的类
+
+**工具类**：不是用来描述一类事物的，也没有 `main` 方法，而是帮我们做一些事情的类
+
 ### 类的声明
 
 类的声明语法形式如下：
@@ -484,7 +515,138 @@ class Student {
 
 :::
 
+### 传递对象
+
+把一个对象传递给方法，实际传递的是对象的**内存地址**。
+
+当多个变量指向同一个对象的时候，只要有一个变量修改了对象中的属性，其它变量再次访问就是修改之后的结果了。
+
+```java
+public class Memory{
+  public static void main(String[] args) {
+    Student stu = new Student();
+    stu.name = "张三";
+    stu.age = 18;
+    sout.println(stu.name + " " + stu.age);
+    change(stu);
+    sout.println(stu.name + " " + stu.age);
+  }
+
+  public static void change(Student stu) {
+    stu.name = "李四";
+    stu.age = 19;
+  }
+}
+
+```
+
+### 继承
+
+继承是类与类之间的一种父子关系，Java 中提供关键字 **extends**，用于建立类与类之间的关系。
+
+通过继承，可以根据已有类来定义新类，新类拥有已有类的所有成员，且可以增加自己的新成员。
+
+Java 只支持类的单继承，每个子类（派生类）只能有一个直接父类（或叫做基类/超类）。
+
+父类是所有子类的公共属性及方法的集合，子类则是父类的特殊化。
+
+继承的语法形式如下：
+
+```java
+[ClassModifier] class 子类 [extends 父类]{
+  // 类体
+}
+```
+
+::: details 具体示例
+
+```java
+public class Student extends Person { }
+```
+
+:::
+
+::: tip 继承的好处
+
+- 可以把多个子类中重复的代码抽取到父类中，提高代码的复用性
+
+- 子类可以在父类的基础上，增加其它的功能，使子类更强大
+
+:::
+
+::: warning 继承的特点
+
+- Java 只支持单继承，不支持多继承，但支持多层继承
+
+- Java 中的类都默认继承于顶级父类 `Object`
+
+:::
+
+::: details 如何实设计继承结构
+
+- 当类与类之间，存在相同（共性）的内容，并满足子类是父类中的一种，就可以考虑使用继承，来优化代码。
+
+:::
+
 ### 关键字
+
+- `static`：表示**静态**，用来修饰成员变量/成员方法。
+  - `static` 修饰成员变量，叫做静态变量，被该类所有对象共享
+  - `static` 修饰成员方法，叫做静态方法，多用在测试类和工具类中，Javabean 类中很少会用
+
+::: details 具体示例：静态变量
+
+```java
+public class Student {
+  String name;
+  int age;
+  static String teacherName;
+}
+
+public static void main(String[] args) {
+  Student stu = new Student();
+  stu.name = "张三";
+  stu.age = 18;
+  Student.teacherName = "张三"; // 类名调用静态变量（推荐）
+  stu.teacherName = "张三"; // 对象名调用静态变量
+}
+```
+
+:::
+
+::: details 具体示例：静态方法
+
+```java
+public class ArrayUtils {
+  private ArrayUtils() {}
+  public static int getMax(int[] arr) {}
+}
+
+public static void main(String[] args) {
+  int[] arr = {1, 2, 3, 4, 5};
+  int max = ArrayUtils.getMax(arr);
+}
+```
+
+:::
+
+::: tip static 关键字的内存解析
+
+- 静态变量不属于某个对象，而是属于整个类的
+
+- 静态变量是随着类的加载而加载的，优先于对象出现的。因此可以在任意对象创建前为静态变量赋值。
+
+:::
+
+::: warning 静态的注意事项
+
+- 静态方法只能访问静态变量和其它的静态方法
+
+- 非静态方法可以访问静态变量或者静态方法，也可以访问非静态的成员变量和非静态的成员方法
+
+- 静态方法中没有 `this` 关键字
+
+:::
 
 - `private`：是一个权限修饰符，可以修饰成员变量和成员方法。一旦被 `private` 修饰，只能在本类中才能访问，外界无法访问。
 
@@ -495,6 +657,8 @@ class Student {
   private String name;
 }
 ```
+
+:::
 
 - `this`：一个对象引用，表示当前对象，直接使用成员变量加 `this` 前缀
 
@@ -508,6 +672,35 @@ class Student {
   }
 }
 ```
+
+:::
+
+::: tip this 的本质
+
+`this` 代表所在方法**调用者**的内存地址
+
+:::
+
+- `super`：一个对象引用，表示父类对象，直接使用成员变量加 `super` 前缀
+
+::: details 具体示例
+
+```java
+public class Fu{
+  String name = "Fu";
+}
+public class Zi extends Fu{
+  String name = "Zi";
+  public void show(){
+    String name = "ziShow";
+    System.out.println(name); // ziShow
+    System.out.println(this.name); // zi
+    System.out.println(super.name); // Fu
+  }
+}
+```
+
+:::
 
 ## 包
 
