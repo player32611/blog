@@ -537,8 +537,60 @@ public class Memory{
     stu.age = 19;
   }
 }
-
 ```
+
+### 枚举类
+
+当对象的个数是有限个时，就不能用以前的 Javabean 类的形式来定义对象。
+
+**枚举**是一个特殊的 Javabean 类，这个类的对象是有限个。
+
+枚举类声明语法形式如下：
+
+```java
+public enum 枚举类名 {
+  枚举项1,枚举项2,枚举项3, ...
+  // 枚举类成员
+}
+```
+
+::: details 具体示例
+
+```java
+public enum Season {
+  SPRING("春天"), SUMMER("夏天"), AUTUMN("秋天"), WINTER("冬天");
+  private String name;
+
+  private Season(String name) {
+    this.name = name;
+  }
+}
+
+Season s = Season.SPRING;
+```
+
+:::
+
+::: warning 枚举类的注意事项
+
+- 每一个枚举项，都是该枚举类的对象
+
+- 枚举项在底层其实就是常量，默认使用 `public`、`static`、`final` 修饰
+
+- 枚举类的第一行上必须是枚举项，枚举项之间用逗号隔开，以分号作为结尾
+
+- 枚举类的构造方法必须是 `private` 修饰，不让外界创建本类的对象
+
+- 编译器会给枚举类新增两个默认存在的方法：`values()`、`valueOf()`
+
+- `values()` 方法表示获取本类所有的枚举项，`valueOf()` 方法表示获取一个指定的枚举项
+
+```java
+Season[] arr = Season.values();
+Season s = Season.valueOf("SPRING");
+```
+
+:::
 
 ### 继承
 
@@ -645,6 +697,18 @@ public static void main(String[] args) {
 - 非静态方法可以访问静态变量或者静态方法，也可以访问非静态的成员变量和非静态的成员方法
 
 - 静态方法中没有 `this` 关键字
+
+:::
+
+- `final`：可以修饰变量、类、方法
+  - `final` 修饰变量：表示该变量只能赋值一次、数据不可变、通常用大写字母表示、多个单词下划线隔开
+
+::: details 具体示例
+
+```java
+final String NUMBER = 100;
+final int MAX_SIZE = 100;
+```
 
 :::
 
