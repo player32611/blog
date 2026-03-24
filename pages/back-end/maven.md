@@ -253,3 +253,56 @@ public void testGenderWithAssert2(){
 :::
 
 ### 常见注解
+
+在 JUnit 中还提供了一些注解，还增强其功能，常见的注解有以下几个：
+
+|         注解         |                                说明                                |                备注                 |
+| :------------------: | :----------------------------------------------------------------: | :---------------------------------: |
+|       `@Test`        |        测试类中的方法用它修饰才能成为测试方法，才能启动执行        |              单元测试               |
+| `@ParameterizedTest` | 参数化测试的注解（可以让单个测试运行很多次，每次运行时仅参数不同） | 用了该注解，就不需要 `@Test` 注解了 |
+|    `@ValueSource`    |               参数化测试的参数来源，赋予测试方法参数               |      与参数化测试注解配合使用       |
+|    `@DisplayName`    |        指定测试类、测试方法显示的名称（默认为类名、方法名）        |                                     |
+|    `@BeforeEach`     |     用来修饰一个实例方法，该方法会在每一个测试方法之前执行一次     |       初始化资源（准备工作）        |
+|     `@AfterEach`     |     用来修饰一个实例方法，该方法会在每一个测试方法之后执行一次     |        释放资源（清理工作）         |
+|     `@BeforeAll`     |     用来修饰一个静态方法，该方法会在所有测试方法之前只执行一次     |       初始化资源（准备工作）        |
+|     `@AfterAll`      |     用来修饰一个静态方法，该方法会在所有测试方法之后只执行一次     |        释放资源（清理工作）         |
+
+::: details 具体示例
+
+```java
+// test/java/com.xxx.xxx/UserServiceTest.java
+
+@DisplayName("用户服务测试类")
+public class UserServiceTest {
+  @BeforeAll
+  public static void beforeAll() {
+    System.out.println("所有测试开始执行之前执行");
+  }
+
+  @AfterAll
+  public static void afterAll() {
+    System.out.println("所有测试执行完毕之后执行");
+  }
+
+  @BeforeEach
+  public void beforeEach() {
+    System.out.println("每个测试开始执行之前执行");
+  }
+
+  @AfterEach
+  public void afterEach() {
+    System.out.println("每个测试执行完毕之后执行");
+  }
+
+  @DisplayName("测试获取性别")
+  @ParameterizedTest
+  @ValueSource(strings = {"100000200010011011", "110002200505091218","120002200505091218"})
+  public void testGetGender(String idCard){
+    UserService userService = new UserService();
+    String gender = userService.getGender(idCard);
+    Assertions.assertEquals("男", gender, "性别测试失败！");
+  }
+}
+```
+
+:::
