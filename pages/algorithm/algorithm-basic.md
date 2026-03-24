@@ -943,11 +943,53 @@ int main() {
 
 例题：[P1638 逛画展](https://www.luogu.com.cn/problem/P1638)
 
-::: danger 警告
+```c++
+#include<bits/stdc++.h>
+using namespace std;
 
-该部分尚未完工!
+const int N = 1e6+10;
 
-:::
+int n,m;
+int a[N];
+int x,y;
+unordered_map<int,int> mp;
+int res = INT_MAX;
+
+bool isAll(){
+    for(auto i : mp)if(i.second<=0)return false;
+    return true;
+}
+
+int main(){
+    cin>>n>>m;
+    for(int i = 1;i<=n;i++)cin>>a[i];
+    for(int i = 1;i<=m;i++)mp.insert({i,0});
+    int l = 1,r =1;
+    while(r<=n){
+        if(isAll())break;
+        mp[a[r]]++;
+        r++;
+    }
+    if(r>n){
+        cout<<l<<" "<<r-1<<endl;
+        return 0;
+    }
+    while(r<=n){
+        while(mp[a[l]]>1){
+            mp[a[l]]--;
+            l++;
+        }
+        if(res>r-l+1){
+            res = r-l+1;
+            x = l;
+            y = r - 1;
+        }
+        mp[a[r]]++;
+        r++;
+    }
+    cout<<x<<" "<<y;
+}
+```
 
 例题：[P14171 【MX-X23-T1】丢手绢](https://www.luogu.com.cn/problem/P14171)
 
