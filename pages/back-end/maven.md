@@ -1,11 +1,5 @@
 # Maven
 
-::: danger 警告
-
-该页面尚未完工!
-
-:::
-
 ::: details 目录
 
 [[toc]]
@@ -306,3 +300,31 @@ public class UserServiceTest {
 ```
 
 :::
+
+### 依赖范围
+
+依赖的 jar 包，默认情况下，可以在任何地方使用。可以通过 `<scope>` 标签设置其作用范围
+
+作用范围：
+
+- 主程序范围有效（main 文件夹范围内）
+
+- 测试程序范围有效（test 文件夹范围内）
+
+- 是否参与打包运行（package 指令范围内）
+
+|    scope 值     | 主程序 | 测试程序 | 打包（运行） |    范例     |
+| :-------------: | :----: | :------: | :----------: | :---------: |
+| compile（默认） |   √    |    √     |      √       |    log4j    |
+|      test       |   -    |    √     |      -       |    jUnit    |
+|    provided     |   √    |    √     |      -       | servlet-api |
+|     runtime     |   -    |    √     |      √       |  jdbc 驱动  |
+
+```xml 5
+<dependency>
+  <groupId>org.junit.jupiter</groupId>
+  <artifactId>junit-jupiter</artifactId>
+  <version>5.9.3</version>
+  <scope>test</scope>
+</dependency>
+```
