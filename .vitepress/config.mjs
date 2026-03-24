@@ -47,6 +47,7 @@ export default defineConfig({
 					{ text: "Java", link: "/pages/back-end/java" },
 					{ text: "Node.js", link: "/pages/back-end/nodejs" },
 					{ text: "Maven", link: "/pages/back-end/maven" },
+					{ text: "Spring Boot", link: "/pages/back-end/springboot" },
 				],
 			},
 			{
