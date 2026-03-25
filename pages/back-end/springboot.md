@@ -766,3 +766,259 @@ class SpringbootMybatisApplicationTests {
 Mybatis 的持久层接口命名规范为 XxxMapper，也称为 Mapper 接口
 
 :::
+
+::: tip 日志输出
+
+默认情况下，在 Mybatis 中，SQL 语句执行时，我们并看不到 SQL 语句的执行日志。在 `application.properties` 加入如下配置，即可查看日志：
+
+```properties
+mybatis.configuration.log-impl=org.apache.ibatis.logging.stdout.StdOutImpl
+```
+
+:::
+
+### 数据库连接池
+
+**数据库连接池**是一个容器，负责分配、管理数据库连接
+
+它允许应用程序重复使用一个现有的数据库连接，而不是再重新建立一个
+
+释放空闲时间超过最大空闲时间的连接，来避免因为没有释放连接而引起的数据库连接遗漏
+
+::: tip 使用数据库连接池的优势
+
+- 资源重用
+
+- 提升系统响应速度
+
+- 避免数据库连接遗漏
+
+:::
+
+官方提供了一个标准的数据库连接池接口 `DataSource`，用于获取连接，由第三方组织实现此接口
+
+普通的 SpringBoot 项目，默认使用的是 Hikari 数据库连接池。如果想要切换为其他连接池（例如 Druid），可进行以下配置：
+
+**引入依赖**：
+
+```xml
+<dependency>
+  <groupId>com.alibaba</groupId>
+  <artifactId>druid-spring-boot-starter</artifactId>
+  <version>1.2.19</version>
+</dependency>
+```
+
+**配置连接池**：
+
+```properties
+spring.datasource.type=com.alibaba.druid.pool.DruidDataSource
+```
+
+### 增删改查
+
+::: details 具体示例：删除用户
+
+**需求**：根据 ID 删除用户信息
+
+**SQL**：`delete from users where id = 5`
+
+**Mapper 接口**：
+
+```java
+@Mapper
+public interface UserMapper {
+  // ...
+
+  @Delete("delete from users where id = #{id}")
+  public Integer deleteById(Integer id);
+
+  // ...
+}
+```
+
+**测试**：
+
+```java
+@SpringBootTest
+class SpringbootMybatisApplicationTests {
+
+    @Autowired
+    private UserMapper userMapper;
+
+    // ...
+
+    @Test
+    public void testDeleteById() {
+        Integer i = userMapper.deleteById(1);
+        System.out.println("执行完毕，影响的记录数："+ i);
+    }
+
+    // ...
+}
+```
+
+DML 语句执行完毕的返回值，表示该 DML 语句执行完毕影响的行数
+
+:::
+
+::: details 具体示例：添加用户
+
+**需求**：添加一个用户
+
+**SQL**：`insert into users (name,password,avator,role_id,balance) values("hcb", '123456', 'https://666', 1, 114514)`
+
+**Mapper 接口**：
+
+```java
+@Mapper
+public interface UserMapper {
+  // ...
+
+    @Insert("insert into users (name,password,avatar,role_id,balance) values(#{name}, #{password}, #{avatar}, #{role_id},#{balance})")
+    public void insertUser(User user);
+
+  // ...
+}
+```
+
+**测试**：
+
+```java
+@SpringBootTest
+class SpringbootMybatisApplicationTests {
+
+    @Autowired
+    private UserMapper userMapper;
+
+    // ...
+
+    @Test
+    public void testInsertUser() {
+        User user = new User(null, "小王", "123456", "https://picsum.photos/200/300", 1, 0);
+        userMapper.insertUser(user);
+    }
+
+    // ...
+}
+```
+
+当参数过多时，可以将所有参数封装到一个对象中，`#{}` 中为响应的对象属性名
+
+:::
+
+::: details 具体示例：更新用户
+
+**需求**：根据 ID 更新用户信息
+
+**SQL**：`update users set name = "小王", password = "123456", avator = "https://666", role_id = 1, balance = 114514 where id = 5`
+
+**Mapper 接口**：
+
+```java
+@Mapper
+public interface UserMapper {
+    // ...
+
+    @Update("update users set name = #{name}, password = #{password}, avatar = #{avatar}, role_id = #{role_id}, balance = #{balance} where id = #{id}")
+    public void updateUser(User user);
+
+    // ...
+}
+```
+
+**测试**：
+
+```java
+@SpringBootTest
+class SpringbootMybatisApplicationTests {
+
+    @Autowired
+    private UserMapper userMapper;
+
+    // ...
+
+    @Test
+    public void testUpdateUser() {
+        User user = new User(1, "小王", "123456", "https://picsum.photos/200/300", 1, 0);
+        userMapper.updateUser(user);
+    }
+
+    // ...
+}
+```
+
+:::
+
+::: details 具体示例：查询用户
+
+**需求**：根据用户名和密码查询用户信息
+
+**SQL**：`select * from users where name = "hcb" and password = "123456"`
+
+**Mapper 接口**：
+
+```java
+@Mapper
+public interface UserMapper {
+    // ...
+
+    @Select("select * from users where name = #{name} and password = #{password}")
+    public User findByNameAndPassword(@Param("name") String name, @Param("password") String password);
+
+    // ...
+}
+```
+
+**测试**：
+
+```java
+@SpringBootTest
+class SpringbootMybatisApplicationTests {
+
+    @Autowired
+    private UserMapper userMapper;
+
+    // ...
+
+    @Test
+    public void testFindByNameAndPassword() {
+        User user = userMapper.findByNameAndPassword("小王", "123456");
+        System.out.println(user);
+    }
+
+    // ...
+}
+```
+
+如果接口方法形参中，需要传递多个参数，需要通过 `@Param` 注解为参数起名字
+
+:::
+
+::: tip 说明
+
+在基于官方骨架创建的 springboot 项目中，接口编译时会保留方法形参名，`@Param` 注解可以省略
+
+```java
+@Select("select * from users where name = #{name} and password = #{password}")
+public User findByNameAndPassword(String name, String password);
+```
+
+:::
+
+::: tip Mybatis 中的 `#` 号和 `$` 号
+
+|   符号   |                               说明                               |            场景            |     优缺点     |
+| :------: | :--------------------------------------------------------------: | :------------------------: | :------------: |
+| `#{...}` | 占位符。执行时，会将 `#{...}` 替换为 `?`，生成预编译 SQL（推荐） |         参数值传递         |  安全、性能高  |
+| `${...}` |      拼接符。直接将参数拼接在 SQL 语句中，存在 SQL 注入问题      | 表名、字段名动态设置时使用 | 不安全、性能低 |
+
+```java
+@Delete("delete from dept where id = #{id}")
+```
+
+```java
+@Select("select  id,name,score from ${tableName} order by ${sortField}")
+```
+
+:::
