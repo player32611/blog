@@ -551,3 +551,146 @@ public class UserController {
 - `@Autowired` 是默认按照类型注入，而 `@Resource` 默认是按照名称注入
 
 :::
+
+## JDBC
+
+**JDBC**（Java DataBase Connectivity），就是使用 Java 语言操作关系型数据库的一套 API
+
+::: tip JDBC 的本质
+
+- sum 公司官方定义的一套操作所有关系型1数据库的规范，即接口
+
+- 各个数据库厂商去实现这套接口，提供数据库驱动 jar 包
+
+- 我们可以使用这套接口（JDBC）编程，真正执行的代码时驱动 jar 包中的实现类
+
+:::
+
+### JDBC 快速入门
+
+**需求**：基于 JDBC 程序，执行 update 语句（update user set age = 25 where id = 1）
+
+**准备工作**：创建一个 maven 项目，引入依赖；并准备数据库表 user
+
+```xml
+<dependency>
+  <groupId>com.mysql</groupId>
+  <artifactId>mysql-connector-j</artifactId>
+  <version>8.0.33</version>
+</dependency>
+```
+
+**代码实现**：编写 JDBC 程序，操作数据库
+
+```java
+@Test
+public void testUpdate() throws Exception {
+  // 注册驱动
+  Class.forName("com.mysql.cj.jdbc.Driver");
+  // 获取数据库连接
+  String url = "jdbc:mysql://localhost:3306/shopping";
+  String username = "root";
+  String password = "1234";
+  Connection connection = DriverManager.getConnection(url, username, password);
+  // 获取 SQL 语句执行对象
+  Statement statement = connection.createStatement();
+  // 执行 SQL
+  int i =  statement.executeUpdate("update user set name='hcb' where id=1");
+  System.out.println("SQL 执行完毕影响的记录数为："+i);
+  // 释放资源
+  statement.close();
+  connection.close();
+}
+```
+
+### JDBC 查询数据
+
+**需求**：基于 JDBC 程序，执行 select 语句，将查询结果封装到 User 对象中
+
+**SQL**：`select * from users where username = 'hcb' and password = '123456'`
+
+```java
+@Test
+public void testSelect() {
+    String url = "jdbc:mysql://localhost:3306/shopping";
+    String username = "root";
+    String password = "hcb326630";
+
+    Connection conn = null;
+    PreparedStatement stmt = null;
+    ResultSet rs = null; // 封装查询返回的结果
+
+    try {
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        conn = DriverManager.getConnection(url, username, password);
+
+        String sql = "SELECT id, name, password, avatar, role_id, balance FROM users WHERE name = ? AND password = ?"; // 预编译 SQL
+        stmt = conn.prepareStatement(sql);
+        stmt.setString(1, "hcb");
+        stmt.setString(2, "123456");
+        rs = stmt.executeQuery();
+
+        while (rs.next()) {
+            User user = new User(
+                    rs.getInt("id"),
+                    rs.getString("name"),
+                    rs.getString("password"),
+                    rs.getString("avatar"),
+                    rs.getInt("role_id"),
+                    rs.getInt("balance")
+            );
+            System.out.println(user);
+        }
+    } catch (SQLException se){
+        se.printStackTrace();
+    } catch (Exception e){
+        e.printStackTrace();
+    } finally {
+        try{
+            if(rs!= null) rs.close();
+            if(stmt!= null) stmt.close();
+            if(conn!= null) conn.close();
+        } catch (SQLException se){
+            se.printStackTrace();
+        }
+    }
+}
+```
+
+::: tip ResultSet（结果集对象）
+
+- **next()**：将光标从当前位置向前移动一行，并判断当前行是否为有效行，返回值为 boolean
+  - **true**：有效行，当前行有数据
+  - **false**：无效行，当前行没有数据
+
+- **getXxx(...)**：获取数据，可以根据列的编号获取，也可以根据列名获取
+
+结果解析步骤：
+
+```java
+while(resultSet.next()){
+  int id = resultSet.getInt("id");
+  // ...
+}
+```
+
+:::
+
+### 预编译 SQL
+
+```java
+PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM users WHERE username = ? AND password = ?");
+pstmt.setString(1, "hcb");
+pstmt.setString(2, "123456");
+ResultSet resultSet = pstmt.executeQuery();
+```
+
+优势一：可以防止 SQL 注入，更安全
+
+::: tip SQL 注入
+
+通过控制输入来修改事先定义好的 SQL 语句，以达到执行代码对服务器进行攻击的方法
+
+:::
+
+优势二：性能更高
