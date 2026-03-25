@@ -347,3 +347,207 @@ public class UserController {
 ```
 
 :::
+
+### IOC详解
+
+要把某个对象交给 IOC 容器管理，需要在对应的类上加上如下注解之一：
+
+|    注解     |         说明          |                        位置                         |
+| :---------: | :-------------------: | :-------------------------------------------------: |
+| @Component  | 声明 bean 的基础注解  |             不属于以下三类时，用此注解              |
+| @Controller | @Component 的衍生注解 |                  标注在控制层类上                   |
+|  @Service   | @Component 的衍生注解 |                  标注在业务层类上                   |
+| @Repository | @Component 的衍生注解 | 标注在数据访问层类上（由于与 mybatis 整合，用的少） |
+
+::: code-group
+
+```java [UserDaoImpl.java] 1
+@Repository // 将当前类交给 IOC 容器管理
+public class UserDaoImpl implements UserDao {
+
+    @Override
+    public List<String> findAll(){
+        InputStream in = this.getClass().getClassLoader().getResourceAsStream("user.txt");
+        ArrayList<String> lines = IOUtils.reafLines(in, StandardCharsets.UTF_8,new ArrayList<>());
+        return lines;
+    }
+}
+```
+
+```java [UserServiceImpl.java] 1
+@Service // 将当前类交给 IOC 容器管理
+public class UserServiceImpl implements UserService {
+
+    @Autowired // 应用程序运行时，会自动的查询该类型的 bean 对象，并赋值给该成员变量
+    private UserDao userDao;
+
+    @Override
+    public List<User> findAll(){
+        // 调用 dao，获取数据
+        List<User> lines = userDao.findAll();
+
+        // 解析用户信息，封装为 User 对象 -> list 集合
+        List<User> userList = lines.stream().map(line->{
+            String[] parts = line.split(",");
+            Integer id = Integer.parseInt(parts[0]);
+            String username = parts[1];
+            String password = parts[2];
+            String name = parts[3];
+            Integer age = Integer.parseInt(parts[4]);
+            LocalDateTime updateTime = LocalDateTime.parse(parts[5], DateTimeFormatter.ofPattern("yyyy-MM-dd H"));
+            return new User(id,username,password,name,age,updateTime);
+        }).toList();
+
+        return userList;
+    }
+}
+```
+
+```java [UserController.java] 1
+@RestController
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    @RequestMapping("/list")
+    public List<User> list() throws Exception{
+        // 调用 service，获取数据
+        List<User> userList = userService.findAll();
+
+        // 返回数据(json)
+        return userList;
+    }
+}
+```
+
+:::
+
+::: tip 提示
+
+声明 bean 的时候，可以通过注解的 value 属性指定 bean 的名字。如果没有指定，默认为类名首字母小写。
+
+```java
+@Repository("userDao")
+public class UserDaoImpl implements UserDao {
+
+    @Override
+    public List<String> findAll(){
+        InputStream in = this.getClass().getClassLoader().getResourceAsStream("user.txt");
+        ArrayList<String> lines = IOUtils.reafLines(in, StandardCharsets.UTF_8,new ArrayList<>());
+        return lines;
+    }
+}
+```
+
+:::
+
+前面声明 bean 的四大注解，要想生效，还需要被组件扫描注解 `@ComponentScan` 扫描。
+
+该注解虽然没有显示配置，但是实际上已经包含在了启动类声明注解 `@SpringBootApplication` 中，默认扫描的范围是启动类所在包及其子包。
+
+### DI 详解
+
+基于 `@Autowired` 进行依赖注入的常见方式有三种：**属性注入**、**构造函数注入**、**setter 注入**。
+
+::: code-group
+
+```java [属性注入] 4,5
+@RestController
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+    // ...
+}
+```
+
+```java [构造函数注入] 4,7-9
+@RestController
+public class UserController {
+
+    private final UserService userService;
+
+    @Autowired
+    public UserController(UserService userService){
+      this.userService = userService;
+    }
+    // ...
+}
+```
+
+```java [setter 注入] 4,7-9
+@RestController
+public class UserController {
+
+    private UserService userService;
+
+    @Autowired
+    public void setUserService(UserService userService){
+      this.userService = userService;
+    }
+    // ...
+}
+```
+
+:::
+
+::: tip 提示
+
+如果使用构造函数方法时，当前类中只存在一个构造函数，可省略 `@Autowired` 注解。
+
+:::
+
+::: tip 三种方式的优缺点
+
+- 属性注入：代码简洁，方便快速开发；但隐藏了类之间的依赖关系，可能会破坏类的封装性
+
+- 构造函数注入：能清晰地看到类的依赖关系，提高了代码的安全性；但代码繁琐，如果构造参数过多，可能会导致构造函数臃肿
+
+- setter 注入：保持了类的封装性，依赖关系更清晰；但需要额外编写 setter 方法，增加了代码量
+
+:::
+
+`@Autowired` 注解，默认是按照类型进行注入的。如果存在多个相同类型的 bean，将会出现报错。
+
+**解决方案一**：`@Primary`
+
+```java
+@Primary
+@Service
+public class UserServiceImpl2 implements UserService {
+  @Override
+  public List<User> list(){
+    // ...
+  }
+}
+```
+
+**解决方案二**：`@Qualifier`
+
+```java
+@RestController
+public class UserController {
+  @Autowired
+  @Qualifier("userServiceImpl2")
+  private UserService userService;
+}
+```
+
+**解决方案三**：`@Resource`
+
+```java
+@RestController
+public class UserController {
+  @Resource(name="userServiceImpl")
+  private UserService userService;
+}
+```
+
+::: tip `@Resource` 与 `@Autowired` 的区别
+
+- `@Autowired` 是 Spring 框架提供的注解，而 `@Resource` 是 JavaEE 规范提供的
+
+- `@Autowired` 是默认按照类型注入，而 `@Resource` 默认是按照名称注入
+
+:::
