@@ -694,3 +694,75 @@ ResultSet resultSet = pstmt.executeQuery();
 :::
 
 优势二：性能更高
+
+## MyBatis
+
+**MyBatis** 是一款优秀的**持久层**框架，用于简化 JDBC 的开发
+
+```java
+@Mapper
+public interface UserMapper {
+  // 查询全部
+  @Select("select * from users")
+  public List<User> findAll();
+}
+```
+
+官网：[https://mybatis.org/](https://mybatis.org/)
+
+### MyBatis 快速入门
+
+**准备工作**：
+
+1. 创建 SpringBoot 工程，引入 Mybatis 相关依赖（Developer Tools -> Lombok, SQL -> MyBatis Framework, SQL -> MySQL Driver）
+
+2. 准备数据库表 users、实体类 User
+
+3. 配置 Mybatis（在 application.properties 中数据库连接信息）
+
+```properties
+# main/resources/application.properties
+
+spring.application.name=springboot-mybatis
+
+# 配置数据库连接信息
+spring.datasource.url=jdbc:mysql://localhost:3306/shopping
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.username=root
+spring.datasource.password=1234
+```
+
+**编写 Mybatis 程序**：编写 Mybatis 的持久层接口，定义 SQL（注解/XML）
+
+```java
+@Mapper // 应用程序在运行时，会自动的为该接口创建一个实现类对象（代理对象），并且会自动将该实现类对象存入 IOC 容器 - bean
+public interface UserMapper {
+    @Select("select * from users")
+    public List<User> findAll();
+}
+
+```
+
+**测试 Mybatis**：
+
+```java
+// test/java/com.xxx.xxx/SpringbootMybatisApplicationTests.java
+@SpringBootTest // SpringBoot 单元测试的注解 - 当前测试类中的测试方法运行时，会启动 springboot 项目 - IOC 容器
+class SpringbootMybatisApplicationTests {
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Test
+    public void testFindAll() {
+        List<User> userList =  userMapper.findAll();
+        userList.forEach(System.out::println);
+    }
+}
+```
+
+::: tip 提示
+
+Mybatis 的持久层接口命名规范为 XxxMapper，也称为 Mapper 接口
+
+:::
