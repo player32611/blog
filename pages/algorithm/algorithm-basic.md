@@ -1228,11 +1228,43 @@ int main() {
 
 例题：[P1873 [COCI 2011/2012 #5] EKO / 砍树](https://www.luogu.com.cn/problem/P1873)
 
-::: danger 警告
+```c++
+#include<bits/stdc++.h>
+using namespace std;
 
-该部分尚未完工!
+typedef long long ll;
 
-:::
+const int N = 1e6+10;
+
+int n,m;
+int a[N];
+ll small = LLONG_MAX;
+ll big = 0;
+
+ll getAll(ll mi){
+    ll res = 0;
+    for(int i = 1;i<=n;i++){
+        if(a[i]-mi>0)res+=(a[i]-mi);
+    }
+    return res;
+}
+
+int main(){
+    cin>>n>>m;
+    for(int i = 1;i<=n;i++){
+        cin>>a[i];
+        if(a[i]<small)small = a[i];
+        if(a[i]>big)big = a[i];
+    }
+    while(small<big){
+        ll mid = (small+big+1)/2;
+        ll res = getAll(mid);
+        if(res<m)big = mid - 1;
+        else small = mid;
+    }
+    cout<<small<<endl;
+}
+```
 
 例题：[P2678 [NOIP 2015 提高组] 跳石头](https://www.luogu.com.cn/problem/P2678)
 
