@@ -1022,3 +1022,149 @@ public User findByNameAndPassword(String name, String password);
 ```
 
 :::
+
+### XML 映射配置
+
+在 Mybatis 中，既可以通过注解配置 SQL 语句，也可以通过 XML 配置文件配置 SQL 语句
+
+**默认规则**：
+
+1. XML 映射文件的名称与 Mapper 接口名称一致，并且将 XML 映射文件和 Mapper 接口放置在相同包下（同包同名）
+
+2. XML 映射文件的 namespace 属性为 Mapper 接口全限定名（引用）一致
+
+3. XML 映射文件中 sql 语句的 id 与 Mapper 接口中的方法名一致，并保持返回类型一致
+
+::: code-group
+
+```xml [UserMapper.xml]
+<-- src/main/resources/com/itheima/mapper/UserMapper.xml -->
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itheima.springbootmybatis.mapper.UserMapper">
+    <select id="findAll" resultType="com.itheima.springbootmybatis.pojo.User">
+        select * from users
+    </select>
+</mapper>
+```
+
+```java [UserMapper.java]
+// main/java/com/itheima/springbootmybatis/mapper/UserMapper.java
+
+@Mapper
+public interface UserMapper {
+    // ...
+
+    public List<User> findAll();
+
+    // ...
+}
+```
+
+:::
+
+::: tip resultType
+
+resultType：查询返回的单条记录所封装的类型
+
+:::
+
+::: tip 注解开发与 XML 开发
+
+使用 Mybatis 的注解，主要是来完成一些简单的增删改查功能
+
+如果需要实现复杂的 SQL 功能，建议使用 XML 来配置映射语句
+
+:::
+
+如果想要手动指定 XML 映射配置文件的位置，可在 `application.properties` 中添加如下配置:
+
+```properties
+mybatis.mapper-locations=classpath:mapper/*.xml
+```
+
+此时便可将 XML 映射配置文件放置在 `src/main/resources/mapper` 目录下
+
+### yml 配置文件
+
+SpringBoot 项目提供了多种属性配置方式（properties、yaml、yml）
+
+::: code-group
+
+```properties [application.properties]
+spring.datasource.url=jdbc:mysql://localhost:3306/shopping
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.username=root
+spring.datasource.password=1234
+```
+
+```yaml [application.yaml/application.yml]
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/shopping
+    username: root
+    password: 1234
+```
+
+:::
+
+**格式**：
+
+- 数值前边必须有空格，作为分隔符
+
+- 使用缩进表示层级关系，缩进时，不允许使用 Tab 键，只能用空格（idea 中会自动将 Tab 转换为空格）
+
+- 缩进的空格数目不重要，只要相同层级的元素的左侧对齐即可
+
+- `#` 表示注释，从这个字符一直到行尾，都会被解析器忽略
+
+定义对象/Map 集合：
+
+```yaml
+user:
+  name: 小王
+  age: 18
+  password: 123456
+```
+
+定义数组/list/Set 集合：
+
+```yaml
+hobby:
+  - java
+  - game
+  - sport
+```
+
+将 `application.properties` 的配置迁移到 `application.yml` 中：
+
+```yml
+spring:
+  application:
+    name: springboot-mybatis
+  datasource:
+    url: jdbc:mysql://localhost:3306/shopping
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: hcb326630
+mybatis:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  mappper-locations: classpath:mapper/*.xml
+```
+
+::: warning 注意
+
+在 yml 格式的配置文件中，如果配置项的值是以 0 开头的，值需要使用 `''` 引起来，因为以 0 开头在 yml 中表示 8 进制的数据
+
+:::
+
+::: tip yml 配置文件的特点及格式
+
+- 简洁、以数据为中心
+
+:::
