@@ -1168,3 +1168,35 @@ mybatis:
 - 简洁、以数据为中心
 
 :::
+
+### 数据封装
+
+实体类属性名和数据库表查询返回的字段名一致时，mybatis 会自动封装
+
+如果实体类属性名和数据库表查询返回的字段名不一致时，则不能自动封装
+
+**手动结果映射**：通过 `@Results` 及 `@Result` 注解来进行手动结果映射：
+
+```java
+@Results({
+  @Result(column = "create_time", property = "createTime"),
+  @Result(column = "update_time", property = "updateTime")
+})
+@Select("select id, name,create_time, update_time from dept order by update_time desc")
+public User findAll();
+```
+
+**起别名**：在 SQL 语句中，对不一样的列名起别名，别名和实体类属性名一样：
+
+```java
+@Select("select id, name, create_time createTime, update_time updateTime from dept order by update_time desc")
+public User findAll();
+```
+
+**开启驼峰命名**：如果字段名与属性名符合驼峰命名规则，mybatis 会自动通过驼峰命名规则映射：
+
+```yml
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+```
